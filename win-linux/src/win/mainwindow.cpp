@@ -800,6 +800,9 @@ void CMainWindow::slot_mainPageReady()
 {
     CSplash::hideSplash();
 
+    AscAppManager::sendCommandTo(nullptr, "updates:turn", "on");
+    AscAppManager::checkUpdates();
+
 #ifdef _UPDMODULE
     OSVERSIONINFO osvi;
 

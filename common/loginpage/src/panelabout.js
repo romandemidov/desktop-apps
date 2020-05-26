@@ -123,6 +123,11 @@
                         if ( this.view ) {
                             this.view.$panel.find('.ver-checkupdate')[this.updates?'show':'hide']();
                         }
+                    } else
+                    if (/^updates:has/.test(cmd)) {
+                        let _version = JSON.parse(param);
+                        let _label = this.view.$panel.find('.ver-checkupdate');
+                        _label.toggleClass('has-update').text('Has new version ' + _version.version);
                     }
                 });
 

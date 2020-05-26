@@ -45,6 +45,8 @@ namespace {
 
 class CAppUpdater: public QObject
 {
+    Q_OBJECT
+
 public:
     CAppUpdater();
     ~CAppUpdater();
@@ -60,6 +62,14 @@ private:
 
 //public slots:
     void slot_complete(int error, const std::wstring& xmlname);
+
+signals:
+    void hasUpdates(QString);
+    void noUpdates();
+
+private:
+    class impl;
+    std::unique_ptr<impl> pimpl;
 };
 
 #endif // CAPPUPDATER_H

@@ -92,27 +92,28 @@ namespace {
 
             std::shared_ptr<CFileDownloader> _downloader = std::make_shared<CFileDownloader>(m_url, false);
 
-//            _downloader->SetEvent_OnComplete(bind(&CThreadProc::callback_download_complete, this, _1));
 #ifdef Q_OS_WIN
-            _downloader->SetFilePath(_wtmpnam(nullptr));
+            wchar_t _wbuf[L_tmpnam_s];
+            if ( !_wtmpnam_s(_wbuf, L_tmpnam_s) ) {
+                _downloader->SetFilePath(_wbuf);
+            }
 #else
             string xml_tmpname = tmpnam(nullptr);
             _downloader->SetFilePath(NSFile::CUtf8Converter::GetUnicodeStringFromUTF8((BYTE*)xml_tmpname.c_str(), static_cast<long>(xml_tmpname.length())));
 #endif
-//            _downloader->Start(0);
+            _downloader->SetEvent_OnComplete(std::bind(&CThreadProc::callback_download_complete, this, _1, _downloader->GetFilePath()));
+            _downloader->Start(0);
 
             m_ct.start();
             while (!m_ct.complete) {
                 msleep(10);
             }
-
-            emit complete(0, _downloader->GetFilePath());
-//            emit complete(xml_tmpname);
         }
 
-        void callback_download_complete(int e)
+        void callback_download_complete(int e, wstring path)
         {
             m_ct.stop(e);
+            emit complete(0, path);
         }
 
     public:
@@ -121,15 +122,27 @@ namespace {
             m_url = {url};
         }
 
+        void abort()
+        {
+            m_ct.complete = true;
+            m_ct.stop(1);
+        }
+
     public slots:
     signals:
         void complete(int, const std::wstring&);
     };
 }
 
+class CAppUpdater::impl {
+public:
+    impl() {}
 
+    string remote_version;
+};
 
 CAppUpdater::CAppUpdater()
+    : pimpl{new impl}
 {
 
 }
@@ -137,6 +150,13 @@ CAppUpdater::CAppUpdater()
 CAppUpdater::~CAppUpdater()
 {
     QObject::disconnect(m_toaster.get());
+
+    if ( m_toaster->isRunning() ) {
+        m_toaster->exit();
+        m_toaster->abort();
+        m_toaster->wait();
+    }
+
     m_toaster->deleteLater();
 }
 
@@ -158,8 +178,20 @@ void CAppUpdater::checkUpdates()
 
 void CAppUpdater::slot_complete(int e, const std::wstring& xmlname)
 {
-    if ( e == 0 )
+    if ( e == 0 ) {
         parse_app_cast(xmlname);
+
+        if ( pimpl->remote_version.compare(VER_FILEVERSION_STR) > 0 ) {
+            emit hasUpdates(QString::fromStdString(pimpl->remote_version));
+
+//            CMessage mess(AscAppManager::topWindow()->handle(), CMessageOpts::moButtons::mbYesDefNoCancel);
+//            mess.warning("Update found");
+//                    win_sparkle_check_update_with_ui_and_install()
+//            _re_package_url = "sparkle:os=\"windows-x64[\w\W]+url=\"(https?\:\/\/[^\"]+)";
+        } else {
+            emit noUpdates();
+        }
+    }
 }
 
 void CAppUpdater::parse_app_cast(const std::wstring& xmlname)
@@ -182,14 +214,7 @@ void CAppUpdater::parse_app_cast(const std::wstring& xmlname)
         std::regex _regex{"sparkle:os=\"" UPDATE_TARGET_OS "\"\\ssparkle:version=\"((\\d{1,3})(?:.(\\d+))?(?:.(\\d+))?(?:.(\\d+))?)"};
         std::smatch _match;
         if ( regex_search(xmlcontent, _match, _regex) ) {
-            if ( _match[1].str().compare(VER_FILEVERSION_STR) > 0 ) {
-                qDebug() << "bigger version. need to update";
-
-//                CMessage mess(AscAppManager::topWindow()->handle(), CMessageOpts::moButtons::mbYesDefNoCancel);
-//                mess.warning("Update found");
-//                        win_sparkle_check_update_with_ui_and_install()
-//                _re_package_url = "sparkle:os=\"windows-x64[\w\W]+url=\"(https?\:\/\/[^\"]+)";
-            }
+            pimpl->remote_version = {_match.str(1)};
         }
     }
 
