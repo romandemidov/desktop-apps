@@ -1504,6 +1504,14 @@ void CAscApplicationManagerWrapper::checkUpdates()
         QObject::connect(_app.m_updater.get(), &CAppUpdater::hasUpdates, [](QString version){
             qDebug() << "updates found" << version;
             AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "updates:has", Utils::stringifyJson(QJsonObject{{"version", version}}));
+
+            CMessage mess(topWindow()->handle(), CMessageOpts::moButtons::mbYesNo);
+            if ( mess.confirm(tr("New version is available. Download and install it?")) == MODAL_RESULT_CUSTOM + 0 ) {
+                APP_CAST(_app);
+
+                _app.m_updater->download();
+            }
+
         });
 
         QObject::connect(_app.m_updater.get(), &CAppUpdater::noUpdates, [](){

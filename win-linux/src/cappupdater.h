@@ -41,6 +41,18 @@
 
 namespace {
     class CThreadProc;
+
+    struct thread_deleter {
+        using pointer = CThreadProc *;
+        auto operator()(QThread * thread) const -> void {
+            if ( thread->isRunning() ) {
+                thread->exit();
+                thread->wait();
+            }
+
+            delete thread, thread = nullptr;
+        }
+    };
 }
 
 class CAppUpdater: public QObject
@@ -52,16 +64,18 @@ public:
     ~CAppUpdater();
 
     void checkUpdates();
+    auto hasUpdatePackage() const -> bool;
+    auto download() -> void;
+    auto install() -> void;
 
 private:
-    std::shared_ptr<CThreadProc> m_toaster;
+    std::unique_ptr<CThreadProc, thread_deleter> m_toaster;
 
     void startChecking();
-
     void parse_app_cast(const std::wstring& xmlname);
 
 //public slots:
-    void slot_complete(int error, const std::wstring& xmlname);
+    void slot_complete(int error, const std::wstring& xmlname, int target);
 
 signals:
     void hasUpdates(QString);
