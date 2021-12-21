@@ -34,9 +34,12 @@
 #define CTABBAR_H
 
 #include <QTabBar>
+#include <QPushButton>
 #include "cscalingwrapper.h"
 
 //class CTabBarPrivate;
+class CTabBarHelper;
+
 
 class CTabBar : public QTabBar, public CScalingWrapper
 {
@@ -73,6 +76,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
     void mouseReleaseEvent (QMouseEvent *) override;
     void paintEvent(QPaintEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
     void tabInserted(int) override;
     void tabRemoved(int index) override;
     void drawTabCaption(QPainter *, const QString&, const QStyleOptionTab&);
@@ -94,6 +98,9 @@ private:
     bool m_active = false;
     bool m_isUIThemeDark = false;
     QString m_activeColor = "none";
+
+    CTabBarHelper * m_helper = nullptr;
+    friend class CTabBarHelper;
 
 signals:
     void tabUndock(int, bool *);

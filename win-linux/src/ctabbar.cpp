@@ -43,6 +43,7 @@
 #define TAB_BTNCLOSE(index) tabButton(index, QTabBar::RightSide)
 #define TAB_ICON(index) tabButton(index, QTabBar::LeftSide)
 
+
 inline static bool verticalTabs(QTabBar::Shape shape)
 {
     return shape == QTabBar::RoundedWest || shape == QTabBar::RoundedEast
@@ -231,11 +232,133 @@ void QTabBarPrivate::Tab::TabBarAnimation::updateState(QAbstractAnimation::State
 /*
  *    CTabBar descrition
 */
+#include <QHBoxLayout>
+
+class CTabBarHelper {
+public:
+    QWidget * m_boxScrollBtns = nullptr;
+    QPushButton * m_btnScrollLeft = nullptr,
+                * m_btnScrollRight = nullptr;
+
+    CTabBar * tabbar = nullptr;
+
+public:
+    CTabBarHelper(CTabBar * parent)
+        : tabbar(parent)
+    {
+        m_boxScrollBtns = new QWidget(parent->parentWidget());
+        m_boxScrollBtns->setLayout(new QHBoxLayout);
+        m_boxScrollBtns->layout()->setMargin(0);
+        m_boxScrollBtns->layout()->setSpacing(0);
+        m_boxScrollBtns->setStyleSheet("background-color:#f00;");
+
+        const QString btn_style{"border:0 none;border-radius:0;"};
+        m_btnScrollLeft = new QPushButton(parent);
+        m_btnScrollLeft->setFixedSize(QSize(20, 28) * tabbar->scaling());
+        m_btnScrollLeft->setStyleSheet(btn_style + "background-color:#ff0;");
+        QObject::connect(m_btnScrollLeft, &QPushButton::clicked, [](bool){
+
+        });
+
+        m_btnScrollRight = new QPushButton(parent);
+        m_btnScrollRight->setFixedSize(QSize(20, 28) * tabbar->scaling());
+        m_btnScrollRight->setStyleSheet(btn_style + "background-color:#0f0;");
+
+        m_boxScrollBtns->layout()->addWidget(m_btnScrollLeft);
+        m_boxScrollBtns->layout()->addWidget(m_btnScrollRight);
+    //    m_boxScrollBtns->setGeometry(width() - 40, 0, 40, 28);
+    }
+
+    auto needScroll(int t = 3) -> int {
+        if ( !tabbar->count() ) return 0;
+
+        int out = 0;
+        if ( t == 3 || t == 2 ) {
+            const QRect rn = tabbar->tabRect(tabbar->count() - 1);
+
+//            bool need_scroll = rn.x() + rn.width() > tabbar->width();
+            bool need_scroll = rn.right() > tabbar->width();
+            if ( need_scroll ) {
+//                Q_D(QTabBar);
+
+//                d->scrollOffset = (r0.x() + r0.width()) - width() + 40 * scaling();
+
+//                update();
+//                d->layoutWidgets();
+
+                out |= 2;
+            }
+        }
+
+        if ( t == 3 || t == 1 ) {
+            const QRect r0 = tabbar->tabRect(0);
+            if ( r0.x() < 0 ) {
+                out |= 1;
+            }
+        }
+
+        return out;
+    }
+
+    auto updateScrollGeometry(const QSize& s) -> void {
+        QSize us{s};
+        if ( s.isEmpty() )
+            us = tabbar->size();
+
+        const int box_width = 40 * tabbar->scaling();
+        m_boxScrollBtns->setGeometry(tabbar->geometry().left() + us.width() - box_width, 0, box_width, us.height());
+    }
+
+    auto makeTabVisible(int index) -> void {
+        if ( isTabVisible(index) ) return;
+
+        QTabBarPrivate * d = tabbar->d_func();
+
+        const QRect tabRect = tabbar->tabRect(index);
+        const int oldScrollOffset = d->scrollOffset;
+        const int tabStart = tabRect.left();
+        const int tabEnd = tabRect.right();
+        const int lastTabEnd = tabbar->tabRect(tabbar->count()).right();
+        const QRect scrollRect = d->normalizedScrollRect(index);
+        const int scrolledTabBarStart = qMax(1, scrollRect.left() + d->scrollOffset);
+        const int scrolledTabBarEnd = qMin(lastTabEnd - 1, scrollRect.right() + d->scrollOffset);
+
+        if ( tabStart < scrolledTabBarStart ) {
+            // Tab is outside on the left, so scroll left.
+            d->scrollOffset = tabStart - scrollRect.left();
+        } else
+        if (tabEnd > scrolledTabBarEnd) {
+            // Tab is outside on the right, so scroll right.
+            d->scrollOffset = tabEnd - scrollRect.right();
+        }
+
+        m_btnScrollLeft->setEnabled(d->scrollOffset > -scrollRect.left());
+        m_btnScrollRight->setEnabled(d->scrollOffset < lastTabEnd - scrollRect.right());
+
+        if ( oldScrollOffset != d->scrollOffset ) {
+            tabbar->update();
+            d->layoutWidgets();
+        }
+    }
+
+    auto isTabVisible(int index) -> bool {
+        if ( !(index < 0) && index  < tabbar->count() ) {
+            const QRect rn = tabbar->tabRect(index);
+            return !(rn.left() < 0 || rn.right() > tabbar->width());
+        }
+
+        return false;
+    }
+};
+
+
 CTabBar::CTabBar(QWidget * parent)
     : QTabBar(parent)
     , CScalingWrapper(parent)
+    , m_helper(new CTabBarHelper(this))
 {
     setDrawBase(false);
+    setUsesScrollButtons(false);
 
     if (Utils::getScreenDpiRatio(
                 QApplication::desktop()->screen(QApplication::desktop()->primaryScreen())->geometry().topLeft()) > 1)
@@ -658,7 +781,8 @@ void CTabBar::onCurrentChanged(int index)
         }
     }
 
-    m_current = index;
+    m_current = index;   
+    m_helper->makeTabVisible(m_current);
 }
 
 void CTabBar::tabRemoved(int index)
@@ -830,11 +954,27 @@ void CTabBar::updateScaling(double f)
 
 bool CTabBar::event(QEvent * e)
 {
+    if ( e->type() == QEvent::Enter ) {
+//        return true;
+    }
+
+    if ( e->type() == QEvent::HoverEnter ) {
+//        return true;
+    }
+
     if ( e->type() == QEvent::HoverMove ) {
         Q_D(QTabBar);
 
         if ( !d->dragInProgress ) {
             QHoverEvent * _hover = static_cast<QHoverEvent *>(e);
+
+//            if ( m_boxScrollBtns->isVisible() &&
+//                    m_boxScrollBtns->geometry().contains(_hover->pos()) )
+            {
+//                qDebug() << "hover:"  << m_btnScrollRight->geometry();
+//                e->accept();
+//                return true;
+            }
 
             int _index = tabAt(_hover->pos());
             if ( m_overIndex != _index ) {
@@ -865,6 +1005,34 @@ bool CTabBar::event(QEvent * e)
 
             m_overIndex = -1;
         }
+    } else
+    if ( e->type() == QEvent::Resize ) {
+        const QResizeEvent & event = *static_cast<QResizeEvent *>(e);
+
+        int s = m_helper->needScroll();
+        m_helper->m_boxScrollBtns->setVisible(s > 0);
+
+        if ( s > 0 ) {
+            m_helper->m_btnScrollLeft->setDisabled(s & 1);
+            m_helper->m_btnScrollRight->setDisabled(s & 2);
+        }
+
+//        const QRect r0 = tabRect(count() - 1);
+
+//        bool need_scroll = r0.x() + r0.width() > width();
+//        if ( need_scroll ) {
+//            Q_D(QTabBar);
+
+//            d->scrollOffset = (r0.x() + r0.width()) - width() + 40 * scaling();
+
+//            update();
+//            d->layoutWidgets();
+//        }
+
+//        if ( !(need_scroll == m_helper->m_boxScrollBtns->isVisible()) )
+//            m_helper->m_boxScrollBtns->setVisible(need_scroll);
+
+        m_helper->updateScrollGeometry(event.size());
     }
 
 //    qDebug() << "event: " << e;
@@ -881,6 +1049,10 @@ int CTabBar::draggedTabIndex()
 QSize CTabBar::tabSizeHint(int index) const
 {
     return QTabBar::tabSizeHint(index);
+}
+
+void CTabBar::resizeEvent(QResizeEvent * e)
+{
 }
 
 void CTabBar::interruptTabMoving(int index)
