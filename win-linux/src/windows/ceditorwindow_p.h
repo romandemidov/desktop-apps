@@ -53,6 +53,10 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+#ifdef __linux__
+# include "platform_linux/xdgdesktopportal.h"
+#endif
+
 
 using namespace NSEditorApi;
 
@@ -465,13 +469,11 @@ public:
             printer->setOutputFileName("");
             printer->setFromTo(1, pagescount);
 
-/*#ifdef _WIN32
-            //CPrintDialogWinWrapper wrapper(printer, window->handle());
-            //QPrintDialog * dialog = wrapper.q_dialog();
-            QPrintDialog * dialog =  new QPrintDialog(printer, window);
-#else*/
+#ifdef _WIN32
             QPrintDialog * dialog =  new QPrintDialog(printer, window->handle());
-//#endif // _WIN32
+#else
+            XdgPrintDialog * dialog =  new XdgPrintDialog(printer, window->handle());
+#endif // _WIN32
 
             dialog->setWindowTitle(CEditorWindow::tr("Print Document"));
             dialog->setEnabledOptions(QPrintDialog::PrintPageRange | QPrintDialog::PrintCurrentPage | QPrintDialog::PrintToFile);

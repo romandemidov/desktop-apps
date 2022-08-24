@@ -67,6 +67,8 @@
 
 #ifdef _WIN32
 # include "shlobj.h"
+#else
+# include "platform_linux/xdgdesktopportal.h"
 #endif
 
 
@@ -1071,12 +1073,11 @@ void CMainWindow::onDocumentPrint(void * opts)
         printer->setOutputFileName("");
         printer->setFromTo(1, pagesCount);
 
-/*#ifdef _WIN32
-        //CPrintDialogWinWrapper wrapper(printer, TOP_NATIVE_WINDOW_HANDLE);
-        //QPrintDialog * dialog = wrapper.q_dialog();
-#else*/
+#ifdef _WIN32
         QPrintDialog * dialog =  new QPrintDialog(printer, this);
-//#endif // _WIN32
+#else
+        XdgPrintDialog * dialog =  new XdgPrintDialog(printer, this);
+#endif // _WIN32
 
         dialog->setWindowTitle(tr("Print Document"));
         dialog->setEnabledOptions(QPrintDialog::PrintPageRange | QPrintDialog::PrintCurrentPage | QPrintDialog::PrintToFile);

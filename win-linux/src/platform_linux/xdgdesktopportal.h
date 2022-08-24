@@ -5,6 +5,12 @@
 
 #include <QWidget>
 #include <QString>
+#include <QPrinter>
+#include <QAbstractPrintDialog>
+
+typedef QAbstractPrintDialog::PrintDialogOption PrintOption;
+typedef QAbstractPrintDialog::PrintDialogOptions PrintOptions;
+typedef QAbstractPrintDialog::PrintRange PrintRange;
 
 
 namespace Xdg
@@ -22,5 +28,29 @@ QStringList openXdgPortal(QWidget *parent,
                           QString *sel_filter,
                           bool sel_multiple = false);
 }
+
+class XdgPrintDialog
+{
+public:
+    XdgPrintDialog(QPrinter *printer, QWidget *parent);
+    ~XdgPrintDialog();
+
+    void setWindowTitle(const QString &title);
+    void setEnabledOptions(PrintOptions enbl_opts);
+    void setOptions(PrintOptions opts);
+    void setPrintRange(PrintRange print_range);
+    QDialog::DialogCode exec();
+    PrintRange printRange();
+    PrintOptions options();
+    int fromPage();
+    int toPage();
+
+private:
+    QPrinter *m_printer;
+    QWidget *m_parent;
+    QString m_title;
+    PrintOptions m_options;
+    PrintRange m_print_range;
+};
 
 #endif // XDGDESKTOPPORTAL_H

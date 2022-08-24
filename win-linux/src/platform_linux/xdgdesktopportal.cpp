@@ -1,5 +1,7 @@
 #define _GNU_SOURCE 1
 #include "xdgdesktopportal.h"
+#include <QVariant>
+#include <QHash>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -81,19 +83,7 @@ typedef struct {
     const char* pattern;
 } FilterItem;
 
-Bool xerror = False;
-
 Result initDBus(void);
-Result openDialog(Window parent, Xdg::Mode mode, const char* title,
-                  char** outPaths,
-                  const FilterItem* filterList,
-                  uint filterCount,
-                  FilterItem* selFilter,
-                  const char* defltPath,
-                  const char* defltName,
-                  bool multiple);
-
-
 const char* getErrorText(void);
 char* strcopy(const char* start, const char* end, char* out);
 void quitDBus(void);
@@ -1218,4 +1208,517 @@ QStringList Xdg::openXdgPortal(QWidget *parent,
     }
 
     return files;
+}
+
+
+/** Print Dialog **/
+
+typedef QPrinter::Unit QUnit;
+typedef QHash<const char*, QVariant> VariantHash;
+
+void setData(DBusMessageIter &msg_iter, const VariantHash &hash) {
+    auto keys = hash.keys();
+    foreach (const char* key, keys) {
+        DBusMessageIter dict_iter;
+        DBusMessageIter variant_iter;
+        __dbusOpen(&msg_iter, DBUS_TYPE_DICT_ENTRY, nullptr, &dict_iter);
+        __dbusAppend(&dict_iter, DBUS_TYPE_STRING, &key);
+
+        if (strcmp(hash[key].typeName(), "QString") == 0) {
+            __dbusOpen(&dict_iter, DBUS_TYPE_VARIANT, "s", &variant_iter);
+            char* val = hash[key].toString().toUtf8().data();
+            __dbusAppend(&variant_iter, DBUS_TYPE_STRING, &val);
+            __dbusClose(&dict_iter, &variant_iter);
+        } else
+        if (strcmp(hash[key].typeName(), "double") == 0) {
+            __dbusOpen(&dict_iter, DBUS_TYPE_VARIANT, "d", &variant_iter);
+            double val = hash[key].toDouble();
+            __dbusAppend(&variant_iter, DBUS_TYPE_DOUBLE, &val);
+            __dbusClose(&dict_iter, &variant_iter);
+        } else {
+            g_print("Other type: %s\n", hash[key].typeName());
+        }
+        __dbusClose(&msg_iter, &dict_iter);
+    }
+}
+
+Result readData(DBusMessage* msg, const char *response, VariantHash &hash) {
+    DBusMessageIter iter;
+    const Result res = readResponseResults(msg, iter);
+    if (res != SUCCESS)
+        return res;
+
+    if (readDict(iter, response,
+                 [&hash](DBusMessageIter& settings_iter) {
+                    if (dbus_message_iter_get_arg_type(&settings_iter) == DBUS_TYPE_ARRAY) {
+                         DBusMessageIter dict_iter;
+                         dbus_message_iter_recurse(&settings_iter, &dict_iter);
+                         while (dbus_message_iter_get_arg_type(&dict_iter) == DBUS_TYPE_DICT_ENTRY) {
+                             DBusMessageIter key_iter;
+                             dbus_message_iter_recurse(&dict_iter, &key_iter);
+                             if (dbus_message_iter_get_arg_type(&key_iter) == DBUS_TYPE_STRING) {
+                                  const char *key = NULL;
+                                  dbus_message_iter_get_basic(&key_iter, &key);
+                                  //g_print("Key: %s\n", key);
+                                  if (dbus_message_iter_next(&key_iter)) {
+                                     if (dbus_message_iter_get_arg_type(&key_iter) == DBUS_TYPE_VARIANT) {
+                                         DBusMessageIter var_iter;
+                                         dbus_message_iter_recurse(&key_iter, &var_iter);
+                                         if (dbus_message_iter_get_arg_type(&var_iter) == DBUS_TYPE_STRING) {
+                                             const char *str_val = NULL;
+                                             dbus_message_iter_get_basic(&var_iter, &str_val);
+                                             //g_print("Val: %s\n", str_val);
+                                             if (key) {
+                                                if (hash.contains(key))
+                                                    hash[key] = QVariant(QString::fromUtf8(str_val));
+                                             }
+                                             //Free((void*)str_val);
+                                         } else
+                                         if (dbus_message_iter_get_arg_type(&var_iter) == DBUS_TYPE_DOUBLE) {
+                                             double dbl_val;
+                                             dbus_message_iter_get_basic(&var_iter, &dbl_val);
+                                             //g_print("Val: %f\n", dbl_val);
+                                             if (key) {
+                                                if (hash.contains(key))
+                                                    hash[key] = QVariant(dbl_val);
+                                             }
+                                         } else {
+                                             g_print("Other type: %d\n", dbus_message_iter_get_arg_type(&var_iter));
+                                         }
+                                     }
+                                  }
+                                  //Free((void*)key);
+                             }
+                             if (!dbus_message_iter_next(&dict_iter))
+                                 break;
+                         }
+                         return SUCCESS;
+                    }
+                    return ERROR;
+                 }) == ERROR)
+        return ERROR;
+
+    return SUCCESS;
+}
+
+Result callXdgPrintDialog(Window parent,
+                          const char* title,
+                          const VariantHash &print_settings,
+                          const VariantHash &page_setup,
+                          DBusMessage* &outMsg) {
+
+    const char* handle_token;
+    char* handle_path = createUniquePath(&handle_token);
+    FreeLater __freeLater(handle_path);
+    DBusError err;
+    dbus_error_init(&err);
+
+    DBusSignalHandler signal_hand;
+    Result res = signal_hand.subscribe(handle_path);
+    if (res != SUCCESS)
+        return res;
+
+    DBusMessage* methd = dbus_message_new_method_call("org.freedesktop.portal.Desktop",
+                                                      "/org/freedesktop/portal/desktop",
+                                                      "org.freedesktop.portal.Print",
+                                                      "PreparePrint");
+    UnrefLater_DBusMessage __unrefLater(methd);
+    DBusMessageIter iter;
+    dbus_message_iter_init_append(methd, &iter);
+
+    QString parent_window_qstr = "x11:" + QString::number((long)parent, 16);
+    char* parent_window = parent_window_qstr.toUtf8().data();
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &parent_window);
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &title);
+
+    DBusMessageIter arr_iter;
+    __dbusOpen(&iter, DBUS_TYPE_ARRAY, "{sv}", &arr_iter);
+    setData(arr_iter, print_settings);
+    __dbusClose(&iter, &arr_iter);
+
+    __dbusOpen(&iter, DBUS_TYPE_ARRAY, "{sv}", &arr_iter);
+    setData(arr_iter, page_setup);
+    __dbusClose(&iter, &arr_iter);
+
+    __dbusOpen(&iter, DBUS_TYPE_ARRAY, "{sv}", &arr_iter);
+    setHandleToken(arr_iter, handle_token);
+    __dbusClose(&iter, &arr_iter);
+
+    DBusMessage* reply = dbus_connection_send_with_reply_and_block(
+                            dbus_conn, methd, DBUS_TIMEOUT_INFINITE, &err);
+    if (!reply) {
+        dbus_error_free(&dbus_err);
+        dbus_move_error(&err, &dbus_err);
+        setErrorText(dbus_err.message);
+        return ERROR;
+    }
+    UnrefLater_DBusMessage __replyUnrefLater(reply);
+    {
+        DBusMessageIter iter;
+        if (!dbus_message_iter_init(reply, &iter)) {
+            setErrorText("D-Bus reply is missing an argument");
+            return ERROR;
+        }
+        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_OBJECT_PATH) {
+            setErrorText("D-Bus reply is not an object path");
+            return ERROR;
+        }
+        const char* path;
+        dbus_message_iter_get_basic(&iter, &path);
+        if (strcmp(path, handle_path) != 0) {
+            signal_hand.subscribe(path);
+        }
+    }
+
+    do {
+        while (true) {
+            DBusMessage* msg = dbus_connection_pop_message(dbus_conn);
+            if (!msg)
+                break;
+            if (dbus_message_is_signal(msg, "org.freedesktop.portal.Request", "Response")) {
+                outMsg = msg;
+                return SUCCESS;
+            }
+            dbus_message_unref(msg);
+        }
+    } while (dbus_connection_read_write(dbus_conn, -1));
+
+    setErrorText("Portal did not give a reply");
+    return ERROR;
+}
+
+Result openPrintDialog(Window parent,
+                       const char* title,
+                       VariantHash &print_settings,
+                       VariantHash &page_setup) {
+    DBusMessage* msg;
+    {
+        const Result res = callXdgPrintDialog(parent,
+                                              title,
+                                              print_settings,
+                                              page_setup,
+                                              msg);
+        if (res != SUCCESS)
+            return res;
+    }
+
+    UnrefLater_DBusMessage __msgUnrefLater(msg);
+
+    Result res;
+    res = readData(msg, "settings", print_settings);
+    if (res != SUCCESS)
+        return res;
+
+    res = readData(msg, "page-setup", page_setup);
+    if (res != SUCCESS)
+        return res;
+
+    return SUCCESS;
+}
+
+
+XdgPrintDialog::XdgPrintDialog(QPrinter *printer, QWidget *parent) :
+    m_printer(printer),
+    m_parent(parent),
+    m_title(QString()),
+    m_options(PrintOptions()),
+    m_print_range(PrintRange::AllPages)
+{
+    m_print_range = (PrintRange)printer->printRange();
+    if (m_printer->collateCopies())
+        m_options |= PrintOption::PrintCollateCopies;
+
+}
+
+XdgPrintDialog::~XdgPrintDialog()
+{
+
+}
+
+void XdgPrintDialog::setWindowTitle(const QString &title)
+{
+    m_title = title;
+}
+
+void XdgPrintDialog::setEnabledOptions(PrintOptions enbl_opts)
+{
+    m_options = enbl_opts;
+}
+
+void XdgPrintDialog::setOptions(PrintOptions opts)
+{
+    m_options = opts;
+}
+
+void XdgPrintDialog::setPrintRange(PrintRange print_range)
+{
+    m_print_range = print_range;
+}
+
+QDialog::DialogCode XdgPrintDialog::exec()
+{
+    QDialog::DialogCode exit_code = QDialog::DialogCode::Rejected;
+    Window parent_xid = (m_parent) ? (Window)m_parent->winId() : 0L;
+
+    //auto qt_printer_name = m_printer->printerName();
+    auto qt_resolution = m_printer->resolution();
+    auto qt_orient = m_printer->orientation();
+    auto qt_duplex = m_printer->duplex();
+    auto qt_color_mode = m_printer->colorMode();
+    auto qt_copy_count = m_printer->copyCount();
+    auto qt_page_order = m_printer->pageOrder();
+    auto qt_output_filename = m_printer->outputFileName();
+    //auto qt_doc_name = m_printer->docName();
+    //auto qt_full_page = m_printer->fullPage();
+    //auto qt_color_count = m_printer->colorCount();
+    //auto qt_supported_res = m_printer->supportedResolutions();
+    //auto qt_supports_multi_copies = m_printer->supportsMultipleCopies();
+    //auto qt_selection_option = m_printer->printerSelectionOption();
+    //auto qt_output_format = m_printer->outputFormat();
+    //auto qt_paper_source = m_printer->paperSource();
+
+    // Qt-PrintOptions:
+    // None = 0
+    // PrintToFile = 1          - not applied
+    // PrintSelection = 2       - not applied
+    // PrintPageRange = 4       - not applied
+    // PrintShowPageSize = 8    - not applied
+    // PrintCollateCopies = 16  - not applied
+    // DontUseSheet = 32        - not applied
+    // PrintCurrentPage = 64    - not applied
+
+    // Input settings
+    const QString quality_arr[] = {
+        "low",
+        "normal",
+        "high",
+        "draft"
+    };
+
+    // Qt-PrintRange:
+    // AllPages = 0
+    // Selection = 1
+    // PageRange = 2
+    // CurrentPage = 3
+    const QString print_pages_arr[] = {
+        "all",
+        "selection",
+        "ranges",
+        "current"
+    };
+    const int print_range = (int)m_print_range;
+    const QString print_pages = (print_range >= 0 && print_range <= 4) ?
+                print_pages_arr[m_print_range] : print_pages_arr[0];
+
+    const QString page_ranges = QString::number(m_printer->fromPage()) + "-" +
+                                QString::number(m_printer->toPage());
+
+    const QString page_set_arr[] = {
+        "all",
+        "even",
+        "odd"
+    };
+
+    // Qt-Duplex:
+    // DuplexNone = 0
+    // DuplexAuto = 1       - not applied
+    // DuplexLongSide = 2
+    // DuplexShortSide = 3
+    const QString duplex_arr[] = {
+        "simplex",
+        "horizontal",
+        "vertical"
+    };
+    const QString duplex = (qt_duplex == QPrinter::DuplexLongSide) ?  duplex_arr[1] :
+                           (qt_duplex == QPrinter::DuplexShortSide) ? duplex_arr[2] :
+                                                                      duplex_arr[0];
+    const QString collate("yes");
+    const QString use_color = qt_color_mode == QPrinter::Color ? "yes" : "no";
+    const QString reverse = qt_page_order == QPrinter::LastPageFirst ? "yes" : "no";
+
+    VariantHash print_settings = {
+        //{"orientation",         QVariant("")}, // portrait landscape reverse-portrait reverse-landscape
+        //{"paper-format",        QVariant("")}, // according to PWG 5101.1-2002
+        //{"paper-width",         QVariant("")}, // mm
+        //{"paper-height",        QVariant("")}, // mm
+        {"n-copies",            QVariant(QString::number(qt_copy_count))},
+        //{"default-source",      QVariant("")},
+        {"quality",             QVariant(quality_arr[2])}, // normal high low draft
+        {"resolution",          QVariant(QString::number(qt_resolution))}, // The resolution, sets both resolution-x and resolution-y
+        {"use-color",           QVariant(use_color)}, // true false
+        {"duplex",              QVariant(duplex)}, // simplex horizontal vertical
+        {"collate",             QVariant(collate)}, // true false
+        {"reverse",             QVariant(reverse)}, // true false
+        //{"media-type",          QVariant("")}, // according to PWG 5101.1-2002
+        //{"dither",              QVariant("")}, // The dithering to use: fine none coarse lineart grayscale error-diffusion
+        //{"scale",               QVariant("")}, // The scale in percent
+        {"print-pages",         QVariant(print_pages)}, // all selection current ranges
+        {"page-ranges",         QVariant(page_ranges)}, // Note that page ranges are 0-based, even if the are displayed as 1-based when presented to the user
+        {"page-set",            QVariant(page_set_arr[0])}, // all even odd
+        //{"finishings",          QVariant("")},
+        //{"number-up",           QVariant("")}, // The number of pages per sheet
+        //{"number-up-layout",    QVariant("")}, // lrtb lrbt rltb rlbt tblr tbrl btlr btrl
+        //{"output-bin",          QVariant("")},
+        //{"resolution-x",        QVariant("")}, // dpi
+        //{"resolution-y",        QVariant("")}, // dpi
+        //{"printer-lpi",         QVariant("")}, // The resolution in lines per inch
+        //{"output-basename",     QVariant("")}, // Basename to use for print-to-file
+        //{"output-file-format",  QVariant("")}, // Format to use for print-to-file: PDF PS SVG
+        {"output-uri",          QVariant(qt_output_filename)}  // The uri used for print-to-file
+    };
+
+   // Input page setup
+    QUnit qt_unit(QUnit::Millimeter);
+    double left_in, top_in, right_in, bottom_in;
+    m_printer->getPageMargins(&left_in, &top_in, &right_in, &bottom_in, qt_unit);
+
+    const int width_in = (qt_orient == QPrinter::Portrait) ?
+                m_printer->widthMM() : m_printer->heightMM();
+    const int height_in = (qt_orient == QPrinter::Portrait) ?
+                m_printer->heightMM() : m_printer->widthMM();
+
+    // Qt-Orient:
+    // Portrait = 0
+    // Landscape = 1
+    const QString orientation_arr[] = {
+        "portrait",
+        "landscape",
+        "reverse_portrait",
+        "reverse_landscape"
+    };
+    const int print_ornt = (int)qt_orient;
+    const QString orientation = (print_ornt >= 0 && print_ornt <= 4) ?
+                orientation_arr[print_ornt] : orientation_arr[0];
+
+    VariantHash page_setup = {
+        {"PPDName",         QVariant(m_printer->paperName())}, // The PPD name
+        //{"Name",            QVariant("")}, // The name of the page setup
+        {"DisplayName",     QVariant(m_printer->paperName())}, // User-visible name for the page setup
+        {"Width",           QVariant(double(width_in))}, // d mm
+        {"Height",          QVariant(double(height_in))}, // d mm
+        {"MarginTop",       QVariant(top_in)}, // d mm
+        {"MarginBottom",    QVariant(bottom_in)}, // d mm
+        {"MarginLeft",      QVariant(left_in)}, // d mm
+        {"MarginRight",     QVariant(right_in)}, // d mm
+        {"Orientation",     QVariant(orientation)}  // portrait landscape reverse-portrait reverse-landscape
+    };
+
+    // Init dialog
+    initDBus();
+    Result result;
+    result = openPrintDialog(parent_xid,
+                             m_title.toUtf8().data(),
+                             print_settings,
+                             page_setup);
+
+    if (result == Result::SUCCESS) {
+        enum _ColorMode {_GrayScale, _Color}; // GrayScale is defined already
+        const QString use_color = print_settings["use-color"].toString();
+        m_printer->setColorMode(use_color == "yes" ?
+                      QPrinter::ColorMode(_Color) : QPrinter::ColorMode(_GrayScale));
+
+        const QString print_pages = print_settings["print-pages"].toString();
+        PrintRange range_arr[4] = {
+            PrintRange::AllPages,
+            PrintRange::Selection,
+            PrintRange::PageRange,
+            PrintRange::CurrentPage
+        };
+        m_print_range = (print_pages == print_pages_arr[0]) ? range_arr[0] :
+                        (print_pages == print_pages_arr[1]) ? range_arr[1] :
+                        (print_pages == print_pages_arr[2]) ? range_arr[2] :
+                        (print_pages == print_pages_arr[3]) ? range_arr[3] :
+                                                              range_arr[0];
+
+        const QString page_ranges = print_settings["page-ranges"].toString();
+        foreach (const QString& range, page_ranges.split(',')) {
+            auto interval = range.split('-');
+            int start = 1;
+            int end = 1;
+            if (interval.size() == 1) {
+                start = interval[0].toInt() + 1;
+                end = interval[0].toInt() + 1;
+            } else
+            if (interval.size() == 2) {
+                start = interval[0].toInt() + 1;
+                end = interval[1].toInt() + 1;
+            }
+            m_printer->setFromTo(start, end);
+            break; // only single range supported for QPrinter
+        }
+
+        const QString collate = print_settings["collate"].toString();
+        m_printer->setCollateCopies(collate == "yes" ? true : false);
+
+        const QString duplex = print_settings["duplex"].toString();
+        QPrinter::DuplexMode qtduplex_arr[4] = {
+            QPrinter::DuplexNone,
+            QPrinter::DuplexAuto,
+            QPrinter::DuplexLongSide,
+            QPrinter::DuplexShortSide
+        };
+        m_printer->setDuplex(duplex == "horizontal" ? qtduplex_arr[2] :
+                             duplex == "vertical" ?   qtduplex_arr[3] :
+                                                      qtduplex_arr[0]);
+
+        const QString reverse = print_settings["reverse"].toString();
+        m_printer->setPageOrder(reverse == "yes" ?
+                    QPrinter::LastPageFirst : QPrinter::FirstPageFirst);
+
+        const QString n_copies = print_settings["n-copies"].toString();
+        m_printer->setNumCopies(n_copies.toInt() > 0 ? n_copies.toInt() : 1);
+
+        QString output_uri = print_settings["output-uri"].toString();
+        m_printer->setOutputFileName(output_uri.replace("file://", ""));
+
+        QUnit qt_unit(QUnit::Millimeter);
+        gdouble left = page_setup["MarginLeft"].toDouble();
+        gdouble top = page_setup["MarginTop"].toDouble();
+        gdouble right = page_setup["MarginRight"].toDouble();
+        gdouble bottom = page_setup["MarginBottom"].toDouble();
+        m_printer->setPageMargins(left, top, right, bottom, qt_unit);
+
+        const QString paper_name = page_setup["PPDName"].toString();
+        gdouble width = page_setup["Width"].toDouble();
+        gdouble height = page_setup["Height"].toDouble();
+        m_printer->setPaperName(paper_name);
+        m_printer->setPaperSize(QSizeF(width, height), qt_unit);
+
+        const QString orient = page_setup["Orientation"].toString();
+        QPrinter::Orientation orient_arr[2] = {
+            QPrinter::Portrait,
+            QPrinter::Landscape
+        };
+        m_printer->setOrientation(orient == orientation_arr[0] ? orient_arr[0] :
+                                  orient == orientation_arr[1] ? orient_arr[1] :
+                                  orient == orientation_arr[2] ? orient_arr[0] :
+                                  orient == orientation_arr[3] ? orient_arr[1] :
+                                                                 orient_arr[0]);
+        exit_code = QDialog::DialogCode::Accepted;
+    } else
+    if (result == Result::ERROR)
+        g_print("Error while open dialog: %s\n", getErrorText());
+
+    quitDBus();
+    return exit_code;
+}
+
+PrintRange XdgPrintDialog::printRange()
+{
+    return m_print_range;
+}
+
+PrintOptions XdgPrintDialog::options()
+{
+    return m_options;
+}
+
+int XdgPrintDialog::fromPage()
+{
+    return m_printer->fromPage();
+}
+
+int XdgPrintDialog::toPage()
+{
+    return m_printer->toPage();
 }
