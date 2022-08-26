@@ -2,6 +2,7 @@
 #include "xdgdesktopportal.h"
 #include <QVariant>
 #include <QHash>
+#include <QDir>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -58,6 +59,8 @@ static_assert(GRND_NONBLOCK == 1,
 #define __dbusAppend dbus_message_iter_append_basic
 //#define ADD_EXTENSION // not reccomended
 
+typedef QPrinter::Unit QUnit;
+typedef QHash<QString, QVariant> VariantHash;
 
 const char URI_PREFIX[] = "file://";
 constexpr size_t URI_PREFIX_SIZE = sizeof(URI_PREFIX) - 1;
@@ -1213,30 +1216,28 @@ QStringList Xdg::openXdgPortal(QWidget *parent,
 
 /** Print Dialog **/
 
-typedef QPrinter::Unit QUnit;
-typedef QHash<const char*, QVariant> VariantHash;
-
 void setData(DBusMessageIter &msg_iter, const VariantHash &hash) {
     auto keys = hash.keys();
-    foreach (const char* key, keys) {
+    foreach (const QString qkey, keys) {
+        char* key = qkey.toUtf8().data();
         DBusMessageIter dict_iter;
         DBusMessageIter variant_iter;
         __dbusOpen(&msg_iter, DBUS_TYPE_DICT_ENTRY, nullptr, &dict_iter);
         __dbusAppend(&dict_iter, DBUS_TYPE_STRING, &key);
 
-        if (strcmp(hash[key].typeName(), "QString") == 0) {
+        if (strcmp(hash[qkey].typeName(), "QString") == 0) {
             __dbusOpen(&dict_iter, DBUS_TYPE_VARIANT, "s", &variant_iter);
-            char* val = hash[key].toString().toUtf8().data();
+            char* val = hash[qkey].toString().toUtf8().data();
             __dbusAppend(&variant_iter, DBUS_TYPE_STRING, &val);
             __dbusClose(&dict_iter, &variant_iter);
         } else
-        if (strcmp(hash[key].typeName(), "double") == 0) {
+        if (strcmp(hash[qkey].typeName(), "double") == 0) {
             __dbusOpen(&dict_iter, DBUS_TYPE_VARIANT, "d", &variant_iter);
-            double val = hash[key].toDouble();
+            double val = hash[qkey].toDouble();
             __dbusAppend(&variant_iter, DBUS_TYPE_DOUBLE, &val);
             __dbusClose(&dict_iter, &variant_iter);
         } else {
-            g_print("Other type: %s\n", hash[key].typeName());
+            g_print("Other type: %s\n", hash[qkey].typeName());
         }
         __dbusClose(&msg_iter, &dict_iter);
     }
@@ -1259,6 +1260,7 @@ Result readData(DBusMessage* msg, const char *response, VariantHash &hash) {
                              if (dbus_message_iter_get_arg_type(&key_iter) == DBUS_TYPE_STRING) {
                                   const char *key = NULL;
                                   dbus_message_iter_get_basic(&key_iter, &key);
+                                  const QString qkey = QString::fromUtf8(key);
                                   //g_print("Key: %s\n", key);
                                   if (dbus_message_iter_next(&key_iter)) {
                                      if (dbus_message_iter_get_arg_type(&key_iter) == DBUS_TYPE_VARIANT) {
@@ -1269,8 +1271,8 @@ Result readData(DBusMessage* msg, const char *response, VariantHash &hash) {
                                              dbus_message_iter_get_basic(&var_iter, &str_val);
                                              //g_print("Val: %s\n", str_val);
                                              if (key) {
-                                                if (hash.contains(key))
-                                                    hash[key] = QVariant(QString::fromUtf8(str_val));
+                                                if (hash.contains(qkey))
+                                                    hash[qkey] = QVariant(QString::fromUtf8(str_val));
                                              }
                                              //Free((void*)str_val);
                                          } else
@@ -1279,8 +1281,8 @@ Result readData(DBusMessage* msg, const char *response, VariantHash &hash) {
                                              dbus_message_iter_get_basic(&var_iter, &dbl_val);
                                              //g_print("Val: %f\n", dbl_val);
                                              if (key) {
-                                                if (hash.contains(key))
-                                                    hash[key] = QVariant(dbl_val);
+                                                if (hash.contains(qkey))
+                                                    hash[qkey] = QVariant(dbl_val);
                                              }
                                          } else {
                                              g_print("Other type: %d\n", dbus_message_iter_get_arg_type(&var_iter));
@@ -1476,6 +1478,9 @@ QDialog::DialogCode XdgPrintDialog::exec()
     //auto qt_selection_option = m_printer->printerSelectionOption();
     //auto qt_output_format = m_printer->outputFormat();
     //auto qt_paper_source = m_printer->paperSource();
+
+    if (qt_output_filename.isEmpty())
+        qt_output_filename = QDir::homePath() + QString("/print.pdf");
 
     // Qt-PrintOptions:
     // None = 0
