@@ -1424,7 +1424,8 @@ XdgPrintDialog::XdgPrintDialog(QPrinter *printer, QWidget *parent) :
     m_parent(parent),
     m_title(QString()),
     m_options(PrintOptions()),
-    m_print_range(PrintRange::AllPages)
+    m_print_range(PrintRange::AllPages),
+    m_page_ranges(QVector<PageRanges>())
 {
     m_print_range = (PrintRange)printer->printRange();
     if (m_printer->collateCopies())
@@ -1537,7 +1538,7 @@ QDialog::DialogCode XdgPrintDialog::exec()
     const QString duplex = (qt_duplex == QPrinter::DuplexLongSide) ?  duplex_arr[1] :
                            (qt_duplex == QPrinter::DuplexShortSide) ? duplex_arr[2] :
                                                                       duplex_arr[0];
-    const QString collate("yes");
+    const QString collate("no");
     const QString use_color = qt_color_mode == QPrinter::Color ? "yes" : "no";
     const QString reverse = qt_page_order == QPrinter::LastPageFirst ? "yes" : "no";
 
@@ -1636,20 +1637,33 @@ QDialog::DialogCode XdgPrintDialog::exec()
                                                               range_arr[0];
 
         const QString page_ranges = print_settings["page-ranges"].toString();
+        if (!m_page_ranges.isEmpty())
+            m_page_ranges.clear();
+        int iter = 0;
         foreach (const QString& range, page_ranges.split(',')) {
             auto interval = range.split('-');
-            int start = 1;
-            int end = 1;
+            int start = -1;
+            int end = -1;
+            bool ok;
             if (interval.size() == 1) {
-                start = interval[0].toInt() + 1;
-                end = interval[0].toInt() + 1;
+                interval[0].toInt(&ok);
+                if (ok) {
+                    start = interval[0].toInt() + 1;
+                    end = interval[0].toInt() + 1;
+                }
             } else
             if (interval.size() == 2) {
-                start = interval[0].toInt() + 1;
-                end = interval[1].toInt() + 1;
+                interval[0].toInt(&ok);
+                if (ok)
+                    start = interval[0].toInt() + 1;
+                interval[1].toInt(&ok);
+                if (ok)
+                    end = interval[1].toInt() + 1;
             }
-            m_printer->setFromTo(start, end);
-            break; // only single range supported for QPrinter
+            m_page_ranges.append(PageRanges(start, end));
+            if (iter == 0)
+                m_printer->setFromTo(start, end);
+            iter++;
         }
 
         const QString collate = print_settings["collate"].toString();
@@ -1716,6 +1730,11 @@ PrintRange XdgPrintDialog::printRange()
 PrintOptions XdgPrintDialog::options()
 {
     return m_options;
+}
+
+QVector<PageRanges> XdgPrintDialog::getPageRanges()
+{
+    return m_page_ranges;
 }
 
 int XdgPrintDialog::fromPage()

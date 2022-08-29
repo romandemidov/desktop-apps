@@ -6,7 +6,7 @@
 #include <QWidget>
 #include <QString>
 #include <QPrinter>
-#include <QAbstractPrintDialog>
+#include "components/cprintdialog.h"
 
 typedef QAbstractPrintDialog::PrintDialogOption PrintOption;
 typedef QAbstractPrintDialog::PrintDialogOptions PrintOptions;
@@ -42,6 +42,7 @@ public:
     QDialog::DialogCode exec();
     PrintRange printRange();
     PrintOptions options();
+    QVector<PageRanges> getPageRanges();
     int fromPage();
     int toPage();
 
@@ -51,6 +52,7 @@ private:
     QString m_title;
     PrintOptions m_options;
     PrintRange m_print_range;
+    QVector<PageRanges> m_page_ranges;
 };
 
 #endif // XDGDESKTOPPORTAL_H

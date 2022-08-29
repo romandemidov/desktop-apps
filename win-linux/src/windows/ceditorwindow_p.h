@@ -46,6 +46,7 @@
 #include "components/csvgpushbutton.h"
 #include "defines.h"
 #include "components/cfullscrwidget.h"
+#include "components/cprintdialog.h"
 
 #include <QPrinterInfo>
 #include <QDesktopWidget>
@@ -470,7 +471,7 @@ public:
             printer->setFromTo(1, pagescount);
 
 #ifdef _WIN32
-            QPrintDialog * dialog =  new QPrintDialog(printer, window->handle());
+            CPrintDialog * dialog =  new CPrintDialog(printer, window->handle());
 #else
             XdgPrintDialog * dialog =  new XdgPrintDialog(printer, window->handle());
 #endif // _WIN32
@@ -481,25 +482,27 @@ public:
                 currentpage++, dialog->setOptions(dialog->options() | QPrintDialog::PrintCurrentPage);
             dialog->setPrintRange(m_printData._print_range);
 
-            int start = -1, finish = -1;
-/*#ifdef _WIN32
-            //if ( wrapper.showModal() == QDialog::Accepted ) {
             if ( dialog->exec() == QDialog::Accepted ) {
-#else*/
-            if ( dialog->exec() == QDialog::Accepted ) {
-//#endif
                 m_printData._printer_info = QPrinterInfo::printerInfo(printer->printerName());
                 m_printData._print_range = dialog->printRange();
+                QVector<PageRanges> page_ranges;
 
                 switch(dialog->printRange()) {
-                case QPrintDialog::AllPages: start = 1, finish = pagescount; break;
+                case QPrintDialog::AllPages:
+                    page_ranges.append(PageRanges(1, pagescount));
+                    break;
                 case QPrintDialog::PageRange:
-                    start = dialog->fromPage(), finish = dialog->toPage(); break;
-                case QPrintDialog::Selection: break;
-                case QPrintDialog::CurrentPage: start = currentpage, finish = currentpage; break;
+                    page_ranges = dialog->getPageRanges();
+                    break;
+                case QPrintDialog::Selection:
+                    page_ranges.append(PageRanges(-1, -1));
+                    break;
+                case QPrintDialog::CurrentPage:
+                    page_ranges.append(PageRanges(currentpage, currentpage));
+                    break;
                 }
 
-                CEditorTools::print({m_panel->cef(), pContext, start, finish, window->handle()});
+                CEditorTools::print({m_panel->cef(), pContext, &page_ranges, window->handle()});
             }
 
             pContext->Release();
