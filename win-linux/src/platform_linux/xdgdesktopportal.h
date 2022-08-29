@@ -45,6 +45,7 @@ public:
     QVector<PageRanges> getPageRanges();
     int fromPage();
     int toPage();
+    uint getToken();
 
 private:
     QPrinter *m_printer;
@@ -53,6 +54,24 @@ private:
     PrintOptions m_options;
     PrintRange m_print_range;
     QVector<PageRanges> m_page_ranges;
+    uint m_token;
+};
+
+class XdgPrintEngine
+{
+public:
+    XdgPrintEngine(QWidget *parent, uint token, char* buf, size_t bufsize);
+    ~XdgPrintEngine();
+
+    void setWindowTitle(const QString &title);
+    void startPrint();
+
+private:
+    QWidget *m_parent;
+    QString  m_title;
+    uint   m_token;
+    char  *m_buf;
+    size_t m_bufsize;
 };
 
 #endif // XDGDESKTOPPORTAL_H

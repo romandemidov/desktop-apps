@@ -1303,6 +1303,26 @@ Result readData(DBusMessage* msg, const char *response, VariantHash &hash) {
     return SUCCESS;
 }
 
+Result readToken(DBusMessage* msg, const char *response, uint &token) {
+    DBusMessageIter iter;
+    const Result res = readResponseResults(msg, iter);
+    if (res != SUCCESS)
+        return res;
+
+    if (readDict(iter, response,
+                 [&token](DBusMessageIter& settings_iter) {
+                    if (dbus_message_iter_get_arg_type(&settings_iter) == DBUS_TYPE_UINT32) {
+                         dbus_message_iter_get_basic(&settings_iter, &token);
+                         //g_print("Token: %d\n", token);
+                         return SUCCESS;
+                    }
+                    return ERROR;
+                 }) == ERROR)
+        return ERROR;
+
+    return SUCCESS;
+}
+
 Result callXdgPrintDialog(Window parent,
                           const char* title,
                           const VariantHash &print_settings,
@@ -1392,7 +1412,8 @@ Result callXdgPrintDialog(Window parent,
 Result openPrintDialog(Window parent,
                        const char* title,
                        VariantHash &print_settings,
-                       VariantHash &page_setup) {
+                       VariantHash &page_setup,
+                       uint &token) {
     DBusMessage* msg;
     {
         const Result res = callXdgPrintDialog(parent,
@@ -1415,6 +1436,10 @@ Result openPrintDialog(Window parent,
     if (res != SUCCESS)
         return res;
 
+    res = readToken(msg, "token", token);
+    if (res != SUCCESS)
+        return res;
+
     return SUCCESS;
 }
 
@@ -1425,7 +1450,8 @@ XdgPrintDialog::XdgPrintDialog(QPrinter *printer, QWidget *parent) :
     m_title(QString()),
     m_options(PrintOptions()),
     m_print_range(PrintRange::AllPages),
-    m_page_ranges(QVector<PageRanges>())
+    m_page_ranges(QVector<PageRanges>()),
+    m_token(0)
 {
     m_print_range = (PrintRange)printer->printRange();
     if (m_printer->collateCopies())
@@ -1615,7 +1641,8 @@ QDialog::DialogCode XdgPrintDialog::exec()
     result = openPrintDialog(parent_xid,
                              m_title.toUtf8().data(),
                              print_settings,
-                             page_setup);
+                             page_setup,
+                             m_token);
 
     if (result == Result::SUCCESS) {
         enum _ColorMode {_GrayScale, _Color}; // GrayScale is defined already
@@ -1745,4 +1772,177 @@ int XdgPrintDialog::fromPage()
 int XdgPrintDialog::toPage()
 {
     return m_printer->toPage();
+}
+
+uint XdgPrintDialog::getToken()
+{
+    return m_token;
+}
+
+/** Print Engine **/
+
+void setToken(DBusMessageIter &msg_iter, uint token) {
+    const char* TOKEN = "token";
+    DBusMessageIter iter;
+    DBusMessageIter var_iter;
+    __dbusOpen(&msg_iter, DBUS_TYPE_DICT_ENTRY, nullptr, &iter);
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &TOKEN);
+    __dbusOpen(&iter, DBUS_TYPE_VARIANT, "u", &var_iter);
+    __dbusAppend(&var_iter, DBUS_TYPE_UINT32, &token);
+    __dbusClose(&iter, &var_iter);
+    __dbusClose(&msg_iter, &iter);
+}
+
+Result callXdgPrint(Window parent,
+                    const char* title,
+                    uint token,
+                    char*  buf,
+                    size_t bufsize,
+                    DBusMessage* &outMsg) {
+
+    const char* handle_token;
+    char* handle_path = createUniquePath(&handle_token);
+    FreeLater __freeLater(handle_path);
+    DBusError err;
+    dbus_error_init(&err);
+
+    DBusSignalHandler signal_hand;
+    Result res = signal_hand.subscribe(handle_path);
+    if (res != SUCCESS)
+        return res;
+
+    DBusMessage* methd = dbus_message_new_method_call("org.freedesktop.portal.Desktop",
+                                                      "/org/freedesktop/portal/desktop",
+                                                      "org.freedesktop.portal.Print",
+                                                      "Print");
+    UnrefLater_DBusMessage __unrefLater(methd);
+    DBusMessageIter iter;
+    dbus_message_iter_init_append(methd, &iter);
+
+    QString parent_window_qstr = "x11:" + QString::number((long)parent, 16);
+    char* parent_window = parent_window_qstr.toUtf8().data();
+
+    // Write PostScript buffer to pipe
+    int fd[2];
+    if (pipe(fd) != 0)
+        return ERROR;
+    ssize_t wsize = write(fd[1], buf, bufsize);
+    if ((size_t)wsize != bufsize)
+        return ERROR;
+    close(fd[1]);
+
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &parent_window);
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &title);
+    __dbusAppend(&iter, DBUS_TYPE_UNIX_FD, &fd[0]);
+    close(fd[0]);
+
+    DBusMessageIter arr_iter;
+    __dbusOpen(&iter, DBUS_TYPE_ARRAY, "{sv}", &arr_iter);
+    setHandleToken(arr_iter, handle_token);
+    setToken(arr_iter, token);
+    __dbusClose(&iter, &arr_iter);
+
+    DBusMessage* reply = dbus_connection_send_with_reply_and_block(
+                            dbus_conn, methd, DBUS_TIMEOUT_INFINITE, &err);
+    if (!reply) {
+        dbus_error_free(&dbus_err);
+        dbus_move_error(&err, &dbus_err);
+        setErrorText(dbus_err.message);
+        return ERROR;
+    }
+    UnrefLater_DBusMessage __replyUnrefLater(reply);
+    {
+        DBusMessageIter iter;
+        if (!dbus_message_iter_init(reply, &iter)) {
+            setErrorText("D-Bus reply is missing an argument");
+            return ERROR;
+        }
+        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_OBJECT_PATH) {
+            setErrorText("D-Bus reply is not an object path");
+            return ERROR;
+        }
+        const char* path;
+        dbus_message_iter_get_basic(&iter, &path);
+        if (strcmp(path, handle_path) != 0) {
+            signal_hand.subscribe(path);
+        }
+    }
+
+    do {
+        while (true) {
+            DBusMessage* msg = dbus_connection_pop_message(dbus_conn);
+            if (!msg)
+                break;
+            if (dbus_message_is_signal(msg, "org.freedesktop.portal.Request", "Response")) {
+                outMsg = msg;
+                return SUCCESS;
+            }
+            dbus_message_unref(msg);
+        }
+    } while (dbus_connection_read_write(dbus_conn, -1));
+
+    setErrorText("Portal did not give a reply");
+    return ERROR;
+}
+
+Result print(Window parent,
+             const char* title,
+             uint token,
+             char*  buf,
+             size_t bufsize) {
+    DBusMessage* msg;
+    {
+        const Result res = callXdgPrint(parent,
+                                        title,
+                                        token,
+                                        buf,
+                                        bufsize,
+                                        msg);
+        if (res != SUCCESS)
+            return res;
+    }
+
+    return SUCCESS;
+}
+
+
+XdgPrintEngine::XdgPrintEngine(QWidget *parent, uint token, char* buf, size_t bufsize) :
+    m_parent(parent),
+    m_token(token),
+    m_buf(buf),
+    m_bufsize(bufsize)
+{
+
+}
+
+XdgPrintEngine::~XdgPrintEngine()
+{
+
+}
+
+void XdgPrintEngine::setWindowTitle(const QString &title)
+{
+    m_title = title;
+}
+
+void XdgPrintEngine::startPrint()
+{
+    Window parent_xid = (m_parent) ? (Window)m_parent->winId() : 0L;
+
+    // Init dialog
+    initDBus();
+    Result result;
+    result = print(parent_xid,
+                   m_title.toUtf8().data(),
+                   m_token,
+                   m_buf,
+                   m_bufsize);
+
+    if (result == Result::SUCCESS) {
+        //g_print("Success... \n");
+    } else
+    if (result == Result::ERROR)
+        g_print("Error while open dialog: %s\n", getErrorText());
+
+    quitDBus();
 }
