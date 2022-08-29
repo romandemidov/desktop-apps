@@ -1646,19 +1646,19 @@ QDialog::DialogCode XdgPrintDialog::exec()
             int end = -1;
             bool ok;
             if (interval.size() == 1) {
-                interval[0].toInt(&ok);
+                int tmp = interval[0].toInt(&ok) + 1;
                 if (ok) {
-                    start = interval[0].toInt() + 1;
-                    end = interval[0].toInt() + 1;
+                    start = tmp;
+                    end = tmp;
                 }
             } else
             if (interval.size() == 2) {
-                interval[0].toInt(&ok);
+                int tmp = interval[0].toInt(&ok) + 1;
                 if (ok)
-                    start = interval[0].toInt() + 1;
-                interval[1].toInt(&ok);
+                    start = tmp;
+                tmp = interval[1].toInt(&ok) + 1;
                 if (ok)
-                    end = interval[1].toInt() + 1;
+                    end = tmp;
             }
             m_page_ranges.append(PageRanges(start, end));
             if (iter == 0)
