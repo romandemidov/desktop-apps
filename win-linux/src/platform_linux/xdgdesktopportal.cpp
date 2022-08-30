@@ -190,6 +190,242 @@ char* replaceSymbol(const char *start, const char *end, char *out, Fn func) {
     return out;
 }
 
+void setHandleToken(DBusMessageIter &msg_iter, const char *handle_token) {
+    const char* HANDLE_TOKEN = "handle_token";
+    DBusMessageIter iter;
+    DBusMessageIter var_iter;
+    __dbusOpen(&msg_iter, DBUS_TYPE_DICT_ENTRY, nullptr, &iter);
+    __dbusAppend(&iter, DBUS_TYPE_STRING, &HANDLE_TOKEN);
+    __dbusOpen(&iter, DBUS_TYPE_VARIANT, "s", &var_iter);
+    __dbusAppend(&var_iter, DBUS_TYPE_STRING, &handle_token);
+    __dbusClose(&iter, &var_iter);
+    __dbusClose(&msg_iter, &iter);
+}
+
+Result readDictImpl(const char*, DBusMessageIter&) {
+    return SUCCESS;
+}
+
+template <class Fn, typename... Args>
+Result readDictImpl(const char* key,
+                    DBusMessageIter& msg,
+                    const char* &candidate_key,
+                    Fn& callback,
+                    Args&... args) {
+    if (strcmp(key, candidate_key) == 0)
+        return callback(msg);
+    else
+        return readDictImpl(key, msg, args...);
+}
+
+template <typename... Args>
+Result readDict(DBusMessageIter msg, Args... args) {
+    if (dbus_message_iter_get_arg_type(&msg) != DBUS_TYPE_ARRAY) {
+        setErrorText("D-Bus response is not an array");
+        return ERROR;
+    }
+    DBusMessageIter dict_iter;
+    dbus_message_iter_recurse(&msg, &dict_iter);
+    while (dbus_message_iter_get_arg_type(&dict_iter) == DBUS_TYPE_DICT_ENTRY) {
+        DBusMessageIter iter;
+        dbus_message_iter_recurse(&dict_iter, &iter);
+        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_STRING) {
+            setErrorText("D-Bus response dict entry does not start with a string");
+            return ERROR;
+        }
+        const char* key;
+        dbus_message_iter_get_basic(&iter, &key);
+        if (!dbus_message_iter_next(&iter)) {
+            setErrorText("D-Bus response dict entry is missing arguments");
+            return ERROR;
+        }
+        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_VARIANT) {
+            setErrorText("D-Bus response dict entry is not a variant");
+            return ERROR;
+        }
+        DBusMessageIter var_iter;
+        dbus_message_iter_recurse(&iter, &var_iter);
+        if (readDictImpl(key, var_iter, args...) == ERROR)
+            return ERROR;
+        if (!dbus_message_iter_next(&dict_iter))
+            break;
+    }
+    return SUCCESS;
+}
+
+Result readResponseResults(DBusMessage *msg, DBusMessageIter &resIter) {
+    DBusMessageIter iter;
+    if (!dbus_message_iter_init(msg, &iter)) {
+        setErrorText("D-Bus response is missing arguments");
+        return ERROR;
+    }
+    if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_UINT32) {
+        setErrorText("D-Bus response argument is not a uint32");
+        return ERROR;
+    }
+    dbus_uint32_t resp_code;
+    dbus_message_iter_get_basic(&iter, &resp_code);
+    if (resp_code != 0) {
+        if (resp_code == 1) {
+            return CANCEL;
+        } else {
+            setErrorText("D-Bus file dialog interaction was ended abruptly");
+            return ERROR;
+        }
+    }
+    if (!dbus_message_iter_next(&iter)) {
+        setErrorText("D-Bus response is missing arguments");
+        return ERROR;
+    }
+    resIter = iter;
+    return SUCCESS;
+}
+
+char* generateChars(char* out) {
+    size_t count = 32;
+    while (count > 0) {
+        unsigned char buff[32];
+        //ssize_t rnd = getrandom(buff, count, 0);
+        ssize_t rnd = syscall(SYS_getrandom, buff, count, 0);
+        if (rnd == -1) {
+            if (errno == EINTR)
+                continue;
+            else
+                break;
+        }
+        count -= rnd;
+        // must be [A-Z][a-z][0-9]_
+        for (size_t i = 0; i != static_cast<size_t>(rnd); ++i) {
+            *out++ = 'A' + static_cast<char>(buff[i] & 15);
+            *out++ = 'A' + static_cast<char>(buff[i] >> 4);
+        }
+    }
+    return out;
+}
+
+char* createUniquePath(const char** handle_token) {
+    const char RESPONSE_PATH[] = "/org/freedesktop/portal/desktop/request/";
+    constexpr size_t RESPONSE_PATH_SIZE = sizeof(RESPONSE_PATH) - 1;
+    const char* dbus_name = dbus_unique_name;
+    if (*dbus_name == ':')
+        ++dbus_name;
+    const size_t sender_len = strlen(dbus_name);
+    const size_t size = RESPONSE_PATH_SIZE + sender_len + 1 + 64;  // 1 for '/'
+    char* path = (char*)malloc(size + 1);
+    char* path_ptr = path;
+    path_ptr = strcopy(RESPONSE_PATH, RESPONSE_PATH + RESPONSE_PATH_SIZE, path_ptr);
+    path_ptr = replaceSymbol(dbus_name, dbus_name + sender_len, path_ptr, [](char chr) {
+        return (chr != '.') ? chr : '_';
+    });
+    *path_ptr++ = '/';
+    *handle_token = path_ptr;
+    path_ptr = generateChars(path_ptr);
+    *path_ptr = '\0';
+    return path;
+}
+
+bool isHex(char ch) {
+    return ('0' <= ch && ch <= '9') ||
+           ('A' <= ch && ch <= 'F') ||
+           ('a' <= ch && ch <= 'f');
+}
+
+bool tryUriDecodeLen(const char* fileUri, size_t &out, const char* &fileUriEnd) {
+    size_t len = 0;
+    while (*fileUri) {
+        if (*fileUri != '%') {
+            ++fileUri;
+        } else {
+            if (*(fileUri + 1) == '\0' || *(fileUri + 2) == '\0') {
+                return false;
+            }
+            if (!isHex(*(fileUri + 1)) || !isHex(*(fileUri + 2))) {
+                return false;
+            }
+            fileUri += 3;
+        }
+        ++len;
+    }
+    out = len;
+    fileUriEnd = fileUri;
+    return true;
+}
+
+char parseHex(char chr) {
+    if ('0' <= chr && chr <= '9')
+        return chr - '0';
+    if ('A' <= chr && chr <= 'F')
+        return chr - ('A' - 10);
+    if ('a' <= chr && chr <= 'f')
+        return chr - ('a' - 10);
+#if defined(__GNUC__)
+    __builtin_unreachable();
+#endif
+}
+
+char* uriDecodeUnchecked(const char* fileUri, const char* fileUriEnd, char* outPath) {
+    while (fileUri != fileUriEnd) {
+        if (*fileUri != '%') {
+            *outPath++ = *fileUri++;
+        } else {
+            ++fileUri;
+            const char high_nibble = parseHex(*fileUri++);
+            const char low_nibble = parseHex(*fileUri++);
+            *outPath++ = (high_nibble << 4) | low_nibble;
+        }
+    }
+    return outPath;
+}
+
+const char* getErrorText(void) {
+    return error_code;
+}
+
+void clearDBusError(void) {
+    setErrorText(nullptr);
+    dbus_error_free(&dbus_err);
+}
+
+Result initDBus(void) {
+    dbus_error_init(&dbus_err);
+    dbus_conn = dbus_bus_get(DBUS_BUS_SESSION, &dbus_err);
+    if (!dbus_conn) {
+        setErrorText(dbus_err.message);
+        return ERROR;
+    }
+    dbus_unique_name = dbus_bus_get_unique_name(dbus_conn);
+    if (!dbus_unique_name) {
+        setErrorText("Cannot get name of connection");
+        return ERROR;
+    }
+    return SUCCESS;
+}
+
+void quitDBus(void) {
+    dbus_connection_unref(dbus_conn);
+}
+
+char* strcopy(const char* start, const char* end, char* out) {
+    for (; start != end; ++start) {
+        *out++ = *start;
+    }
+    return out;
+}
+
+void setErrorText(const char* msg) {
+    error_code = msg;
+}
+
+void Free(void* p) {
+    if (p != NULL) {
+        free(p);
+        p = NULL;
+    }
+}
+
+
+/** File Dialog **/
+
 void setOpenFileEntryType(DBusMessageIter &msg_iter, EntryType entry_type) {
     const char* ENTRY_MULTIPLE = "multiple";
     const char* ENTRY_DIRECTORY = "directory";
@@ -203,18 +439,6 @@ void setOpenFileEntryType(DBusMessageIter &msg_iter, EntryType entry_type) {
         int val = 1;
         __dbusAppend(&var_iter, DBUS_TYPE_BOOLEAN, &val);
     }
-    __dbusClose(&iter, &var_iter);
-    __dbusClose(&msg_iter, &iter);
-}
-
-void setHandleToken(DBusMessageIter &msg_iter, const char *handle_token) {
-    const char* HANDLE_TOKEN = "handle_token";
-    DBusMessageIter iter;
-    DBusMessageIter var_iter;
-    __dbusOpen(&msg_iter, DBUS_TYPE_DICT_ENTRY, nullptr, &iter);
-    __dbusAppend(&iter, DBUS_TYPE_STRING, &HANDLE_TOKEN);
-    __dbusOpen(&iter, DBUS_TYPE_VARIANT, "s", &var_iter);
-    __dbusAppend(&var_iter, DBUS_TYPE_STRING, &handle_token);
     __dbusClose(&iter, &var_iter);
     __dbusClose(&msg_iter, &iter);
 }
@@ -346,85 +570,6 @@ void setCurrentFile(DBusMessageIter &msg_iter, const char *path, const char *nam
     __dbusClose(&var_iter, &arr_iter);
     __dbusClose(&dict_iter, &var_iter);
     __dbusClose(&msg_iter, &dict_iter);
-}
-
-Result readDictImpl(const char*, DBusMessageIter&) {
-    return SUCCESS;
-}
-
-template <class Fn, typename... Args>
-Result readDictImpl(const char* key,
-                    DBusMessageIter& msg,
-                    const char* &candidate_key,
-                    Fn& callback,
-                    Args&... args) {
-    if (strcmp(key, candidate_key) == 0)
-        return callback(msg);
-    else
-        return readDictImpl(key, msg, args...);
-}
-
-template <typename... Args>
-Result readDict(DBusMessageIter msg, Args... args) {
-    if (dbus_message_iter_get_arg_type(&msg) != DBUS_TYPE_ARRAY) {
-        setErrorText("D-Bus response is not an array");
-        return ERROR;
-    }
-    DBusMessageIter dict_iter;
-    dbus_message_iter_recurse(&msg, &dict_iter);
-    while (dbus_message_iter_get_arg_type(&dict_iter) == DBUS_TYPE_DICT_ENTRY) {
-        DBusMessageIter iter;
-        dbus_message_iter_recurse(&dict_iter, &iter);
-        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_STRING) {
-            setErrorText("D-Bus response dict entry does not start with a string");
-            return ERROR;
-        }
-        const char* key;
-        dbus_message_iter_get_basic(&iter, &key);
-        if (!dbus_message_iter_next(&iter)) {
-            setErrorText("D-Bus response dict entry is missing arguments");
-            return ERROR;
-        }
-        if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_VARIANT) {
-            setErrorText("D-Bus response dict entry is not a variant");
-            return ERROR;
-        }
-        DBusMessageIter var_iter;
-        dbus_message_iter_recurse(&iter, &var_iter);
-        if (readDictImpl(key, var_iter, args...) == ERROR)
-            return ERROR;
-        if (!dbus_message_iter_next(&dict_iter))
-            break;
-    }
-    return SUCCESS;
-}
-
-Result readResponseResults(DBusMessage *msg, DBusMessageIter &resIter) {
-    DBusMessageIter iter;
-    if (!dbus_message_iter_init(msg, &iter)) {
-        setErrorText("D-Bus response is missing arguments");
-        return ERROR;
-    }
-    if (dbus_message_iter_get_arg_type(&iter) != DBUS_TYPE_UINT32) {
-        setErrorText("D-Bus response argument is not a uint32");
-        return ERROR;
-    }
-    dbus_uint32_t resp_code;
-    dbus_message_iter_get_basic(&iter, &resp_code);
-    if (resp_code != 0) {
-        if (resp_code == 1) {
-            return CANCEL;
-        } else {
-            setErrorText("D-Bus file dialog interaction was ended abruptly");
-            return ERROR;
-        }
-    }
-    if (!dbus_message_iter_next(&iter)) {
-        setErrorText("D-Bus response is missing arguments");
-        return ERROR;
-    }
-    resIter = iter;
-    return SUCCESS;
 }
 
 Result readResponseUris(DBusMessage* msg, DBusMessageIter& uriIter) {
@@ -662,102 +807,6 @@ Result readResponseUrisSingleAndCurrentExtension(DBusMessage* msg,
 }
 #endif
 
-char* generateChars(char* out) {
-    size_t count = 32;
-    while (count > 0) {
-        unsigned char buff[32];
-        //ssize_t rnd = getrandom(buff, count, 0);
-        ssize_t rnd = syscall(SYS_getrandom, buff, count, 0);
-        if (rnd == -1) {
-            if (errno == EINTR)
-                continue;
-            else
-                break;
-        }
-        count -= rnd;
-        // must be [A-Z][a-z][0-9]_
-        for (size_t i = 0; i != static_cast<size_t>(rnd); ++i) {
-            *out++ = 'A' + static_cast<char>(buff[i] & 15);
-            *out++ = 'A' + static_cast<char>(buff[i] >> 4);
-        }
-    }
-    return out;
-}
-
-char* createUniquePath(const char** handle_token) {
-    const char RESPONSE_PATH[] = "/org/freedesktop/portal/desktop/request/";
-    constexpr size_t RESPONSE_PATH_SIZE = sizeof(RESPONSE_PATH) - 1;
-    const char* dbus_name = dbus_unique_name;
-    if (*dbus_name == ':')
-        ++dbus_name;
-    const size_t sender_len = strlen(dbus_name);
-    const size_t size = RESPONSE_PATH_SIZE + sender_len + 1 + 64;  // 1 for '/'
-    char* path = (char*)malloc(size + 1);
-    char* path_ptr = path;
-    path_ptr = strcopy(RESPONSE_PATH, RESPONSE_PATH + RESPONSE_PATH_SIZE, path_ptr);
-    path_ptr = replaceSymbol(dbus_name, dbus_name + sender_len, path_ptr, [](char chr) {
-        return (chr != '.') ? chr : '_';
-    });
-    *path_ptr++ = '/';
-    *handle_token = path_ptr;
-    path_ptr = generateChars(path_ptr);
-    *path_ptr = '\0';
-    return path;
-}
-
-bool isHex(char ch) {
-    return ('0' <= ch && ch <= '9') ||
-           ('A' <= ch && ch <= 'F') ||
-           ('a' <= ch && ch <= 'f');
-}
-
-bool tryUriDecodeLen(const char* fileUri, size_t &out, const char* &fileUriEnd) {
-    size_t len = 0;
-    while (*fileUri) {
-        if (*fileUri != '%') {
-            ++fileUri;
-        } else {
-            if (*(fileUri + 1) == '\0' || *(fileUri + 2) == '\0') {
-                return false;
-            }
-            if (!isHex(*(fileUri + 1)) || !isHex(*(fileUri + 2))) {
-                return false;
-            }
-            fileUri += 3;
-        }
-        ++len;
-    }
-    out = len;
-    fileUriEnd = fileUri;
-    return true;
-}
-
-char parseHex(char chr) {
-    if ('0' <= chr && chr <= '9')
-        return chr - '0';
-    if ('A' <= chr && chr <= 'F')
-        return chr - ('A' - 10);
-    if ('a' <= chr && chr <= 'f')
-        return chr - ('a' - 10);
-#if defined(__GNUC__)
-    __builtin_unreachable();
-#endif
-}
-
-char* uriDecodeUnchecked(const char* fileUri, const char* fileUriEnd, char* outPath) {
-    while (fileUri != fileUriEnd) {
-        if (*fileUri != '%') {
-            *outPath++ = *fileUri++;
-        } else {
-            ++fileUri;
-            const char high_nibble = parseHex(*fileUri++);
-            const char low_nibble = parseHex(*fileUri++);
-            *outPath++ = (high_nibble << 4) | low_nibble;
-        }
-    }
-    return outPath;
-}
-
 Result allocAndCopyFilePath(const char* fileUri, char* &outPath) {
     const char* prefix_begin = URI_PREFIX;
     const char* const prefix_end = URI_PREFIX + URI_PREFIX_SIZE;
@@ -939,34 +988,6 @@ Result callXdgPortal(Window parent, Xdg::Mode mode, const char* title,
     return ERROR;
 }
 
-const char* getErrorText(void) {
-    return error_code;
-}
-
-void clearDBusError(void) {
-    setErrorText(nullptr);
-    dbus_error_free(&dbus_err);
-}
-
-Result initDBus(void) {
-    dbus_error_init(&dbus_err);
-    dbus_conn = dbus_bus_get(DBUS_BUS_SESSION, &dbus_err);
-    if (!dbus_conn) {
-        setErrorText(dbus_err.message);
-        return ERROR;
-    }
-    dbus_unique_name = dbus_bus_get_unique_name(dbus_conn);
-    if (!dbus_unique_name) {
-        setErrorText("Cannot get name of connection");
-        return ERROR;
-    }
-    return SUCCESS;
-}
-
-void quitDBus(void) {
-    dbus_connection_unref(dbus_conn);
-}
-
 void freePath(char* filePath) {
     assert(filePath);
     Free(filePath);
@@ -1098,24 +1119,6 @@ void pathSetFree(const void* pathSet) {
     dbus_message_unref(msg);
 }
 
-char* strcopy(const char* start, const char* end, char* out) {
-    for (; start != end; ++start) {
-        *out++ = *start;
-    }
-    return out;
-}
-
-void setErrorText(const char* msg) {
-    error_code = msg;
-}
-
-void Free(void* p) {
-    if (p != NULL) {
-        free(p);
-        p = NULL;
-    }
-}
-
 QStringList Xdg::openXdgPortal(QWidget *parent,
                                Mode mode,
                                const QString &title,
@@ -1212,7 +1215,6 @@ QStringList Xdg::openXdgPortal(QWidget *parent,
 
     return files;
 }
-
 
 /** Print Dialog **/
 
