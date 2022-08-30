@@ -1665,31 +1665,45 @@ QDialog::DialogCode XdgPrintDialog::exec()
                         (print_pages == print_pages_arr[3]) ? range_arr[3] :
                                                               range_arr[0];
 
+        const QString page_set = print_settings["page-set"].toString();
         const QString page_ranges = print_settings["page-ranges"].toString();
         if (!m_page_ranges.isEmpty())
             m_page_ranges.clear();
         int iter = 0;
+        int delta = (m_print_range == PrintRange::AllPages) ? 0 : 1;  // Bypass the bug with numbering
         foreach (const QString& range, page_ranges.split(',')) {
             auto interval = range.split('-');
             int start = -1;
             int end = -1;
             bool ok;
             if (interval.size() == 1) {
-                int tmp = interval[0].toInt(&ok) + 1;
+                int tmp = interval[0].toInt(&ok) + delta;
                 if (ok) {
                     start = tmp;
                     end = tmp;
                 }
             } else
             if (interval.size() == 2) {
-                int tmp = interval[0].toInt(&ok) + 1;
+                int tmp = interval[0].toInt(&ok) + delta;
                 if (ok)
                     start = tmp;
-                tmp = interval[1].toInt(&ok) + 1;
+                tmp = interval[1].toInt(&ok) + delta;
                 if (ok)
                     end = tmp;
             }
-            m_page_ranges.append(PageRanges(start, end));
+
+            if (page_set == page_set_arr[0]) {
+                m_page_ranges.append(PageRanges(start, end));
+            } else {
+                for (int page = start; page <= end; page++) {
+                    if (page % 2 == 0 && page_set == page_set_arr[1])
+                        m_page_ranges.append(PageRanges(page, page));   // Filter Even pages
+                    else
+                    if (page % 2 != 0 && page_set == page_set_arr[2])
+                        m_page_ranges.append(PageRanges(page, page));   // Filter Odd pages
+                }
+            }
+
             if (iter == 0)
                 m_printer->setFromTo(start, end);
             iter++;
