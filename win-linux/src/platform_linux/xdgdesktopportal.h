@@ -41,6 +41,7 @@ public:
     void setPrintRange(PrintRange print_range);
     QDialog::DialogCode exec();
     PrintRange printRange();
+    PrintOptions enabledOptions();
     PrintOptions options();
     QVector<PageRanges> getPageRanges();
     int fromPage();

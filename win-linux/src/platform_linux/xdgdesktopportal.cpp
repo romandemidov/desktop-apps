@@ -1770,6 +1770,11 @@ PrintRange XdgPrintDialog::printRange()
     return m_print_range;
 }
 
+PrintOptions XdgPrintDialog::enabledOptions()
+{
+    return m_options;
+}
+
 PrintOptions XdgPrintDialog::options()
 {
     return m_options;
