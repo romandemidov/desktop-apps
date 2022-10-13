@@ -34,6 +34,7 @@
 #include <QSettings>
 #ifndef __OS_WIN_XP
 # include <Shobjidl.h>
+# include <Lmcons.h>
 #endif
 #include "filechooser.h"
 
@@ -41,6 +42,11 @@ using std::wstring;
 #ifndef __OS_WIN_XP
 using std::vector;
 using std::pair;
+
+#define FDIALOG_CHOICE_AUTHORS 101
+#define FDIALOG_CHOICE_TAGS    103
+#define FDIALOG_CHOICE_TITLE   105
+
 typedef vector<IShellItem *> VectorShellItems;
 typedef vector<pair<wstring, wstring>> specvector;
 
@@ -172,9 +178,31 @@ void nativeFileDialog(HWND parent_hwnd,
                 }
             }
 
-            if (!file.empty() && mode == Win::Mode::SAVE) {
-                pSaveDialog->SetFileName(file.c_str());
-                pSaveDialog->SetDefaultExtension(L"");
+            if (mode == Win::Mode::SAVE) {
+                if (!file.empty()) {
+                    pSaveDialog->SetFileName(file.c_str());
+                    pSaveDialog->SetDefaultExtension(L"");
+                }
+                IFileDialogCustomize *pfdcustom = nullptr;
+                hr = pSaveDialog->QueryInterface(IID_PPV_ARGS(&pfdcustom));
+                if (SUCCEEDED(hr)) {
+                    WCHAR username[UNLEN+1];
+                    DWORD username_len = UNLEN + 1;
+                    GetUserNameW(username, &username_len);
+                    pfdcustom->StartVisualGroup(100, L"Authors:");
+                    pfdcustom->AddEditBox(FDIALOG_CHOICE_AUTHORS, username);
+                    pfdcustom->EndVisualGroup();
+
+                    pfdcustom->StartVisualGroup(102, L"Tags:");
+                    pfdcustom->AddEditBox(FDIALOG_CHOICE_TAGS, L"Add a tag");
+                    pfdcustom->EndVisualGroup();
+
+                    pfdcustom->StartVisualGroup(104, L"Title:");
+                    pfdcustom->AddEditBox(FDIALOG_CHOICE_TITLE, L"Add a title");
+                    pfdcustom->EndVisualGroup();
+
+                    pfdcustom->Release();
+                }
             }
 
             hr = (mode == Win::Mode::OPEN || mode == Win::Mode::FOLDER) ?
@@ -209,6 +237,21 @@ void nativeFileDialog(HWND parent_hwnd,
                             CoTaskMemFree(pszFilePath);
                         }
                         item->Release();
+                    }
+                    IFileDialogCustomize *pfdcustom = nullptr;
+                    hr = pSaveDialog->QueryInterface(IID_PPV_ARGS(&pfdcustom));
+                    if (SUCCEEDED(hr)) {
+                        PWSTR ch_authors, ch_tags, ch_title;
+                        pfdcustom->GetEditBoxText(FDIALOG_CHOICE_AUTHORS, &ch_authors);
+                        pfdcustom->GetEditBoxText(FDIALOG_CHOICE_TAGS, &ch_tags);
+                        pfdcustom->GetEditBoxText(FDIALOG_CHOICE_TITLE, &ch_title);
+                        auto _a = QString::fromStdWString(ch_authors);
+                        auto _b = QString::fromStdWString(ch_tags);
+                        auto _c = QString::fromStdWString(ch_title);
+                        CoTaskMemFree(ch_authors);
+                        CoTaskMemFree(ch_tags);
+                        CoTaskMemFree(ch_title);
+                        pfdcustom->Release();
                     }
                 }
                 if (mode != Win::Mode::FOLDER) {
