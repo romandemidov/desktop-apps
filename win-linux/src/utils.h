@@ -54,6 +54,15 @@ namespace InputArgs {
     auto change_webapps_param(const std::wstring& from, const std::wstring& to) -> const std::wstring&;
 }
 
+namespace EditorJSVariables {
+    auto init() -> void;
+    auto setVariable(const QString& name, const QString& var) -> void;
+    auto setVariable(const QString& name, const QJsonObject& obj) -> void;
+    auto applyVariable(const QString& name, const QJsonObject& obj) -> void;
+    auto toWString() -> std::wstring;
+    auto apply() -> void;
+}
+
 class Utils {
 public:
     static QStringList * getInputFiles(const QStringList& inlist);
@@ -86,6 +95,13 @@ public:
     static QByteArray readStylesheets(std::vector<std::string> const *);
     static QByteArray readStylesheets(const QString&);
     static QJsonObject parseJson(const std::wstring&);
+
+#ifdef _WIN32
+    enum class WinVer : uchar {
+        Undef, WinXP, WinVista, Win7, Win8, Win8_1, Win10, Win11
+    };
+    static WinVer getWinVersion();
+#endif
 };
 
 namespace WindowHelper {
@@ -104,6 +120,7 @@ namespace WindowHelper {
 //    auto check_button_state(Qt::MouseButton b) -> bool;
     auto initEnvInfo() -> void;
     auto getEnvInfo() -> QString;
+    auto useGtkDialog() -> bool;
 #else
     auto isWindowSystemDocked(HWND handle) -> bool;
     auto correctWindowMinimumSize(HWND handle) -> void;
@@ -114,6 +131,7 @@ namespace WindowHelper {
     auto correctWindowMinimumSize(const QRect&, const QSize&) -> QSize;
     auto isLeftButtonPressed() -> bool;
     auto constructFullscreenWidget(QWidget * panel) -> CFullScrWidget *;
+    auto useNativeDialog() -> bool;
 }
 
 #endif // UTILS_H

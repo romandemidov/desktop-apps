@@ -36,24 +36,13 @@
 #include <QObject>
 #include <QMap>
 
-/*#ifdef _WIN32
-#include "win/qwinwidget.h"
 
-class CFileDialogHelper;
-class CFileDialogWrapper : public QWinWidget
-{
-    Q_OBJECT
-
-public:
-    explicit CFileDialogWrapper(HWND);
-#else*/
 class CFileDialogWrapper : public QObject
 {
     Q_OBJECT
 
 public:
     explicit CFileDialogWrapper(QWidget * p = 0);
-//#endif
     ~CFileDialogWrapper();
 
     bool    modalSaveAs(QString&, int selected = -1);
@@ -81,17 +70,11 @@ private:
     QString getFilter(const QString&) const;
     int getKey(const QString &value);
     QString joinFilters() const;
+    QString joinExtentions(const QString&) const;
 
     QString m_filters;
     QMap<int, QString> m_mapFilters;
     int m_format;
-    bool m_useNativeDialogFlag;
-#ifdef __linux__
-    bool m_useGtkFileChooserFlag = true;
-#endif
-signals:
-
-public slots:
 };
 
 #endif // CFILEDIALOG_H

@@ -53,6 +53,11 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QGridLayout>
+
+#ifdef __linux__
+# include "platform_linux/gtkprintdialog.h"
+#endif
 
 #ifdef __linux__
 # include "platform_linux/xdgdesktopportal.h"
@@ -111,7 +116,9 @@ const QString g_css =
         "#mainPanel[zoom=\"2x\"][window=pretty] QPushButton#toolButtonClose {background-image:url(:/minclose_light_2x.png);}"
         "#mainPanel[zoom=\"2x\"][window=pretty] QPushButton#toolButtonMaximize{background-image:url(:/max_light_2x.png);}"
         "#mainPanel[uitheme=theme-dark] #iconuser,"
-        "#mainPanel[uitheme=theme-dark] #labelTitle{color:rgba(255,255,255,80%);}";
+        "#mainPanel[uitheme=theme-dark] #labelTitle{color:rgba(255,255,255,80%);}"
+        "#mainPanel[uitheme=theme-contrast-dark] #iconuser,"
+        "#mainPanel[uitheme=theme-contrast-dark] #labelTitle{color:#e8e8e8;}";
 
 auto prepare_editor_css(int type, const CTheme& theme) -> QString {
     std::wstring c;
@@ -137,14 +144,16 @@ auto editor_color(int type) -> QColor {
 class CEditorWindowPrivate : public CCefEventsGate
 {
     struct sPrintData {
-        sPrintData() : _print_range(QPrintDialog::PrintRange::AllPages)
+        sPrintData() :
+            _printer_info(QPrinterInfo::defaultPrinter()),
+            _print_range(QPrintDialog::PrintRange::AllPages)
         {}
 
         QPrinterInfo _printer_info;
         QPrintDialog::PrintRange _print_range;
     };
 
-    sPrintData m_printData;
+    sPrintData *m_printData = nullptr;
 
     CEditorWindow * window = nullptr;
     CElipsisLabel * iconuser = nullptr;
@@ -167,6 +176,8 @@ public:
     ~CEditorWindowPrivate() override {
          if ( leftboxbuttons )
              leftboxbuttons->deleteLater();
+         if (m_printData)
+             delete m_printData, m_printData = nullptr;
     }
 
     void init(CTabPanel * const p) override {
@@ -317,6 +328,9 @@ public:
                 panel()->data()->setFeatures(L"old version of editor");
                 extendableTitleToSimple();
             }
+            panel()->setReady();
+            if (window->isActiveWindow())
+                window->focus();
     }
 
     void onDocumentName(void * data) override
@@ -388,7 +402,7 @@ public:
             setWindowColors();
         }
 
-        AscAppManager::sendCommandTo(panel()->cef(), L"uitheme:changed", theme);
+        AscAppManager::sendCommandTo(panel()->cef(), L"uitheme:changed", AscAppManager::themes().current().id());
     }
 
     void onDocumentChanged(int id, bool state) override
@@ -454,6 +468,12 @@ public:
 
     void onDocumentPrint(int currentpage, uint pagescount) override
     {
+#ifdef __OS_WIN_XP
+        if (QPrinterInfo::availablePrinterNames().size() == 0) {
+            CMessage::info(window->handle(), tr("There are no printers available"));
+            return;
+        }
+#endif
         if ( isPrinting ) return;
         isPrinting = true;
 
@@ -462,9 +482,11 @@ public:
         CRunningEventHelper _h(&_event);
 #endif
         if ( !(pagescount < 1) ) {
+            if (!m_printData)
+                m_printData = new sPrintData();
             CAscMenuEvent * pEvent;
-            QAscPrinterContext * pContext = m_printData._printer_info.isNull() ?
-                        new QAscPrinterContext() : new QAscPrinterContext(m_printData._printer_info);
+            QAscPrinterContext * pContext = m_printData->_printer_info.isNull() ?
+                        new QAscPrinterContext() : new QAscPrinterContext(m_printData->_printer_info);
 
             QPrinter * printer = pContext->getPrinter();
             printer->setOutputFileName("");
@@ -477,14 +499,17 @@ public:
 #endif // _WIN32
 
             dialog->setWindowTitle(CEditorWindow::tr("Print Document"));
-            dialog->setEnabledOptions(QPrintDialog::PrintPageRange | QPrintDialog::PrintCurrentPage | QPrintDialog::PrintToFile);
-            if (!(currentpage < 0))
-                currentpage++, dialog->setOptions(dialog->options() | QPrintDialog::PrintCurrentPage);
-            dialog->setPrintRange(m_printData._print_range);
+            dialog->setEnabledOptions(QPrintDialog::PrintPageRange | QPrintDialog::PrintToFile);
+            if (!(currentpage < 0)) {
+                currentpage++;
+                dialog->setEnabledOptions(dialog->enabledOptions() | QPrintDialog::PrintCurrentPage);
+                dialog->setOptions(dialog->options() | QPrintDialog::PrintCurrentPage);
+            }
+            dialog->setPrintRange(m_printData->_print_range);
 
             if ( dialog->exec() == QDialog::Accepted ) {
-                m_printData._printer_info = QPrinterInfo::printerInfo(printer->printerName());
-                m_printData._print_range = dialog->printRange();
+                m_printData->_printer_info = QPrinterInfo::printerInfo(printer->printerName());
+                m_printData->_print_range = dialog->printRange();
                 QVector<PageRanges> page_ranges;
 
                 switch(dialog->printRange()) {

@@ -168,10 +168,12 @@ ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
                VER_PRODUCT_VERSION_COMMAS=$$replace(FULL_PRODUCT_VERSION, \., ",")
 }
 
-CMD_IN_HELP_URL = $$join(HELPURL,,\\\",\\\")
+CMD_IN_HELP_URL = $$join(URL_WEBAPPS_HELP,,\\\",\\\")
 !isEmpty(CMD_IN_HELP_URL) {
-    DEFINES += URL_WEBAPPS_HELP=CMD_IN_HELP_URL
+    DEFINES += URL_WEBAPPS_HELP=$$CMD_IN_HELP_URL
     message(webapps help url: $$CMD_IN_HELP_URL)
+} else {
+    message(no webapps help url found)
 }
 
 PLATFORM_BUILD=$$CORE_BUILDS_PLATFORM_PREFIX
@@ -200,7 +202,8 @@ core_linux {
                 $$PWD/src/platform_linux/cdialogcertificateinfo.h \
                 $$PWD/src/platform_linux/singleapplication.h \
                 $$PWD/src/platform_linux/xdgdesktopportal.h \
-                $$PWD/src/platform_linux/gtkfilechooser.h
+                $$PWD/src/platform_linux/gtkfilechooser.h \
+                $$PWD/src/platform_linux/gtkprintdialog.h
 
     SOURCES +=  $$PWD/src/windows/platform_linux/cx11decoration.cpp \
                 #$$PWD/src/windows/platform_linux/gtk_addon.cpp \
@@ -210,10 +213,11 @@ core_linux {
                 $$PWD/src/platform_linux/cdialogcertificateinfo.cpp \
                 $$PWD/src/platform_linux/singleapplication.cpp \
                 $$PWD/src/platform_linux/xdgdesktopportal.cpp \
-                $$PWD/src/platform_linux/gtkfilechooser.cpp
+                $$PWD/src/platform_linux/gtkfilechooser.cpp \
+                $$PWD/src/platform_linux/gtkprintdialog.cpp
 
     CONFIG += link_pkgconfig
-    PKGCONFIG += glib-2.0 gtk+-3.0 atk dbus-1
+    PKGCONFIG += glib-2.0 gtk+-3.0 atk dbus-1 gtk+-unix-print-3.0
     LIBS += -lX11
 
     LIBS += $$CORE_3DPARTY_PATH/icu/$$PLATFORM_BUILD/build/libicuuc.so.58
@@ -230,11 +234,13 @@ core_windows {
     HEADERS += $$PWD/src/windows/platform_win/cwindowplatform.h \
                $$PWD/src/windows/platform_win/csnap.h \
                $$PWD/src/windows/platform_win/caption.h \
-               $$PWD/src/platform_win/singleapplication.h
+               $$PWD/src/platform_win/singleapplication.h \
+               $$PWD/src/platform_win/filechooser.h
 
     SOURCES += $$PWD/src/windows/platform_win/cwindowplatform.cpp \
                $$PWD/src/windows/platform_win/csnap.cpp \
-               $$PWD/src/platform_win/singleapplication.cpp
+               $$PWD/src/platform_win/singleapplication.cpp \
+               $$PWD/src/platform_win/filechooser.cpp
 
 
     LIBS += -lwininet \

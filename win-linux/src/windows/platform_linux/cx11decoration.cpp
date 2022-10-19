@@ -43,7 +43,7 @@
 //#include "gtk_addon.h"
 
 #define CUSTOM_BORDER_WIDTH 4
-#define MOTION_TIMER_MS 500
+#define MOTION_TIMER_MS 250
 
 const int k_NET_WM_MOVERESIZE_SIZE_TOPLEFT =     0;
 const int k_NET_WM_MOVERESIZE_SIZE_TOP =         1;
@@ -345,7 +345,8 @@ void CX11Decoration::freeCursors()
     Display * _display = QX11Info::display();
     std::for_each(m_cursors.begin(), m_cursors.end(),
         [_display](std::pair<int, Cursor> i) {
-            XFreeCursor(_display, i.second);
+            if (_display)
+                XFreeCursor(_display, i.second);
         }
     );
 }
@@ -569,7 +570,7 @@ void CX11Decoration::raiseWindow()
 void CX11Decoration::sendButtonRelease()
 {
     Display * xdisplay_ = QX11Info::display();
-    Window x_root_window_ = DefaultRootWindow(xdisplay_);
+    Window x_root_window_ = (Window)m_window->effectiveWinId();
 
     XEvent event;
     memset(&event, 0, sizeof(XEvent));
@@ -585,6 +586,7 @@ void CX11Decoration::sendButtonRelease()
                         &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
     XSendEvent(xdisplay_, PointerWindow, True, ButtonReleaseMask, &event);
     XFlush(xdisplay_);
+    QApplication::postEvent(m_window, new QEvent(QEvent::User));
 }
 
 void CX11Decoration::setCursorPos(int x, int y)

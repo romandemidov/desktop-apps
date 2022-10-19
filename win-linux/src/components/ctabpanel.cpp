@@ -3,7 +3,7 @@
 #include "cascapplicationmanagerwrapper.h"
 #include "defines.h"
 #include "cefview.h"
-
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QDebug>
 
@@ -27,6 +27,9 @@ CTabPanel::CTabPanel(QWidget *parent)
     setLayout(_layout);
     m_pViewer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     m_pViewer->SetBackgroundCefColor(244, 244, 244);
+
+    setAttribute(Qt::WA_DontCreateNativeAncestors);
+    setAttribute(Qt::WA_NativeWindow);
 }
 
 CTabPanel::~CTabPanel()
@@ -132,6 +135,11 @@ bool CTabPanel::openRecentFile(int id)
     return static_cast<CCefViewEditor *>(m_pViewer->GetCefView())->OpenRecentFile(id);
 }
 
+bool CTabPanel::isReady()
+{
+    return m_isReady;
+}
+
 /*void CTabPanel::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
@@ -188,6 +196,11 @@ void CTabPanel::applyLoader(const QString& cmd, const QString& args)
             AscAppManager::sendCommandTo(m_pLoader, cmd, args);
         }
     }
+}
+
+void CTabPanel::setReady()
+{
+    m_isReady = true;
 }
 
 void CTabPanel::showFullScreen()

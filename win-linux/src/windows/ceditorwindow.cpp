@@ -58,6 +58,7 @@ CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
     , d_ptr(new CEditorWindowPrivate(this))
 {
     setObjectName("editorWindow");
+    setWindowTitle("_");
     d_ptr.get()->init(panel);
     m_pMainPanel = createMainPanel(this, d_ptr->panel()->data()->title());
     setCentralWidget(m_pMainPanel);
@@ -80,6 +81,11 @@ CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
     if ( i.suffix() == "oform" || panel->data()->hasFeature(L"uitype\":\"fillform") ) {
         d_ptr->ffWindowCustomize();
     }
+
+    QTimer::singleShot(200, this, [=]() {
+        if (d_ptr->canExtendTitle())
+            setWindowTitle(panel->data()->title());
+    });
 }
 
 CEditorWindow::~CEditorWindow()
@@ -178,18 +184,13 @@ void CEditorWindow::setReporterMode(bool apply)
 
 void CEditorWindow::undock(bool maximized)
 {
-#ifdef Q_OS_LINUX
-    maximized = false;
-#else
-    if ( maximized ) {
-        m_restoreMaximized = true;
-        maximized = false;
-    }
-#endif
-
-    CWindowPlatform::show(maximized);
-    if (isCustomWindowStyle())
+    if (isCustomWindowStyle()) {
+        m_restoreMaximized = maximized;
+        CWindowPlatform::show(false);
         captureMouse();
+    } else {
+        CWindowPlatform::show(maximized);
+    }
 }
 
 bool CEditorWindow::holdView(int id) const
@@ -355,7 +356,6 @@ void CEditorWindow::onMoveEvent(const QRect&)
 
 void CEditorWindow::onExitSizeMove()
 {
-    updateScaling();
     if ( m_restoreMaximized ) {
         m_restoreMaximized = false;
         CWindowPlatform::show(true);
@@ -406,13 +406,15 @@ int CEditorWindow::calcTitleCaptionWidth()
 
 void CEditorWindow::focus()
 {
-    mainView()->view()->setFocusToCef();
+    if (d_ptr->panel()->isReady())
+        mainView()->view()->setFocusToCef();
 }
 
 void CEditorWindow::onCloseEvent()
 {
     if ( m_pMainView ) {
         if ( closeWindow() == MODAL_RESULT_YES ) {
+            CWindowBase::saveWindowState();
             hide();
         }
     }
@@ -434,23 +436,13 @@ void CEditorWindow::onMaximizeEvent()
 
 bool CEditorWindow::event(QEvent * event)
 {
-    static bool _flg_motion = false;
-    static bool _flg_left_button = false;
     if (event->type() == QEvent::Resize) {
         onSizeEvent(0);
     } else
-    if (event->type() == QEvent::MouseButtonPress) {
-        _flg_left_button = static_cast<QMouseEvent *>(event)->buttons().testFlag(Qt::LeftButton);
-    } else
-    if (event->type() == QEvent::MouseButtonRelease) {
-        if ( _flg_left_button && _flg_motion ) {
-            onExitSizeMove();
-        }
-        _flg_left_button = _flg_motion = false;
+    if (event->type() == QEvent::User) {
+        onExitSizeMove();
     } else
     if (event->type() == QEvent::Move) {
-        if (!_flg_motion)
-            _flg_motion = true;
         QMoveEvent * _e = static_cast<QMoveEvent *>(event);
         onMoveEvent(QRect(_e->pos(), QSize(1,1)));
     }

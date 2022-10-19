@@ -92,9 +92,21 @@ namespace InputArgs {
 
 
     auto contains(const std::wstring& param) -> bool {
+        const std::wstring::size_type l = param.length();
         auto iter = std::find_if(std::begin(in_args), std::end(in_args),
-            [&param](const std::wstring& s) {
-                return s.find(param) != std::wstring::npos;
+            [&param, l](const std::wstring& s) {
+                std::wstring::size_type n = s.find(param);
+                if (n != std::wstring::npos) {
+                    if (n + l == s.length())
+                        return true;
+                    else {
+                        wchar_t d = s.at(n+l);
+                        if (d == L':' || d == L'=')
+                            return true;
+                    }
+                }
+
+                return false;
         });
 
         return iter != end(in_args);
@@ -133,6 +145,43 @@ namespace InputArgs {
         }
 
         return web_apps_params;
+    }
+}
+
+namespace EditorJSVariables {
+    QJsonObject vars_object;
+
+    auto init() -> void {
+#ifdef __OS_WIN_XP
+        vars_object["os"] = "winxp";
+#endif
+        if ( InputArgs::contains(L"--help-url") )
+            vars_object["helpUrl"] = QUrl(QString::fromStdWString(InputArgs::argument_value(L"--help-url"))).toString();
+#ifdef URL_WEBAPPS_HELP
+        else if ( !QString(URL_WEBAPPS_HELP).isEmpty() )
+            vars_object["helpUrl"] = URL_WEBAPPS_HELP;
+#endif
+    }
+
+    auto setVariable(const QString& name, const QString& var) -> void {
+        vars_object[name] = var;
+    }
+
+    auto setVariable(const QString& name, const QJsonObject& obj) -> void {
+        vars_object[name] = obj;
+    }
+
+    auto applyVariable(const QString& name, const QJsonObject& obj) -> void {
+        vars_object[name] = obj;
+        apply();
+    }
+
+    auto toWString() -> std::wstring {
+        return vars_object.isEmpty() ? L"" : Utils::stringifyJson(vars_object).toStdWString();
+    }
+
+    auto apply() -> void {
+        AscAppManager::getInstance().SetRendererProcessVariable(toWString());
     }
 }
 
@@ -530,6 +579,47 @@ QJsonObject Utils::parseJson(const std::wstring& wjson)
     return QJsonObject();
 }
 
+#ifdef _WIN32
+Utils::WinVer Utils::getWinVersion()
+{
+    NTSTATUS(WINAPI *RtlGetVersion)(LPOSVERSIONINFOEXW);
+    *(FARPROC*)&RtlGetVersion = GetProcAddress(GetModuleHandleA("ntdll"), "RtlGetVersion");
+    if (RtlGetVersion != NULL) {
+        OSVERSIONINFOEXW osInfo;
+        osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+        RtlGetVersion(&osInfo);
+
+        if (osInfo.dwMajorVersion == 5L && (osInfo.dwMinorVersion == 1L || osInfo.dwMinorVersion == 2L))
+            return WinVer::WinXP;
+        else
+        if (osInfo.dwMajorVersion == 6L && osInfo.dwMinorVersion == 0L)
+            return  WinVer::WinVista;
+        else
+        if (osInfo.dwMajorVersion == 6L && osInfo.dwMinorVersion == 1L)
+            return  WinVer::Win7;
+        else
+        if (osInfo.dwMajorVersion == 6L && osInfo.dwMinorVersion == 2L)
+            return  WinVer::Win8;
+        else
+        if (osInfo.dwMajorVersion == 6L && osInfo.dwMinorVersion == 3L)
+            return  WinVer::Win8_1;
+        else
+        if (osInfo.dwMajorVersion == 10L) {
+            if (osInfo.dwMinorVersion == 0L) {
+                if (osInfo.dwBuildNumber < 22000)
+                    return  WinVer::Win10;
+                else
+                    return  WinVer::Win11;
+            } else
+                return  WinVer::Win11;
+        } else
+        if (osInfo.dwMajorVersion > 10L)
+            return  WinVer::Win11;
+    }
+    return WinVer::Undef;
+}
+#endif
+
 QString Utils::replaceBackslash(const QString& path)
 {
     return QString(path).replace(QRegularExpression("\\\\"), "/");
@@ -642,7 +732,7 @@ namespace WindowHelper {
     }
 
     // Linux Environment Info
-    QString desktop_env("OTHER");
+    QString desktop_env;
 
     auto initEnvInfo() -> void {
         const QString env = QString::fromUtf8(getenv("XDG_CURRENT_DESKTOP"));
@@ -650,20 +740,42 @@ namespace WindowHelper {
             const QString session = QString::fromUtf8(getenv("DESKTOP_SESSION"));
             if (session.indexOf("gnome-fallback") != -1)
                 desktop_env = "GNOME";
-            else
-                desktop_env = "UNITY";
+            else desktop_env = "UNITY";
         } else
         if (env.indexOf("GNOME") != -1)
             desktop_env = "GNOME";
         else
         if (env.indexOf("KDE") != -1)
             desktop_env = "KDE";
+        else desktop_env = "OTHER";
     }
 
     auto getEnvInfo() -> QString {
+        if ( desktop_env.isEmpty() )
+            initEnvInfo();
+
         return desktop_env;
     }
 
+    auto useGtkDialog() -> bool {
+        GET_REGISTRY_USER(reg_user)
+        bool use_gtk_dialog = true;
+        bool saved_flag = reg_user.value("--xdg-desktop-portal", false).toBool();
+        if (InputArgs::contains(L"--xdg-desktop-portal=default")) {
+            use_gtk_dialog = false;
+            if (saved_flag)
+                reg_user.setValue("--xdg-desktop-portal", false);
+        } else
+        if (InputArgs::contains(L"--xdg-desktop-portal")) {
+            use_gtk_dialog = false;
+            if (!saved_flag)
+                reg_user.setValue("--xdg-desktop-portal", true);
+        } else {
+            if (saved_flag)
+                use_gtk_dialog = false;
+        }
+        return use_gtk_dialog;
+    }
 #else
     auto isWindowSystemDocked(HWND handle) -> bool {
         RECT windowrect;
@@ -764,4 +876,13 @@ namespace WindowHelper {
 
         return _parent;
     }   
+
+    auto useNativeDialog() -> bool
+    {
+        bool use_native_dialog = true;
+#ifdef FILEDIALOG_DONT_USE_NATIVEDIALOGS
+        use_native_dialog = InputArgs::contains(L"--native-file-dialog");
+#endif
+        return use_native_dialog;
+    }
 }

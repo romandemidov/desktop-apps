@@ -46,178 +46,26 @@
 
 #ifdef Q_OS_WIN
 # include <shobjidl.h>
+# include <platform_win/filechooser.h>
 #else
 # include "platform_linux/xdgdesktopportal.h"
 # include "platform_linux/gtkfilechooser.h"
 #endif
 #include <string>
 
-using namespace std;
 
-#ifdef Q_OS_WIN
-static DWORD win_ver_major{0};
-//static const int win_ver_major = QOperatingSystemVersion::current().majorVersion();
-using VectorShellItems = vector<IShellItem *>;
-
-auto itemsFromItemArray(IShellItemArray * items)
-{
-    VectorShellItems out;
-    DWORD itemCount = 0;
-    if (FAILED(items->GetCount(&itemCount)) || itemCount == 0)
-        return out;
-
-    out.reserve(itemCount);
-    for (DWORD i = 0; i < itemCount; ++i) {
-        IShellItem * item = nullptr;
-        if (SUCCEEDED(items->GetItemAt(i, &item)))
-            out.push_back(item);
-    }
-
-    return out;
-}
-#endif
-
-class CFileDialogHelper {
-    using specvector = vector<pair<wstring,wstring>>;
-public:
-    struct CFileDialogOpenArguments {
-        CFileDialogOpenArguments(ParentHandle h, const wstring& t)
-            : parent(h)
-            , title(t)
-        {}
-
-        ParentHandle parent = nullptr;
-        wstring title;
-        wstring filter,
-                startFilter;
-        wstring folder;
-        bool multiSelect = false;
-    };
-
-public:
-    static auto stringToFilters(const wstring& wstr) -> specvector {
-        specvector v;
-
-        if ( !wstr.empty() ) {
-            auto _parce_filter_string = [](const wstring& fullstr, size_t start, size_t stop) -> pair<wstring, wstring> {
-                wstring filter_name = fullstr.substr(start, stop - start);
-                size_t mid = filter_name.find(L"(") + 1;
-                wstring filter_pattern = filter_name.substr(mid, filter_name.find(L")", mid) - mid);
-
-                std::replace(begin(filter_pattern), end(filter_pattern), ' ', ';');
-                return make_pair(filter_name, filter_pattern);
-            };
-
-            wstring _delim = L";;";
-            size_t _curr = wstr.find(_delim),
-                _prev = 0;
-            while ( _curr != wstring::npos ) {
-                v.push_back(_parce_filter_string(wstr,_prev,_curr));
-
-                _prev = _curr + 2;
-                _curr = wstr.find(_delim, _prev);
-            }
-
-            v.push_back(_parce_filter_string(wstr, _prev, wstr.size()));
-        }
-
-        return v;
-    }
-
-    static auto nativeOpenDialog(const CFileDialogOpenArguments& args) -> QStringList {
-        QStringList out;
-
-#if defined(Q_OS_WIN) && !defined(__OS_WIN_XP)
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        if ( SUCCEEDED(hr) ) {
-            IFileOpenDialog * pDialog = nullptr;
-
-            // Create the FileOpenDialog object.
-            hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileOpenDialog, reinterpret_cast<void**>(&pDialog));
-
-            if (SUCCEEDED(hr)) {
-                hr = pDialog->SetTitle(args.title.c_str());
-
-                specvector filters{stringToFilters(args.filter)};
-
-                uint typeIndex = 1;
-                COMDLG_FILTERSPEC * specOpenTypes = new COMDLG_FILTERSPEC[filters.size()];
-                for (uint i{0}; i < filters.size(); ++i) {
-                    specvector::const_reference iter = filters.at(i);
-                    specOpenTypes[i] = {iter.first.c_str(), iter.second.c_str()};
-
-                    if ( !args.startFilter.empty() &&
-                            iter.first.find(args.startFilter) == 0 )
-                        typeIndex = i + 1;
-                }
-
-                hr = pDialog->SetFileTypes(filters.size(), specOpenTypes);
-                delete [] specOpenTypes;
-
-                pDialog->SetFileTypeIndex(typeIndex);
-
-                if ( !args.folder.empty() ) {
-                    IShellItem * pItem = nullptr;
-                    hr = SHCreateItemFromParsingName(args.folder.c_str(), nullptr, IID_PPV_ARGS(&pItem));
-
-                    if (SUCCEEDED(hr)) {
-                        pDialog->SetFolder(pItem);
-                        pItem->Release();
-                    }
-                }
-
-                DWORD dwFlags;
-                hr = pDialog->GetOptions(&dwFlags);
-                if (SUCCEEDED(hr)) {
-                    if ( args.multiSelect ) dwFlags |= FOS_ALLOWMULTISELECT;
-
-                    QSettings _r("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced", QSettings::NativeFormat);
-                    if ( _r.value("Hidden", 1) == 1 )
-                        dwFlags |= FOS_FORCESHOWHIDDEN;
-
-                    hr = pDialog->SetOptions(dwFlags | FOS_FILEMUSTEXIST | FOS_PATHMUSTEXIST);
-                }
-
-                hr = pDialog->Show((HWND)args.parent->winId());
-                if (SUCCEEDED(hr)) {
-                    IShellItemArray * items = nullptr;
-                    hr = pDialog->GetResults(&items);
-                    if (SUCCEEDED(hr) && items) {
-                        VectorShellItems iarray = itemsFromItemArray(items);
-                        for (IShellItem * item : iarray) {
-                            PWSTR pszFilePath;
-                            hr = item->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-                            if (SUCCEEDED(hr)) {
-                                out.append(QString::fromStdWString(pszFilePath));
-                                CoTaskMemFree(pszFilePath);
-                            }
-                        }
-
-                        for (IShellItem * item : iarray)
-                            item->Release();
-                        items->Release();
-                    }
-                }
-                pDialog->Release();
-            }
-            CoUninitialize();
-        }
+namespace CFileDialogHelper {
+    auto useModalDialog() -> bool {
+#if defined(__linux__) && defined(FILEDIALOG_DONT_USE_MODAL)
+        return false;
 #else
+        return true;
 #endif
-
-        return out;
     }
 };
 
-/*#if defined(_WIN32)
-CFileDialogWrapper::CFileDialogWrapper(HWND hParentWnd) : QWinWidget(hParentWnd)
-#else*/
-// because bug in cef - 'open/save dialog' doesn't open for second time
-#if !defined(FILEDIALOG_DONT_USE_NATIVEDIALOGS) && !defined(FILEDIALOG_DONT_USE_MODAL)
-#define FILEDIALOG_DONT_USE_MODAL
-#endif
+
 CFileDialogWrapper::CFileDialogWrapper(QWidget * parent) : QObject(parent)
-//#endif
 {
     m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN]         = tr("All files (*.*)");
 
@@ -257,32 +105,6 @@ CFileDialogWrapper::CFileDialogWrapper(QWidget * parent) : QObject(parent)
 
     m_mapFilters[AVS_OFFICESTUDIO_FILE_IMAGE_JPG]           = tr("JPG Image (*.jpg *.jpeg)");
     m_mapFilters[AVS_OFFICESTUDIO_FILE_IMAGE_PNG]           = tr("PNG Image (*.png)");
-
-#ifdef FILEDIALOG_DONT_USE_NATIVEDIALOGS
-    // Set native dialog from command line arguments
-    m_useNativeDialogFlag = InputArgs::contains(L"--native-file-dialog");
-#endif
-
-#ifdef __linux__
-    GET_REGISTRY_SYSTEM(reg_system)
-    GET_REGISTRY_USER(reg_user)
-    if (InputArgs::contains(L"--xdg-desktop-portal=default")) {
-        m_useGtkFileChooserFlag = false;
-        if (reg_user.value("--xdg-desktop-portal", false).toBool())
-            reg_user.setValue("--xdg-desktop-portal", false);
-    } else
-    if (InputArgs::contains(L"--xdg-desktop-portal")) {
-        m_useGtkFileChooserFlag = false;
-        if (!reg_user.value("--xdg-desktop-portal", false).toBool())
-            reg_user.setValue("--xdg-desktop-portal", true);
-    } else {
-        if (reg_user.value("--xdg-desktop-portal", false).toBool() ||
-                reg_system.value("--xdg-desktop-portal", false).toBool())
-        {
-            m_useGtkFileChooserFlag = false;
-        }
-    }
-#endif
 }
 
 CFileDialogWrapper::~CFileDialogWrapper()
@@ -320,56 +142,40 @@ bool CFileDialogWrapper::modalSaveAs(QString& fileName, int selected)
     }
 
 #ifdef _WIN32
-    QString _croped_name = fileName.contains(QRegExp("\\.[^\\/\\\\]+$")) ?
-                                    fileName.left(fileName.lastIndexOf(".")) : fileName;
-
-    QWidget * _mess_parent = (QWidget *)parent();
-    /*HWND _mess_parent = QWinWidget::parentWindow();*/
-    /*CInAppEventModal _event(_mess_parent->winId());
-    CRunningEventHelper _h(&_event);*/
+    QString _croped_name = fileName;
 #else
     QString _croped_name = fileName.left(fileName.lastIndexOf("."));
-    QWidget * _mess_parent = (QWidget *)parent();
-
 #endif
     reFilter.setPattern("\\(\\*(\\.\\w+)\\)$");
 
     auto _exec_dialog = [=] (QWidget * p, QString n, QString f, QString& sf) {
         QFileDialog::Options _opts{QFileDialog::DontConfirmOverwrite};
-#ifdef FILEDIALOG_DONT_USE_NATIVEDIALOGS
-        if ( !m_useNativeDialogFlag )
-            _opts |= QFileDialog::DontUseNativeDialog;
-#else
-#endif
 
+        if (WindowHelper::useNativeDialog()) {
 #ifdef __linux__
-        if (!_opts.testFlag(QFileDialog::DontUseNativeDialog)) {
             QStringList result;
-            if (m_useGtkFileChooserFlag) {
-                result = Gtk::openGtkFileChooser(qobject_cast<QWidget*>(parent()),
-                                                 Gtk::Mode::SAVE, tr("Save As"),
+            if (WindowHelper::useGtkDialog()) {
+                result = Gtk::openGtkFileChooser(p, Gtk::Mode::SAVE, tr("Save As"),
                                                  n, "", f, &sf);
             } else {
-                result = Xdg::openXdgPortal(qobject_cast<QWidget*>(parent()),
-                                            Xdg::Mode::SAVE, tr("Save As"),
+                result = Xdg::openXdgPortal(p, Xdg::Mode::SAVE, tr("Save As"),
                                             n, "", f, &sf);
             }
             return (result.size() > 0) ? result.at(0) : QString();
-        }
+#else
+# ifndef __OS_WIN_XP
+            QStringList result;
+            result = Win::openWinFileChooser(p, Win::Mode::SAVE, tr("Save As"),
+                                             n, "", f, &sf);
+            return (result.size() > 0) ? result.at(0) : QString();
+# endif
 #endif
+        } else _opts |= QFileDialog::DontUseNativeDialog;
         return QFileDialog::getSaveFileName(p, tr("Save As"), n, f, &sf, _opts);
     };
 
-#ifdef FILEDIALOG_DONT_USE_MODAL
-    QWidget * _parent = NULL;
-#else
-# ifdef _WIN32
-    QWidget * _parent = (QWidget *)parent();
-# else
-    QWidget * _parent = (QWidget *)parent();
-# endif
-#endif
-
+    QWidget * _parent = CFileDialogHelper::useModalDialog() ?
+                (QWidget *)parent() : nullptr;
 #ifndef _WIN32
     WindowHelper::CParentDisable oDisabler(qobject_cast<QWidget*>(parent()));
 #endif
@@ -387,6 +193,7 @@ bool CFileDialogWrapper::modalSaveAs(QString& fileName, int selected)
 
             QFileInfo info(fileName);
             if ( info.exists() ) {
+                QWidget * _mess_parent = (QWidget *)parent();
                 CMessage mess(_mess_parent, CMessageOpts::moButtons::mbYesNo);
                 int _answ = mess.warning(tr("%1 already exists.<br>Do you want to replace it?").arg(info.fileName()));
                 if ( MODAL_RESULT_CUSTOM + 1 == _answ ) {
@@ -400,7 +207,6 @@ bool CFileDialogWrapper::modalSaveAs(QString& fileName, int selected)
 
         break;
     }
-
 
     m_format = 0;
     if (m_filters.length()) {
@@ -430,80 +236,47 @@ QString CFileDialogWrapper::getFilter(const QString& extension) const
 QStringList CFileDialogWrapper::modalOpen(const QString& path, const QString& filter, QString * selected, bool multi)
 {
     QString _filter_ = filter;
+    QString _all_sup_files;
     if ( _filter_.isEmpty() ) {
 //        _filter_ = joinFilters();
-        _filter_ = m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN] + ";;" +
-                    tr("Text documents") + " (*.docx *.doc *.odt *.ott *.rtf *.docm *.dotx *.dotm *.fodt *.wps *.wpt *.xml *.pdf *.djv *.djvu *.docxf *.oform);;" +
+        _filter_ =  tr("Text documents") + " (*.docx *.doc *.odt *.ott *.rtf *.docm *.dotx *.dotm *.fb2 *.fodt *.wps *.wpt *.xml *.pdf *.djv *.djvu *.docxf *.oform);;" +
                     tr("Spreadsheets") + " (*.xlsx *.xls *.ods *.ots *.xltx *.xltm *.fods *.et *.ett);;" +
-                    tr("Presentations") + " (*.pptx *.ppt *.odp *.otp *.ppsm *.ppsx *.potx *.potm *.fodp *.dps *.dpt);;" +
+                    tr("Presentations") + " (*.pptx *.ppt *.odp *.otp *.ppsm *.ppsx *.pps *.potx *.pot *.potm *.fodp *.dps *.dpt);;" +
                     tr("Web Page") + " (*.html *.htm *.mht *.epub);;" +
                     tr("Text files") + " (*.txt *.csv)";
+        _all_sup_files = tr("All supported files") + " " + joinExtentions(_filter_);
+        _filter_.prepend(_all_sup_files + ";;");
+        _filter_.append(";;" + m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN]);
     }
+    const QString _default_sel_filter = _all_sup_files.isEmpty() ?
+                m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN] : _all_sup_files;
+    QString _sel_filter = selected ? *selected : _default_sel_filter;
 
-    QString _sel_filter = selected ? *selected : m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN];
-//    QWidget * p = qobject_cast<QWidget *>(parent());
-
-    QWidget * _parent =
-#ifdef _WIN32
-                        (QWidget *)parent();
-#else
-# ifdef FILEDIALOG_DONT_USE_MODAL
-                        NULL;
-# else
-                        (QWidget *)parent();
-# endif
-#endif
-    QFileDialog::Options _opts;
-#ifdef FILEDIALOG_DONT_USE_NATIVEDIALOGS
-    if ( !m_useNativeDialogFlag )
-        _opts = QFileDialog::DontUseNativeDialog;
-#else
-    _opts = QFileDialog::Options();
-#endif
-
-#ifndef _WIN32
+    QWidget * _parent = CFileDialogHelper::useModalDialog() ?
+                (QWidget *)parent() : nullptr;
+    QFileDialog::Options _opts;       
+#ifdef __linux__
     WindowHelper::CParentDisable oDisabler(qobject_cast<QWidget*>(parent()));
-    if (!_opts.testFlag(QFileDialog::DontUseNativeDialog)) {
-        if (m_useGtkFileChooserFlag) {
-            return Gtk::openGtkFileChooser(qobject_cast<QWidget*>(parent()),
-                                           Gtk::Mode::OPEN, tr("Open Document"), "",
+#endif
+
+    if (WindowHelper::useNativeDialog()) {
+#ifdef __linux__
+        if (WindowHelper::useGtkDialog()) {
+            return Gtk::openGtkFileChooser(_parent, Gtk::Mode::OPEN, tr("Open Document"), "",
                                            path, _filter_, &_sel_filter, multi);
         } else {
-            return Xdg::openXdgPortal(qobject_cast<QWidget*>(parent()),
-                                      Xdg::Mode::OPEN, tr("Open Document"), "",
+            return Xdg::openXdgPortal(_parent, Xdg::Mode::OPEN, tr("Open Document"), "",
                                       path, _filter_, &_sel_filter, multi);
-        }
-    }
+        }    
+#else
+# ifndef __OS_WIN_XP
+    return Win::openWinFileChooser(_parent, Win::Mode::OPEN, tr("Open Document"), "",
+                                   path, _filter_, &_sel_filter, multi);
+# endif
+#endif
+    } else _opts |= QFileDialog::DontUseNativeDialog;
     return multi ? QFileDialog::getOpenFileNames(_parent, tr("Open Document"), path, _filter_, &_sel_filter, _opts) :
                 QStringList(QFileDialog::getOpenFileName(_parent, tr("Open Document"), path, _filter_, &_sel_filter, _opts));
-#else
-    /*CInAppEventModal event_(qobject_cast<QWidget*>(parent())->winId());
-    CRunningEventHelper h_(&event_);*/
-
-    CFileDialogHelper::CFileDialogOpenArguments args{_parent,tr("Open Document").toStdWString()};
-    args.filter = _filter_.toStdWString();
-    args.startFilter = _sel_filter.toStdWString();
-    args.multiSelect = multi;
-    args.folder = QDir::toNativeSeparators(path).toStdWString();
-
-    if ( win_ver_major == 0 ) {
-        OSVERSIONINFO osvi;
-
-        ZeroMemory(&osvi, sizeof(OSVERSIONINFO));
-        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-
-        GetVersionEx(&osvi);
-        win_ver_major = osvi.dwMajorVersion;
-    }
-
-    // Win XP doesn't support IFileOpenDialog
-    if ( win_ver_major > 5 ) {
-        return CFileDialogHelper::nativeOpenDialog(args);
-    } else {
-        return multi ? QFileDialog::getOpenFileNames(_parent, tr("Open Document"), path, _filter_, &_sel_filter, _opts) :
-                    QStringList(QFileDialog::getOpenFileName(_parent, tr("Open Document"), path, _filter_, &_sel_filter, _opts));
-    }
-#endif
 }
 
 QString CFileDialogWrapper::modalOpenSingle(const QString& path, const QString& filter, QString * selected)
@@ -551,7 +324,7 @@ QStringList CFileDialogWrapper::modalOpenPlugins(const QString& path)
 QStringList CFileDialogWrapper::modalOpenDocuments(const QString& path, bool multi)
 {
     QString filter = m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN];
-    filter.prepend(tr("Text documents") + " (*.docx *.doc *.odt *.ott *.rtf *.docm *.dotx *.dotm *.fodt *.wps *.wpt *.xml);;");
+    filter.prepend(tr("Text documents") + " (*.docx *.doc *.odt *.ott *.rtf *.docm *.dotx *.dotm *.fb2 *.fodt *.wps *.wpt *.xml);;");
 
     return modalOpen(path, filter, nullptr, multi);
 }
@@ -567,7 +340,7 @@ QStringList CFileDialogWrapper::modalOpenSpreadsheets(const QString& path, bool 
 QStringList CFileDialogWrapper::modalOpenPresentations(const QString& path, bool multi)
 {
     QString filter = m_mapFilters[AVS_OFFICESTUDIO_FILE_UNKNOWN];
-    filter.prepend(tr("Presentations") + " (*.pptx *.ppt *.odp *.otp *.ppsm *.ppsx *.potx *.potm *.fodp *.dps *.dpt);;");
+    filter.prepend(tr("Presentations") + " (*.pptx *.ppt *.odp *.otp *.ppsm *.ppsx *.pps *.potx *.pot *.potm *.fodp *.dps *.dpt);;");
 
     return modalOpen(path, filter, nullptr, multi);
 }
@@ -597,18 +370,35 @@ QStringList CFileDialogWrapper::modalOpenMedia(const QString& type, const QStrin
 
 QString CFileDialogWrapper::selectFolder(const QString& folder)
 {
-    QWidget * _parent =
-#ifdef _WIN32
-                        (QWidget *)parent();
-#else
-# ifdef FILEDIALOG_DONT_USE_MODAL
-                        NULL;
-# else
-                        (QWidget *)parent();
-# endif
+    QWidget * _parent = CFileDialogHelper::useModalDialog() ?
+                (QWidget *)parent() : nullptr;
+    QFileDialog::Options _opts{QFileDialog::ShowDirsOnly};
+
+#ifdef __linux__
+    WindowHelper::CParentDisable oDisabler(qobject_cast<QWidget*>(parent()));
 #endif
 
-    return QFileDialog::getExistingDirectory(_parent, "", folder);
+    if (WindowHelper::useNativeDialog()) {
+#ifdef __linux__
+        QStringList result;
+        if (WindowHelper::useGtkDialog()) {
+            result = Gtk::openGtkFileChooser(_parent, Gtk::Mode::FOLDER, tr("Select Folder"),
+                                             "", folder, "", nullptr);
+        } else {
+            result = Xdg::openXdgPortal(_parent, Xdg::Mode::FOLDER, tr("Select Folder"),
+                                        "", folder, "", nullptr);
+        }
+        return (result.size() > 0) ? result.at(0) : QString();
+#else
+# ifndef __OS_WIN_XP
+        QStringList result;
+        result = Win::openWinFileChooser(_parent, Win::Mode::FOLDER, tr("Select Folder"),
+                                         "", folder, "", nullptr);
+        return (result.size() > 0) ? result.at(0) : QString();
+# endif
+#endif
+    } else _opts |= QFileDialog::DontUseNativeDialog;
+    return QFileDialog::getExistingDirectory(_parent, tr("Select Folder"), folder, _opts);
 }
 
 void CFileDialogWrapper::setFormats(std::vector<int>& vf)
@@ -665,5 +455,24 @@ QString CFileDialogWrapper::joinFilters() const
         _out.append(f);
     }
 
+    return _out;
+}
+
+QString CFileDialogWrapper::joinExtentions(const QString &filter) const
+{
+    QString _out;
+    foreach (QString str, filter.split(";;")) {
+        const int start = str.indexOf('(');
+        const int end = str.indexOf(')');
+        if (start != -1 && start < end)
+            _out += str.mid(start + 1, end - start - 1) + " ";
+    }
+    const int pos = _out.lastIndexOf(' ');
+    if (pos != -1)
+        _out = _out.mid(0, pos);
+    if (!_out.isEmpty()) {
+        _out.prepend('(');
+        _out.append(')');
+    }
     return _out;
 }
