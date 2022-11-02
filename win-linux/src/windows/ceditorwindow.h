@@ -43,6 +43,7 @@
 #include <memory>
 #include <QCoreApplication>
 #include <QSpacerItem>
+#include <QMenu>
 
 class CEditorWindowPrivate;
 class CEditorWindow : public CWindowPlatform
@@ -90,6 +91,7 @@ private:
     QString m_css;
     bool m_restoreMaximized = false;
     QSpacerItem *m_pSpacer = nullptr;
+    QMenu       *m_pTopMenu = nullptr;
 
     friend class CEditorWindowPrivate;
     std::unique_ptr<CEditorWindowPrivate> d_ptr;
@@ -97,6 +99,7 @@ private:
 private slots:
     void onClickButtonHome();
     void slot_modalDialog(bool,  WId);
+    void openRenameDialog();
 };
 
 #endif // CEDITORWINDOW_H

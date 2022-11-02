@@ -46,6 +46,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDir>
+#include <QLineEdit>
+#include <QFormLayout>
 
 #include "windows/ceditorwindow_p.h"
 
@@ -87,6 +89,11 @@ CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
         if (d_ptr->canExtendTitle())
             setWindowTitle(panel->data()->title());
     });
+
+    m_pTopMenu = new QMenu(this);
+    QAction *m_pActRename = new QAction(tr("Rename"), m_pTopMenu);
+    connect(m_pActRename, &QAction::triggered, this, &CEditorWindow::openRenameDialog);
+    m_pTopMenu->addAction(m_pActRename);
 }
 
 CEditorWindow::~CEditorWindow()
@@ -458,6 +465,12 @@ bool CEditorWindow::event(QEvent * event)
     if (event->type() == QEvent::User) {
         onExitSizeMove();
     } else
+    if (event->type() == QEvent::MouseButtonRelease
+            && m_labelTitle->underMouse()) {
+        QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+        if (mouse_event->button() == Qt::RightButton)
+            m_pTopMenu->exec(QCursor::pos() + QPoint(8, 4));
+    } else
     if (event->type() == QEvent::Move) {
         QMoveEvent * _e = static_cast<QMoveEvent *>(event);
         onMoveEvent(QRect(_e->pos(), QSize(1,1)));
@@ -502,6 +515,33 @@ void CEditorWindow::slot_modalDialog(bool status, WId h)
     Q_UNUSED(status)
     Q_UNUSED(h)
     //status ? pimpl->lockParentUI() : pimpl->unlockParentUI();
+}
+
+void CEditorWindow::openRenameDialog()
+{
+    QLineEdit *line = nullptr;
+    CMessage mbox(this, CMessageOpts::moButtons::mbOkCancel);
+    QList<QFormLayout*> layouts = mbox.findChildren<QFormLayout*>("", Qt::FindChildrenRecursively);
+    QList<QLabel*> labels = mbox.findChildren<QLabel*>("", Qt::FindChildrenRecursively);
+    if (layouts.size() > 0 && labels.size() > 0) {
+        line = new QLineEdit(&mbox);
+        line->setText(d_ptr->panel()->data()->title());
+        layouts.at(0)->addWidget(line);
+        line->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        labels.at(0)->setVisible(false);
+        line->setFocus();
+    }
+    switch (mbox.info(tr("New name:"))) {
+    case MODAL_RESULT_CUSTOM + 0: {
+        if (line && !line->text().isEmpty()) {
+            d_ptr->panel()->data()->setTitle(line->text());
+            //d_ptr->onDocumentChanged(d_ptr->panel()->cef()->GetId(), true);
+        }
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void CEditorWindow::closeEvent(QCloseEvent * e)
