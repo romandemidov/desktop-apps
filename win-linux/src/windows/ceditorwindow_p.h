@@ -383,26 +383,25 @@ public:
 
     void setWindowColors()
     {
-        std::wstring background, border;
+        QColor background, border;
         switch (panel()->data()->contentType()) {
         case etDocument:
-            background = AscAppManager::themes().current().value(CTheme::ColorRole::ecrTabWordActive);
+            background = GetColorByRole(ecrTabWordActive);
             border = background;
             break;
         case etPresentation:
-            background = AscAppManager::themes().current().value(CTheme::ColorRole::ecrTabSlideActive);
+            background = GetColorByRole(ecrTabSlideActive);
             border = background;
             break;
         case etSpreadsheet:
-            background = AscAppManager::themes().current().value(CTheme::ColorRole::ecrTabCellActive);
+            background = GetColorByRole(ecrTabCellActive);
             border = background;
             break;
         default:
-            background = AscAppManager::themes().current().value(CTheme::ColorRole::ecrWindowBackground);
-            border = AscAppManager::themes().current().value(CTheme::ColorRole::ecrWindowBorder);
+            background = GetColorByRole(ecrWindowBackground);
+            border = GetColorByRole(ecrWindowBorder);
         }
-
-        window->setWindowColors(QColor(QString::fromStdWString(background)), QColor(QString::fromStdWString(border)));
+        window->setWindowColors(background, border.lighter(140));
     }
 
     void changeTheme(const std::wstring& theme)
