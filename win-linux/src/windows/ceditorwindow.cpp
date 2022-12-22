@@ -51,6 +51,7 @@
 
 #define CAPTURED_WINDOW_OFFSET_X  180
 #define CAPTURED_WINDOW_OFFSET_Y  15
+#define MOTION_TIMER_MS 700
 
 
 CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
@@ -84,6 +85,12 @@ CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
     QTimer::singleShot(200, this, [=]() {
         if (d_ptr->canExtendTitle())
             setWindowTitle(panel->data()->title());
+    });
+
+    m_motionTimer = new QTimer(this);
+    m_motionTimer->setInterval(MOTION_TIMER_MS);
+    QObject::connect(m_motionTimer, &QTimer::timeout, this, [=] {
+        AscAppManager::editorWindowMoving((size_t)handle(), getCursorPos());
     });
 }
 
@@ -352,18 +359,6 @@ void CEditorWindow::onSizeEvent(int type)
     recalculatePlaces();
 }
 
-void CEditorWindow::onMoveEvent(const QRect&)
-{
-#ifdef Q_OS_WIN
-    POINT pt{0,0};
-    if ( ::GetCursorPos(&pt) ) {
-        AscAppManager::editorWindowMoving((size_t)handle(), QPoint(pt.x,pt.y));
-    }
-#else
-    AscAppManager::editorWindowMoving((size_t)handle(), QCursor::pos());
-#endif
-}
-
 void CEditorWindow::onExitSizeMove()
 {
     if ( m_restoreMaximized ) {
@@ -452,9 +447,11 @@ bool CEditorWindow::event(QEvent * event)
     if (event->type() == QEvent::User) {
         onExitSizeMove();
     } else
-    if (event->type() == QEvent::Move) {
-        QMoveEvent * _e = static_cast<QMoveEvent *>(event);
-        onMoveEvent(QRect(_e->pos(), QSize(1,1)));
+    if (event->type() == StartMoving) {
+        m_motionTimer->start();
+    } else
+    if (event->type() == StopMoving) {
+        m_motionTimer->stop();
     }
     return CWindowPlatform::event(event);
 }

@@ -49,6 +49,7 @@ public:
     void toggleBorderless(bool);
     void toggleResizeable();
     void bringToTop();
+    QPoint getCursorPos();
     virtual void show(bool);
     virtual void adjustGeometry() final;
 
@@ -63,7 +64,8 @@ private:
     bool m_borderless,
          m_closed,
          m_isResizeable,
-         m_allowMaximize;
+         m_allowMaximize,
+         m_isMoving;
 };
 
 #endif // CWINDOWPLATFORM_H

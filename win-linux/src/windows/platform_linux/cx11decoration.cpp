@@ -32,6 +32,7 @@
 
 #include "cx11decoration.h"
 #include "utils.h"
+#include "defines.h"
 #include <QX11Info>
 #include <QApplication>
 
@@ -297,7 +298,8 @@ namespace WindowHelper {
 }
 
 CX11Decoration::CX11Decoration(QWidget * w)
-    : m_window(w)
+    : m_start_pos(QPoint())
+    , m_window(w)
     , m_title(NULL)
     , m_motionTimer(nullptr)
     , m_currentCursor(0)
@@ -312,6 +314,7 @@ CX11Decoration::CX11Decoration(QWidget * w)
     need_to_check_motion = guess_window_manager() == WM_KWIN;
     dpi_ratio = Utils::getScreenDpiRatioByWidget(w);
     m_nBorderSize = CUSTOM_BORDER_WIDTH * dpi_ratio;
+    m_used_x11 = qgetenv("XDG_SESSION_TYPE").indexOf("x11") != -1;
 }
 
 CX11Decoration::~CX11Decoration()
@@ -431,6 +434,7 @@ void CX11Decoration::dispatchMouseDown(QMouseEvent *e)
     if (m_decoration) return;
 
     if (e->buttons() == Qt::LeftButton) {
+        m_start_pos = m_window->mapFromGlobal(QCursor::pos());
         QRect oTitleRect = m_title->geometry();
 
         if (!m_bIsMaximized)
@@ -449,14 +453,14 @@ void CX11Decoration::dispatchMouseMove(QMouseEvent *e)
         m_motionTimer = new QTimer;
 
         QObject::connect(m_motionTimer, &QTimer::timeout, [=]{
-            if ( WindowHelper::check_button_state(Qt::LeftButton) ) {
-                if ( need_to_check_motion ) {
-                    QMoveEvent _e{QCursor::pos(), m_window->pos()};
-                    QApplication::sendEvent(m_window, &_e);
-                }
-            } else {
+            if ( !WindowHelper::check_button_state(Qt::LeftButton) ) {
                 m_motionTimer->stop();
                 sendButtonRelease();
+                QApplication::postEvent(m_window, new QEvent(StopMoving));
+                QTimer::singleShot(25, [=]() {
+                    if (m_window->size() == m_startSize)
+                        QApplication::postEvent(m_window, new QEvent(QEvent::User));
+                });
             }
         });
     }
@@ -468,6 +472,7 @@ void CX11Decoration::dispatchMouseMove(QMouseEvent *e)
 
         XUngrabPointer(xdisplay_, CurrentTime);
         if ( !m_motionTimer->isActive() ) m_motionTimer->start(MOTION_TIMER_MS);
+        QApplication::postEvent(m_window, new QEvent(StartMoving));
 
         XEvent event;
         memset(&event, 0, sizeof(event));
@@ -604,10 +609,6 @@ void CX11Decoration::sendButtonRelease()
                         &event.xbutton.x_root, &event.xbutton.y_root, &event.xbutton.x, &event.xbutton.y, &event.xbutton.state);
     XSendEvent(xdisplay_, PointerWindow, True, ButtonReleaseMask, &event);
     XFlush(xdisplay_);
-    QTimer::singleShot(25, [=]() {
-        if (m_window->size() == m_startSize)
-            QApplication::postEvent(m_window, new QEvent(QEvent::User));
-    });
 }
 
 void CX11Decoration::setCursorPos(int x, int y)
@@ -617,6 +618,12 @@ void CX11Decoration::setCursorPos(int x, int y)
     XSelectInput(xdisplay_, root_window, KeyReleaseMask);
     XWarpPointer(xdisplay_, None, root_window, 0, 0, 0, 0, x, y);
     XFlush(xdisplay_);
+}
+
+QPoint CX11Decoration::getCursorPos()
+{
+    return (m_used_x11) ?
+        QCursor::pos() : m_window->mapToGlobal(m_window->rect().topLeft()) + m_start_pos;
 }
 
 void CX11Decoration::setMinimized()

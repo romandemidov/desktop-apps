@@ -75,7 +75,6 @@ private:
     void recalculatePlaces();
     void updateTitleCaption();
     void onSizeEvent(int);
-    void onMoveEvent(const QRect&);
     void onExitSizeMove();
     void captureMouse();
     virtual int calcTitleCaptionWidth() final;
@@ -90,6 +89,7 @@ private:
     QString m_css;
     bool m_restoreMaximized = false;
     QSpacerItem *m_pSpacer = nullptr;
+    QTimer *m_motionTimer = nullptr;
 
     friend class CEditorWindowPrivate;
     std::unique_ptr<CEditorWindowPrivate> d_ptr;

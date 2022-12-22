@@ -53,7 +53,8 @@ CWindowPlatform::CWindowPlatform(const QRect &rect) :
     m_borderless(true),
     m_closed(false),
     m_isResizeable(true),
-    m_allowMaximize(true)
+    m_allowMaximize(true),
+    m_isMoving(false)
 {
     setWindowFlags(windowFlags() | Qt::Window | Qt::FramelessWindowHint
                    | Qt::WindowSystemMenuHint | Qt::WindowMaximizeButtonHint
@@ -138,6 +139,14 @@ void CWindowPlatform::bringToTop()
     ::SetFocus(m_hWnd);
     ::SetActiveWindow(m_hWnd);
     ::AttachThreadInput(frgID, appID, FALSE);
+}
+
+QPoint CWindowPlatform::getCursorPos()
+{
+    POINT pt{0,0};
+    if (::GetCursorPos(&pt))
+        return QPoint(pt.x, pt.y);
+    return QPoint();
 }
 
 void CWindowPlatform::show(bool maximized)
@@ -339,11 +348,19 @@ bool CWindowPlatform::nativeEvent(const QByteArray &eventType, void *message, lo
     }
 
     case WM_EXITSIZEMOVE:
+        if (m_isMoving) {
+            m_isMoving = false;
+            QApplication::postEvent(this, new QEvent(StopMoving));
+        }
         if (m_allowMaximize)
             QApplication::postEvent(this, new QEvent(QEvent::User));
         break;
 
     case WM_MOVE:
+        if (!m_isMoving) {
+            m_isMoving = true;
+            QApplication::postEvent(this, new QEvent(StartMoving));
+        }
         if (movParam != 0)
             movParam = 0;
         break;

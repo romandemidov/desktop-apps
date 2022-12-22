@@ -56,6 +56,7 @@ public:
     void dispatchMouseMove(QMouseEvent *);
     void dispatchMouseUp(QMouseEvent *);
     void setCursorPos(int x, int y);
+    QPoint getCursorPos();
 
     void turnOn();
     void turnOff();
@@ -69,6 +70,7 @@ public:
     int m_nDirection;
 protected:
     double dpi_ratio = 1;
+    QPoint m_start_pos;
     void onDpiChanged(double);
 
 private:
@@ -79,7 +81,8 @@ private:
     bool m_decoration;
     int m_nBorderSize;
     bool m_bIsMaximized;
-    bool need_to_check_motion = false;
+    bool need_to_check_motion = false,
+         m_used_x11 = true;
     QSize m_startSize;
 
     std::map<int, ulong> m_cursors;

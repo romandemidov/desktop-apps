@@ -1249,7 +1249,6 @@ ParentHandle CAscApplicationManagerWrapper::windowHandleFromId(int id)
 }
 
 namespace Drop {
-    const int drop_timeout = 300;
     auto callback_to_attach(const CEditorWindow * editor) -> void {
         if ( editor ) {
             CTabPanel * tabpanel = editor->releaseEditorView();
@@ -1266,44 +1265,14 @@ namespace Drop {
         }
     }
 
-
-    size_t drop_handle;
-    auto validate_drop(size_t handle, const QPoint& pt) -> void {
+    auto validate_drop(size_t handle, const QPoint& cur_pos) -> void {
         CMainWindow * main_window = CAscApplicationManagerWrapper::mainWindow();
-        if ( main_window && main_window->isVisible() ) {
-            drop_handle = handle;
-
-            static QPoint last_cursor_pos;
-            static QTimer * drop_timer = nullptr;
-            if ( !drop_timer ) {
-                drop_timer = new QTimer;
-                QObject::connect(qApp, &QCoreApplication::aboutToQuit, drop_timer, &QTimer::deleteLater);
-                QObject::connect(drop_timer, &QTimer::timeout, []{
-                    CMainWindow * main_window = CAscApplicationManagerWrapper::mainWindow();
-                    QPoint current_cursor = QCursor::pos();
-                    if ( main_window->pointInTabs(current_cursor) ) {
-                        if ( current_cursor == last_cursor_pos ) {
-                            drop_timer->stop();
-
-                            if ( WindowHelper::isLeftButtonPressed() )
-                                callback_to_attach(CAscApplicationManagerWrapper::editorWindowFromHandle(drop_handle) );
-                        } else {
-                            last_cursor_pos = current_cursor;
-                        }
-                    } else {
-                        drop_timer->stop();
-                    }
+        if (main_window && !main_window->isMinimized()) {
+            if (main_window->pointInTabs(cur_pos)) {
+                QTimer::singleShot(0, [=]() {
+                    callback_to_attach(CAscApplicationManagerWrapper::editorWindowFromHandle(handle));
                 });
             }
-
-            if ( main_window->pointInTabs(pt) ) {
-                if ( !drop_timer->isActive() )
-                    drop_timer->start(drop_timeout);
-
-                last_cursor_pos = QCursor::pos();
-            } else
-            if ( drop_timer->isActive() )
-                drop_timer->stop();
         }
     }
 }

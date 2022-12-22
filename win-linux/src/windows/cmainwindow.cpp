@@ -213,9 +213,11 @@ int CMainWindow::editorsCount(const std::wstring& portal)
 
 bool CMainWindow::pointInTabs(const QPoint& pt)
 {
+    int top_offset = isMaximized() ? 18 : 1;
+    int bottom_offset = isMaximized() ? 18 : 0;
     QRect _rc_title(m_pMainPanel->geometry());
     _rc_title.setHeight(tabWidget()->tabBar()->height());
-    _rc_title.adjust(m_pButtonMain->width(), 1, -3*int(TOOLBTN_WIDTH*m_dpiRatio), 0);
+    _rc_title.adjust(m_pButtonMain->width(), top_offset, -3*int(TOOLBTN_WIDTH*m_dpiRatio), bottom_offset);
     return _rc_title.contains(m_pMainPanel->mapFromGlobal(pt));
 }
 
