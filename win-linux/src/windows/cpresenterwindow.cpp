@@ -51,7 +51,7 @@ using namespace std::placeholders;
 
 CPresenterWindow::CPresenterWindow(const QRect &rect, const QString &title, QCefView *view) :
     CWindowPlatform(rect)
-{    
+{
     m_pMainPanel = createMainPanel(this, title, static_cast<QWidget*>(view));
     setCentralWidget(m_pMainPanel);
 #ifdef __linux__
@@ -91,6 +91,12 @@ void CPresenterWindow::applyTheme(const std::wstring& theme)
 bool CPresenterWindow::holdView(int id) const
 {
     return ((QCefView *)m_pMainView)->GetCefView()->GetId() == id;
+}
+
+void CPresenterWindow::closeEvent(QCloseEvent *e)
+{
+    onCloseEvent();
+    e->ignore();
 }
 
 /** Private **/
@@ -161,7 +167,7 @@ void CPresenterWindow::setScreenScalingFactor(double factor)
 {
     CWindowPlatform::setScreenScalingFactor(factor);
     QString css(AscAppManager::getWindowStylesheets(factor));
-    if (!css.isEmpty()) {                
+    if (!css.isEmpty()) {
         m_pMainPanel->setStyleSheet(css);
     }
 #ifdef _WIN32

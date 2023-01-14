@@ -194,12 +194,13 @@ bool CFileDialogWrapper::modalSaveAs(QString& fileName, int selected)
             QFileInfo info(fileName);
             if ( info.exists() ) {
                 QWidget * _mess_parent = (QWidget *)parent();
-                CMessage mess(_mess_parent, CMessageOpts::moButtons::mbYesNo);
-                int _answ = mess.warning(tr("%1 already exists.<br>Do you want to replace it?").arg(info.fileName()));
-                if ( MODAL_RESULT_CUSTOM + 1 == _answ ) {
+                int _answ = CMessage::showMessage(_mess_parent,
+                                                  tr("%1 already exists.<br>Do you want to replace it?").arg(info.fileName()),
+                                                  MsgType::MSG_WARN, MsgBtns::mbYesNo);
+                if ( MODAL_RESULT_NO == _answ ) {
                     continue;
                 } else
-                if ( MODAL_RESULT_CUSTOM + 0 != _answ ) {
+                if ( MODAL_RESULT_YES != _answ ) {
                     fileName.clear();
                 }
             }
@@ -416,10 +417,27 @@ void CFileDialogWrapper::setFormats(std::vector<int>& vf)
 
 int CFileDialogWrapper::getKey(const QString &value)
 {
+#ifdef Q_OS_LINUX
+    QString _sv{value};
+    if ( WindowHelper::getEnvInfo() == "GNOME" ) {
+        QRegularExpression _re_strbegin("^(.+)\\s\\（", QRegularExpression::CaseInsensitiveOption);
+        QRegularExpressionMatch _re_match = _re_strbegin.match(value);
+
+        if ( _re_match.hasMatch() ) {
+            _sv = _re_match.captured(1);
+        }
+    }
+
+    foreach (QString v, m_mapFilters) {
+        if (v.startsWith(_sv))
+           return m_mapFilters.key(v);
+    }
+#else
     foreach (QString v, m_mapFilters) {
         if (v == value)
            return m_mapFilters.key(value);
     }
+#endif
     return -1;
 }
 

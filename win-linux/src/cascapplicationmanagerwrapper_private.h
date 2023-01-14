@@ -42,6 +42,7 @@
 #include "ceditortools.h"
 #include "utils.h"
 #include "components/cmessage.h"
+#include "cprintdata.h"
 #include <QApplication>
 
 #ifdef DOCUMENTSCORE_OPENSSL_SUPPORT
@@ -59,6 +60,7 @@ public:
 
         GET_REGISTRY_USER(reg_user);
         m_openEditorWindow = reg_user.value("editorWindowMode").toBool();
+        m_printData = std::make_shared<CPrintData>();
     }
 
     virtual ~CAscApplicationManagerWrapper_Private() {}
@@ -181,10 +183,10 @@ public:
                     if ( !match.hasMatch() ) {
                         QFileInfo _info(opts.url);
                         if ( /*!data->get_IsRecover() &&*/ !_info.exists() ) {
-                            CMessage mess(m_appmanager.mainWindow()->handle(), CMessageOpts::moButtons::mbYesDefNo);
-                            int modal_res = mess.warning(QObject::tr("%1 doesn't exists!<br>Remove file from the list?").arg(_info.fileName()));
-
-                            if ( modal_res == MODAL_RESULT_CUSTOM ) {
+                            int res = CMessage::showMessage(m_appmanager.mainWindow()->handle(),
+                                                            QObject::tr("%1 doesn't exists!<br>Remove file from the list?").arg(_info.fileName()),
+                                                            MsgType::MSG_WARN, MsgBtns::mbYesDefNo);
+                            if ( res == MODAL_RESULT_YES ) {
                                 AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "file:skip", QString::number(opts.id));
                             }
 
@@ -227,8 +229,8 @@ public:
 
                         if ( !openDocument(opts) ) {
                             QFileInfo _info(QString::fromStdWString(file_path));
-                            CMessage mess(m_appmanager.mainWindow()->handle());
-                            mess.error(QObject::tr("File %1 cannot be opened or doesn't exists.").arg(_info.fileName()));
+                            CMessage::error(m_appmanager.mainWindow()->handle(),
+                                            QObject::tr("File %1 cannot be opened or doesn't exists.").arg(_info.fileName()));
                         }
                     }
                 }
@@ -376,9 +378,10 @@ protected:
     }
 
 public:
-    CAscApplicationManagerWrapper& m_appmanager;
+    CAscApplicationManagerWrapper& m_appmanager;    
     QPointer<QCefView> m_pStartPanel;
     bool m_openEditorWindow = false;
+    std::shared_ptr<CPrintData> m_printData;
 };
 
 //CAscApplicationManagerWrapper::CAscApplicationManagerWrapper()

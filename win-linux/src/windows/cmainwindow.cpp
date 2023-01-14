@@ -65,6 +65,7 @@
 #include <stdexcept>
 #include <functional>
 #include <regex>
+#include <QPrintEngine>
 
 #ifdef _WIN32
 # include "shlobj.h"
@@ -78,19 +79,10 @@
   #include "../version.h"
 #endif
 
-using namespace std::placeholders;
-using namespace NSEditorApi;
-
 #define TOP_NATIVE_WINDOW_HANDLE this
 
-struct CMainWindow::printdata {
-public:
-    printdata() :
-        _printer_info(QPrinterInfo::defaultPrinter()),
-        _print_range(QPrintDialog::PrintRange::AllPages) {}
-    QPrinterInfo _printer_info;
-    QPrintDialog::PrintRange _print_range;
-};
+using namespace std::placeholders;
+using namespace NSEditorApi;
 
 CMainWindow::CMainWindow(const QRect &rect) :
     CWindowPlatform(rect),
@@ -653,7 +645,7 @@ int CMainWindow::tabCloseRequest(int index)
         }
     }
 
-    return MODAL_RESULT_CUSTOM;
+    return MODAL_RESULT_YES;
 }
 
 int CMainWindow::trySaveDocument(int index)
@@ -665,14 +657,13 @@ int CMainWindow::trySaveDocument(int index)
         toggleButtonMain(false);
         m_pTabs->setCurrentIndex(index);
 
-        CMessage mess(TOP_NATIVE_WINDOW_HANDLE, CMessageOpts::moButtons::mbYesDefNoCancel);
-        modal_res = mess.warning(getSaveMessage().arg(m_pTabs->titleByIndex(index)));
-
+        modal_res = CMessage::showMessage(TOP_NATIVE_WINDOW_HANDLE,
+                                          getSaveMessage().arg(m_pTabs->titleByIndex(index)),
+                                          MsgType::MSG_WARN, MsgBtns::mbYesDefNoCancel);
         switch (modal_res) {
-        case MODAL_RESULT_CANCEL: break;
-        case MODAL_RESULT_CUSTOM + 1: modal_res = MODAL_RESULT_NO; break;
-        case MODAL_RESULT_CUSTOM + 2: modal_res = MODAL_RESULT_CANCEL; break;
-        case MODAL_RESULT_CUSTOM + 0:
+        case MODAL_RESULT_NO: break;
+        case MODAL_RESULT_CANCEL: modal_res = MODAL_RESULT_CANCEL; break;
+        case MODAL_RESULT_YES:
         default:{
             m_pTabs->editorCloseRequest(index);
             m_pTabs->panel(index)->cef()->Apply(new CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_SAVE));
@@ -782,11 +773,10 @@ void CMainWindow::onLocalFileRecent(const COpenOptions& opts)
     if ( !match.hasMatch() ) {
         QFileInfo _info(opts.url);
         if ( opts.srctype != etRecoveryFile && !_info.exists() ) {
-            CMessage mess(TOP_NATIVE_WINDOW_HANDLE, CMessageOpts::moButtons::mbYesDefNo);
-            int modal_res = mess.warning(
-                        tr("%1 doesn't exists!<br>Remove file from the list?").arg(_info.fileName()));
-
-            if (modal_res == MODAL_RESULT_CUSTOM) {
+            int modal_res = CMessage::showMessage(TOP_NATIVE_WINDOW_HANDLE,
+                                                  tr("%1 doesn't exists!<br>Remove file from the list?").arg(_info.fileName()),
+                                                  MsgType::MSG_WARN, MsgBtns::mbYesDefNo);
+            if (modal_res == MODAL_RESULT_YES) {
                 AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, "file:skip", QString::number(opts.id));
             }
 
@@ -983,11 +973,11 @@ void CMainWindow::onDocumentSave(int id, bool cancel)
 
 void CMainWindow::onDocumentSaveInnerRequest(int id)
 {
-    CMessage mess(TOP_NATIVE_WINDOW_HANDLE, CMessageOpts::moButtons::mbYesDefNo);
-    int modal_res = mess.confirm(tr("Document must be saved to continue.<br>Save the document?"));
-
+    int modal_res = CMessage::showMessage(TOP_NATIVE_WINDOW_HANDLE,
+                                          tr("Document must be saved to continue.<br>Save the document?"),
+                                          MsgType::MSG_CONFIRM, MsgBtns::mbYesDefNo);
     CAscEditorSaveQuestion * pData = new CAscEditorSaveQuestion;
-    pData->put_Value((modal_res == MODAL_RESULT_CUSTOM + 0) ? true : false);
+    pData->put_Value(modal_res == MODAL_RESULT_YES);
 
     CAscMenuEvent * pEvent = new CAscMenuEvent(ASC_MENU_EVENT_TYPE_DOCUMENTEDITORS_SAVE_YES_NO);
     pEvent->m_pData = pData;
@@ -1100,23 +1090,26 @@ void CMainWindow::onDocumentPrint(void * opts)
     WindowHelper::CParentDisable disabler(qobject_cast<QWidget*>(this));
 #endif
 
-    CAscPrintEnd * pData = (CAscPrintEnd *)opts;
-    CCefView * pView = AscAppManager::getInstance().GetViewById(pData->get_Id());
+    CCefView * pView = AscAppManager::getInstance().GetViewById(AscAppManager::printData().viewId());
 
-    int pagesCount = pData->get_PagesCount(),
-        currentPage = pData->get_CurrentPage();
+    int pagesCount = AscAppManager::printData().pagesCount(),
+        currentPage = AscAppManager::printData().pageCurent();
+
 
     if (pView && !(pagesCount < 1)) {
-        if (!m_printData)
-            m_printData = new printdata();
-
         NSEditorApi::CAscMenuEvent * pEvent;
-        QAscPrinterContext * pContext = m_printData->_printer_info.isNull() ?
-                    new QAscPrinterContext() : new QAscPrinterContext(m_printData->_printer_info);
+        QAscPrinterContext * pContext = new QAscPrinterContext(AscAppManager::printData().printerInfo());
 
         QPrinter * printer = pContext->getPrinter();
         printer->setOutputFileName("");
         printer->setFromTo(1, pagesCount);
+        printer->printEngine()->setProperty(QPrintEngine::PPK_DocumentName,
+                    m_pTabs->titleByIndex(m_pTabs->tabIndexByView(AscAppManager::printData().viewId()), true));
+
+        if ( !AscAppManager::printData().isQuickPrint() ) {
+            printer->setPageOrientation(AscAppManager::printData().pageOrientation());
+            printer->setPageSize(AscAppManager::printData().pageSize());
+        }
 
 #ifdef _WIN32
         CPrintDialog * dialog =  new CPrintDialog(printer, this);
@@ -1135,12 +1128,27 @@ void CMainWindow::onDocumentPrint(void * opts)
             dialog->setEnabledOptions(dialog->enabledOptions() | QPrintDialog::PrintCurrentPage);
             dialog->setOptions(dialog->options() | QPrintDialog::PrintCurrentPage);
         }
-        dialog->setPrintRange(m_printData->_print_range);
+        dialog->setPrintRange(AscAppManager::printData().printRange());
+        if ( dialog->printRange() == QPrintDialog::PageRange )
+            dialog->setFromTo(AscAppManager::printData().pageFrom(), AscAppManager::printData().pageTo());
 
-        if (dialog->exec() == QDialog::Accepted) {
-            m_printData->_printer_info = QPrinterInfo::printerInfo(printer->printerName());
-            m_printData->_print_range = dialog->printRange();
+        int modal_res = QDialog::Accepted;
+        if ( AscAppManager::printData().isQuickPrint() ) {
+            dialog->accept();
+        } else modal_res = dialog->exec();
+            qApp->processEvents();
+
+        if ( modal_res == QDialog::Accepted ) {
+            if ( !AscAppManager::printData().isQuickPrint() )
+                AscAppManager::printData().setPrinterInfo(*printer);
+
+//            m_printData->_print_range = dialog->printRange();
             QVector<PageRanges> page_ranges;
+
+#ifdef Q_OS_LINUX
+            if ( AscAppManager::printData().isQuickPrint() && printer->outputFormat() == QPrinter::PdfFormat )
+                printer->setOutputFileName(Utils::uniqFileName(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/print.pdf"));
+#endif
 
             switch(dialog->printRange()) {
             case QPrintDialog::AllPages:
@@ -1170,7 +1178,7 @@ void CMainWindow::onDocumentPrint(void * opts)
     }
 
     printInProcess = false;
-    RELEASEINTERFACE(pData)
+//    RELEASEINTERFACE(pData)
 }
 
 void CMainWindow::onFullScreen(int id, bool apply)

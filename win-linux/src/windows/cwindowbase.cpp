@@ -125,8 +125,11 @@ void CWindowBase::setWindowColors(const QColor& background, const QColor& border
     Q_UNUSED(border)
     QPalette pal = palette();
     pal.setColor(QPalette::Window, background);
-    /*setStyleSheet(QString("QMainWindow{border:1px solid %1; border-top:2px solid %1;}").
-                  arg(border.name()));*/
+    setStyleSheet(QString("QMainWindow{border:1px solid %1;"
+#ifdef _WIN32
+                          "border-bottom:2px solid %1;"
+#endif
+                          "}").arg(border.name()));
     setAutoFillBackground(true);
     setPalette(pal);
 }
@@ -205,15 +208,12 @@ void CWindowBase::saveWindowState()
 
 void CWindowBase::moveToPrimaryScreen()
 {
-    QTimer::singleShot(200, this, [=]{
-        QMainWindow::showNormal();
-        QRect rect = QApplication::primaryScreen()->availableGeometry();
-        m_dpiRatio = Utils::getScreenDpiRatio(rect.topLeft());
-        m_window_rect = QRect(rect.translated(100, 100).topLeft() * m_dpiRatio,
-                              MAIN_WINDOW_DEFAULT_SIZE * m_dpiRatio);
-        setGeometry(m_window_rect);
-        adjustGeometry();
-    });
+    QMainWindow::showNormal();
+    QRect rect = QApplication::primaryScreen()->availableGeometry();
+    double dpiRatio = Utils::getScreenDpiRatio(rect.topLeft());
+    m_window_rect = QRect(rect.translated(100, 100).topLeft() * dpiRatio,
+                          MAIN_WINDOW_DEFAULT_SIZE * dpiRatio);
+    setGeometry(m_window_rect);
 }
 
 void CWindowBase::setIsCustomWindowStyle(bool custom)

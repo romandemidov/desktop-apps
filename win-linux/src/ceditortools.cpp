@@ -66,7 +66,7 @@ namespace CEditorTools
                     start < 1 && (start = 1);
                     finish < 1 && (finish = 1);
                     finish < start && (finish = start);
-                    //c.context->SetPageOrientation(c.view->GetPrintPageOrientation(start - 1));
+                    c.context->SetPageOrientation(c.view->GetPrintPageOrientation(start - 1));
                     while (start <= finish) {
                         c.context->AddRef();
 
@@ -87,7 +87,7 @@ namespace CEditorTools
                         if ( _progress.isRejected() )
                             break;
                         if (curr < count) {
-                            //c.context->SetPageOrientation(c.view->GetPrintPageOrientation(start));
+                            c.context->SetPageOrientation(c.view->GetPrintPageOrientation(start));
                             c.context->getPrinter()->newPage();
                         }
                         curr++;
@@ -305,8 +305,10 @@ namespace CEditorTools
                 switch ( dlg.getFormat() ) {
                 case AVS_OFFICESTUDIO_FILE_DOCUMENT_TXT:
                 case AVS_OFFICESTUDIO_FILE_SPREADSHEET_CSV: {
-                    CMessage mess(_parent, CMessageOpts::moButtons::mbOkDefCancel);
-                    _allowed =  MODAL_RESULT_CUSTOM == mess.warning(QCoreApplication::translate("CEditorWindow", "Some data will lost.<br>Continue?"));
+                    int res = CMessage::showMessage(_parent,
+                                                    QCoreApplication::translate("CEditorWindow", "Some data will lost.<br>Continue?"),
+                                                    MsgType::MSG_WARN, MsgBtns::mbOkDefCancel);
+                    _allowed = (MODAL_RESULT_OK == res);
                     break; }
                 default: break;
                 }

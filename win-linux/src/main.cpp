@@ -92,10 +92,17 @@ int main( int argc, char *argv[] )
         manager->m_oSettings.country = Utils::systemLocationCode().toStdString();
     };
 
-    if ( InputArgs::contains(L"--geometry=default") ) {
+    if ( InputArgs::contains(L"--updates-reset") ) {
         GET_REGISTRY_USER(reg_user)
-        reg_user.remove("maximized");
-        reg_user.remove("position");
+        reg_user.beginGroup("Updates");
+        reg_user.remove("Updates/ignored_ver");
+        reg_user.remove("Updates/file");
+        reg_user.remove("Updates/hash");
+        reg_user.remove("Updates/version");
+        reg_user.remove("Updates/last_check");
+        reg_user.endGroup();
+        reg_user.remove("autoUpdateMode");
+        reg_user.remove("checkUpdatesInterval");
     }
     if ( InputArgs::contains(L"--version") ) {
         qWarning() << VER_PRODUCTNAME_STR << "ver." << VER_FILEVERSION_STR;
@@ -105,8 +112,20 @@ int main( int argc, char *argv[] )
         CHelp::out();
         return 0;
     }
+    if ( InputArgs::contains(L"--updates-reset") ) {
+        GET_REGISTRY_USER(reg_user)
+        reg_user.beginGroup("Updates");
+        reg_user.remove("");
+        reg_user.endGroup();
+        reg_user.remove("autoUpdateMode");
+        reg_user.remove("checkUpdatesInterval");
+    }
+    if ( InputArgs::contains(L"--geometry=default") ) {
+        GET_REGISTRY_USER(reg_user)
+        reg_user.remove("maximized");
+        reg_user.remove("position");
+    }
 
-    int exit_code = 0;
     SingleApplication app(argc, argv, APP_MUTEX_NAME ":" + QString::fromStdWString(Utils::systemUserName()));
 
     if (!app.isPrimary() && !InputArgs::contains(L"--single-window-app")) {
@@ -152,7 +171,7 @@ int main( int argc, char *argv[] )
     AscAppManager::getInstance().CheckFonts();
 
     bool bIsOwnMessageLoop = false;
-    exit_code = application_cef->RunMessageLoop(bIsOwnMessageLoop);
+    int exit_code = application_cef->RunMessageLoop(bIsOwnMessageLoop);
     if (!bIsOwnMessageLoop)
         exit_code = app.exec();
 

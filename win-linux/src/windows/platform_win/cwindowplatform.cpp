@@ -59,8 +59,12 @@ CWindowPlatform::CWindowPlatform(const QRect &rect) :
                    | Qt::WindowSystemMenuHint | Qt::WindowMaximizeButtonHint
                    | Qt::MSWindowsFixedSizeDialogHint);
     m_hWnd = (HWND)winId();
-    DWORD style = ::GetWindowLong(m_hWnd, GWL_STYLE);
-    ::SetWindowLong(m_hWnd, GWL_STYLE, style | WS_MAXIMIZEBOX | WS_THICKFRAME | WS_CAPTION);
+    LONG style = ::GetWindowLong(m_hWnd, GWL_STYLE);
+    style &= ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME);
+    style |= (WS_CLIPCHILDREN | WS_MAXIMIZEBOX | WS_MINIMIZEBOX);
+    style |= (Utils::getWinVersion() > Utils::WinVer::Win7) ?
+                WS_OVERLAPPEDWINDOW : WS_POPUP;
+    ::SetWindowLong(m_hWnd, GWL_STYLE, style);
 #ifndef __OS_WIN_XP
     const MARGINS shadow = {1, 1, 1, 1};
     DwmExtendFrameIntoClientArea(m_hWnd, &shadow);
@@ -187,7 +191,7 @@ bool CWindowPlatform::nativeEvent(const QByteArray &eventType, void *message, lo
 
     case WM_KEYDOWN: {
         if (msg->wParam == VK_F5 || msg->wParam == VK_F6 || msg->wParam == VK_F7) {
-            SendMessage(msg->hwnd, WM_KEYDOWN, msg->wParam, msg->lParam);
+            //SendMessage(msg->hwnd, WM_KEYDOWN, msg->wParam, msg->lParam);
         } else
         if (msg->wParam == VK_TAB) {
             SetFocus(HWND(winId()));
@@ -293,18 +297,42 @@ bool CWindowPlatform::nativeEvent(const QByteArray &eventType, void *message, lo
 
     case WM_POWERBROADCAST: {
         if (msg->wParam == PBT_APMRESUMEAUTOMATIC) {
-            auto pt = QApplication::desktop()->availableGeometry(this).topLeft();
-            POINT point{pt.x(), pt.y()};
-            HMONITOR monitor = MonitorFromPoint(point, MONITOR_DEFAULTTONULL);
-            if (!monitor)
+            HMONITOR monitor = MonitorFromWindow(m_hWnd, MONITOR_DEFAULTTONULL);
+            if (!monitor) {
                 moveToPrimaryScreen();
-            else {
-                BOOL res;
-                if (GetDevicePowerState(monitor, &res)) {
-                    if (res == FALSE)
-                        moveToPrimaryScreen();
-                } else
+            } else {
+                MONITORINFOEX monInfo;
+                ZeroMemory(&monInfo, sizeof(monInfo));
+                monInfo.cbSize = sizeof(MONITORINFOEX);
+                if (GetMonitorInfo(monitor, &monInfo)) {
+                    DISPLAY_DEVICE  dispDevice;
+                    ZeroMemory(&dispDevice, sizeof(dispDevice));
+                    dispDevice.cb = sizeof(dispDevice);
+                    if (EnumDisplayDevices(monInfo.szDevice, 0, &dispDevice, EDD_GET_DEVICE_INTERFACE_NAME)) {
+                        HANDLE hDevice;
+                        hDevice = CreateFile(dispDevice.DeviceID,
+                                             GENERIC_READ,
+                                             FILE_SHARE_READ,
+                                             NULL,
+                                             OPEN_EXISTING,
+                                             FILE_ATTRIBUTE_READONLY,
+                                             NULL);
+                        if (hDevice != INVALID_HANDLE_VALUE) {
+                            BOOL res;
+                            if (GetDevicePowerState(hDevice, &res)) {
+                                if (res == FALSE)
+                                    moveToPrimaryScreen();
+                            } else {
+                                moveToPrimaryScreen();
+                            }
+                            CloseHandle(hDevice);
+                        } else {
+                            moveToPrimaryScreen();
+                        }
+                    }
+                } else {
                     moveToPrimaryScreen();
+                }
             }
         }
         break;
@@ -324,6 +352,12 @@ bool CWindowPlatform::nativeEvent(const QByteArray &eventType, void *message, lo
         if (m_allowMaximize && ++movParam == UM_SNAPPING)
             m_allowMaximize = false;
         break;
+
+    case WM_PAINT:
+        return false;
+
+    case WM_ERASEBKGND:
+        return true;
 
     default:
         break;
