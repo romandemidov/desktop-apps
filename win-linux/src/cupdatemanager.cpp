@@ -52,11 +52,18 @@
 #include "Network/FileTransporter/include/FileTransporter.h"
 #include "cascapplicationmanagerwrapper.h"
 #ifdef Q_OS_WIN
-# include <QProcess>
 # include <QCryptographicHash>
+# include <Windows.h>
+# include "OfficeUtils.h"
 # include "platform_win/updatedialog.h"
+# define DAEMON_NAME "/update-daemon.exe"
+# define TEMP_DAEMON_NAME "/~update-daemon.exe"
+# define DELETE_LIST "/delete_list.lst"
+# define REPLACEMENT_LIST "/replacement_list.lst"
+# define SUCCES_UNPACKED "/success_unpacked"
 #endif
 
+#define UPDATE_PATH "/DesktopEditorsUpdates"
 #define CHECK_ON_STARTUP_MS 9000
 #define CMD_ARGUMENT_CHECK_URL L"--updates-appcast-url"
 #ifndef URL_APPCAST_UPDATES
@@ -81,8 +88,10 @@ auto currentArch()->QString
 
 class CUpdateManager::DialogSchedule : public QObject
 {
+    Q_OBJECT
 public:
     DialogSchedule(QObject *owner);
+public slots:
     void addToSchedule(const QString &method);
 
 private:
@@ -146,6 +155,119 @@ auto generateTmpFileName(const QString &ext)->QString
     const QRegularExpression branches = QRegularExpression("[{|}]+");
     return QDir::tempPath() + "/" + QString(FILE_PREFIX) +
            uuid.toString().replace(branches, "") + currentArch() + ext;
+}
+
+auto createListFiles(const QString &updPath, const QString &appPath)->bool
+{
+    if (QFile::exists(appPath + TEMP_DAEMON_NAME)
+            && !QFile::remove(appPath + TEMP_DAEMON_NAME)) {
+        CMessage::warning(nullptr, QObject::tr("Unable to remove temp file: %1")
+                            .arg(appPath + TEMP_DAEMON_NAME));
+        return false;
+    }
+
+    auto fillSubpathVector = [](const QString &path, QVector<QString> &vec) {
+        QStringList filters{"*.*"};
+        QDirIterator it(path, filters, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString subPath = it.next().mid(path.length());
+            vec.push_back(std::move(subPath));
+        }
+    };
+
+    QVector<QString> updVec, appVec;
+    fillSubpathVector(appPath, appVec);
+    fillSubpathVector(updPath, updVec);
+    {
+        const QString delListFilePath = updPath + DELETE_LIST;
+        QFile delListFile(delListFilePath);
+        if (!delListFile.open(QFile::WriteOnly)) {
+            CMessage::warning(nullptr, QObject::tr("Can't create file: ") + delListFilePath);
+            return false;
+        }
+        QTextStream out(&delListFile);
+        foreach (auto &appFile, appVec) {
+            if (!updVec.contains(appFile) && appFile != DAEMON_NAME)
+                out << appFile << "\n";
+        }
+        delListFile.close();
+    }
+    {
+        const QString repListFilePath = updPath + REPLACEMENT_LIST;
+        QFile repListFile(repListFilePath);
+        if (!repListFile.open(QFile::WriteOnly)) {
+            CMessage::warning(nullptr, QObject::tr("Can't create file: ") + repListFilePath);
+            return false;
+        }
+        QTextStream out(&repListFile);
+        foreach (auto &updFile, updVec) {
+            int ind = appVec.indexOf(updFile);
+            if (ind != -1) {
+                auto updFileHash = getFileHash(updPath + updFile);
+                if (updFileHash.isEmpty() || updFileHash != getFileHash(appPath + appVec[ind]))
+                    out << updFile << "\n";
+            } else
+                out << updFile << "\n";
+        }
+        repListFile.close();
+    }
+    return true;
+}
+
+auto isSuccessUnpacked(const QString &successFilePath, const QString &version)->bool
+{
+    QFile successFile(successFilePath);
+    if (!successFile.open(QFile::ReadOnly))
+        return false;
+    if (QString(successFile.readAll()).indexOf(version) == -1) {
+        successFile.close();
+        return false;
+    }
+    successFile.close();
+    return true;
+}
+
+auto unzipArchive(const QString &zipFilePath, const QString &updPath, const QString &version)->bool
+{
+    QDir updDir(updPath);
+    if (!updDir.exists() && !updDir.mkpath(updPath)) {
+        CMessage::warning(nullptr, QObject::tr("An error occurred while creating Update dir!"));
+        return false;
+    }
+    COfficeUtils utils;
+    HRESULT res = utils.ExtractToDirectory(zipFilePath.toStdWString(), updPath.toStdWString(), nullptr, 0);
+    if (res != S_OK) {
+        CMessage::warning(nullptr, QObject::tr("An error occurred while unpacking zip file!"));
+        return false;
+    }
+    QFile successFile(updPath + SUCCES_UNPACKED);
+    if (!successFile.open(QFile::WriteOnly)) {
+        CMessage::warning(nullptr, QObject::tr("An error occurred while creating success unpack file!"));
+        return false;
+    }
+    if (successFile.write(version.toUtf8()) == -1) {
+        successFile.close();
+        return false;
+    }
+    successFile.close();
+    return true;
+}
+
+auto runProcess(const WCHAR *fileName, WCHAR *args)->BOOL
+{
+    PROCESS_INFORMATION ProcessInfo;
+    STARTUPINFO StartupInfo;
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    if (CreateProcessW(fileName, args, NULL, NULL, FALSE,
+                       CREATE_NO_WINDOW, NULL, NULL,
+                       &StartupInfo, &ProcessInfo)) {
+        //WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+        CloseHandle(ProcessInfo.hThread);
+        CloseHandle(ProcessInfo.hProcess);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 class CUpdateManager::CUpdateManagerPrivate
@@ -227,7 +349,17 @@ CUpdateManager::CUpdateManager(QObject *parent):
     setUrl();
 #endif
 
-    if ( !m_checkUrl.empty() ) {
+    m_appPath = qApp->applicationDirPath();
+    QString parentPath = QFileInfo(m_appPath).dir().absolutePath();
+    if (QFileInfo(m_appPath).baseName() == QString(REG_APP_NAME) && parentPath != m_appPath)
+        m_updPath = parentPath + UPDATE_PATH;
+    else {
+        QTimer::singleShot(2000, this, [] {
+            CMessage::warning(nullptr, tr("This folder configuration does not allow for updates!"));
+        });
+    }
+
+    if ( !m_checkUrl.empty() && !m_updPath.isEmpty()) {
         m_pimpl = new CUpdateManagerPrivate(this, m_checkUrl);
 #ifdef __linux__
         m_pTimer = new QTimer(this);
@@ -240,6 +372,10 @@ CUpdateManager::CUpdateManager(QObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
+    if (m_future_clear.isRunning())
+        m_future_clear.waitForFinished();
+    if (m_future_unzip.isRunning())
+        m_future_unzip.waitForFinished();
     delete m_packageData, m_packageData = nullptr;
     delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_dialogSchedule, m_dialogSchedule = nullptr;
@@ -301,8 +437,8 @@ void CUpdateManager::clearTempFiles(const QString &except)
     static bool lock = false;
     if (!lock) { // for one-time cleaning
         lock = true;
-        QtConcurrent::run([=]() {
-            QStringList filter{"*.json", "*.exe"};
+        m_future_clear = QtConcurrent::run([=]() {
+            QStringList filter{"*.json", "*.zip"};
             QDirIterator it(QDir::tempPath(), filter, QDir::Files | QDir::NoSymLinks |
                             QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
             while (it.hasNext()) {
@@ -403,13 +539,16 @@ void CUpdateManager::savePackageData(const QByteArray &hash, const QString &vers
 
 void CUpdateManager::loadUpdates()
 {
+    if (m_lock)
+        return;
     if (!m_savedPackageData->fileName.isEmpty()
             && m_savedPackageData->fileName.indexOf(currentArch()) != -1
             && m_savedPackageData->version == m_newVersion
             && m_savedPackageData->hash == getFileHash(m_savedPackageData->fileName))
     {
         m_packageData->fileName = m_savedPackageData->fileName;
-        m_dialogSchedule->addToSchedule("showStartInstallMessage");
+        unzipIfNeeded();
+
     } else
     if (!m_packageData->packageUrl.empty()) {
         m_downloadMode = Mode::DOWNLOAD_UPDATES;
@@ -437,20 +576,51 @@ void CUpdateManager::onLoadUpdateFinished(const QString &filePath)
 {
     m_packageData->fileName = filePath;
     savePackageData(getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);
-    m_dialogSchedule->addToSchedule("showStartInstallMessage");
+    unzipIfNeeded();
+}
+
+void CUpdateManager::unzipIfNeeded()
+{
+    if (m_lock)
+        return;
+    m_lock = true;
+    auto unzip = [=]()->void {
+        if (!unzipArchive(m_packageData->fileName, m_updPath, m_newVersion)
+                || !createListFiles(m_updPath, m_appPath)) {
+            m_lock = false;
+            return;
+        }
+        m_lock = false;
+        QMetaObject::invokeMethod(this->m_dialogSchedule,
+                                  "addToSchedule",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(QString, QString("showStartInstallMessage")));
+    };
+
+    QDir updDir(m_updPath);
+    if (!updDir.exists() || updDir.isEmpty()) {
+        m_future_unzip = QtConcurrent::run(unzip);
+    } else {
+        if (isSuccessUnpacked(m_updPath + SUCCES_UNPACKED, m_newVersion)) {
+            m_lock = false;
+            m_dialogSchedule->addToSchedule("showStartInstallMessage");
+        } else {
+            updDir.removeRecursively();
+            m_future_unzip = QtConcurrent::run(unzip);
+        }
+    }
 }
 
 void CUpdateManager::handleAppClose()
 {
     if ( m_restartForUpdate ) {
         GET_REGISTRY_SYSTEM(reg_system)
-        QString prev_inst_lang = reg_system.value("locale", "en").toString();
-
-        QStringList args{"/LANG=" + prev_inst_lang};
-        if ( !m_packageData->packageArgs.empty() )
-            args << QString::fromStdWString(m_packageData->packageArgs).split(" ");
-        if (!QProcess::startDetached(m_packageData->fileName, args)) {
-            //qDebug() << "Install command not found!" << m_packageData.fileName << args;
+        wstring filePath = (m_appPath + DAEMON_NAME).toStdWString();
+        wstring args = L"/LANG=" + reg_system.value("locale", "en").toString().toStdWString();
+        args += L" " + m_packageData->packageArgs;
+        if (!runProcess(filePath.c_str(), (wchar_t*)args.c_str())) {
+            wstring lpText = QString("Unable to start process: %1").arg(m_appPath + DAEMON_NAME).toStdWString();
+            MessageBoxW(NULL, lpText.c_str(), TEXT(APP_TITLE), MB_OK | MB_ICONWARNING | MB_SETFOREGROUND);
         }
     } else
         if (m_pimpl)
@@ -486,6 +656,8 @@ void CUpdateManager::setNewUpdateSetting(const QString& _rate)
 
 void CUpdateManager::cancelLoading()
 {
+    if (m_lock)
+        return;
     AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(m_newVersion));
     m_downloadMode = Mode::CHECK_UPDATES;
     if (m_pimpl)
@@ -553,7 +725,9 @@ void CUpdateManager::onLoadCheckFinished(const QString &filePath)
             QJsonValue win = package.value("win_32");
 # endif
             QJsonObject win_params = win.toObject();
-            m_packageData->packageUrl = win_params.value("url").toString().toStdWString();
+            QJsonObject archive = win_params.value("archive").toObject();
+            m_packageData->packageUrl = archive.value("url").toString().toStdWString();
+            //m_packageData->packageUrl = win_params.value("url").toString().toStdWString();
             m_packageData->packageArgs = win_params.value("installArguments").toString().toStdWString();
 #endif
 
@@ -672,3 +846,5 @@ void CUpdateManager::showStartInstallMessage(QWidget *parent)
     }
 }
 #endif
+
+#include "cupdatemanager.moc"

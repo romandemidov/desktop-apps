@@ -36,6 +36,7 @@
 #include <QObject>
 #include <QTimer>
 #include <ctime>
+#include <QFuture>
 
 using std::wstring;
 
@@ -73,6 +74,7 @@ private:
     void onCheckFinished(bool error, bool updateExist, const QString &version, const QString &changelog);
 #ifdef Q_OS_WIN
     void onLoadUpdateFinished(const QString &filePath);
+    void unzipIfNeeded();
     void savePackageData(const QByteArray &hash = QByteArray(),
                          const QString &version = QString(),
                          const QString &fileName = QString());
@@ -82,7 +84,8 @@ private:
     PackageData      *m_packageData;
     SavedPackageData *m_savedPackageData;
 
-    bool        m_restartForUpdate = false;
+    bool        m_restartForUpdate = false,
+                m_lock = false;
 #else
     QTimer      *m_pTimer = nullptr;
     time_t      m_lastCheck;
@@ -95,7 +98,11 @@ private:
     QTimer      *m_pCheckOnStartupTimer = nullptr;
     wstring     m_checkUrl;
     int         m_downloadMode;
-    QString     m_newVersion;
+    QString     m_newVersion,
+                m_appPath,
+                m_updPath;
+    QFuture<void> m_future_unzip,
+                 m_future_clear;
 
     class CUpdateManagerPrivate;
     CUpdateManagerPrivate *m_pimpl;
