@@ -54,6 +54,7 @@
 #endif
 
 #include "cthemes.h"
+#include "cappstate.h"
 
 #define SEND_TO_ALL_START_PAGE nullptr
 
@@ -112,6 +113,7 @@ private:
     CMainWindow * m_pMainWindow = nullptr;
 
     std::shared_ptr<CThemes> m_themes;
+    std::unique_ptr<CAppState> m_appstate = nullptr;
 
 public:
     CWindowsQueue<sWinTag>& closeQueue();
@@ -183,6 +185,7 @@ public:
     static QString          newFileName(int format);
     static CThemes &        themes();
     static CPrintData&      printData();
+    static CAppState&       appState();
 
     static ParentHandle     windowHandleFromId(int id);
 
