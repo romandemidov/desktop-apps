@@ -36,9 +36,7 @@
 #include <QObject>
 #include <QTimer>
 #include <ctime>
-#include "Network/FileTransporter/include/FileTransporter.h"
 
-using NSNetwork::NSFileTransport::CFileDownloader;
 using std::wstring;
 
 
@@ -71,28 +69,18 @@ private:
     void init();
     void clearTempFiles(const QString &except = QString());
     void updateNeededCheking();
-    void onLoadCheckFinished();
-    void downloadFile(const wstring &url, const QString &ext);
+    void onLoadCheckFinished(const QString &filePath);
     void onCheckFinished(bool error, bool updateExist, const QString &version, const QString &changelog);
 #ifdef Q_OS_WIN
-    void onLoadUpdateFinished();
+    void onLoadUpdateFinished(const QString &filePath);
     void savePackageData(const QByteArray &hash = QByteArray(),
                          const QString &version = QString(),
                          const QString &fileName = QString());
-    QByteArray getFileHash(const QString &fileName);
 
-    struct PackageData {
-        QString     fileName = "";
-        wstring     packageUrl = L"",
-                    packageArgs = L"";
-    };
-    struct SavedPackageData {
-        QByteArray hash = QByteArray();
-        QString    version = "",
-                   fileName = "";
-    };
-    PackageData      m_packageData;
-    SavedPackageData m_savedPackageData;
+    struct PackageData;
+    struct SavedPackageData;
+    PackageData      *m_packageData;
+    SavedPackageData *m_savedPackageData;
 
     bool        m_restartForUpdate = false;
 #else
@@ -108,7 +96,9 @@ private:
     wstring     m_checkUrl;
     int         m_downloadMode;
     QString     m_newVersion;
-    CFileDownloader  * m_pDownloader = nullptr;
+
+    class CUpdateManagerPrivate;
+    CUpdateManagerPrivate *m_pimpl;
     class DialogSchedule;
     DialogSchedule *m_dialogSchedule;
 
@@ -126,7 +116,7 @@ signals:
 
 private slots:
     void showUpdateMessage(QWidget *parent);
-    void onCompleteSlot(const int error);
+    void onCompleteSlot(const int error, const QString &filePath);
 #ifdef Q_OS_WIN
     void showStartInstallMessage(QWidget *parent);
     void onProgressSlot(const int percent);

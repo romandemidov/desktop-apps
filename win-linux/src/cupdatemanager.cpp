@@ -40,7 +40,6 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 #include <QtConcurrent/QtConcurrent>
-#include <QDebug>
 #include <algorithm>
 #include <iostream>
 #include <functional>
@@ -50,6 +49,7 @@
 #include "version.h"
 #include "clangater.h"
 #include "components/cmessage.h"
+#include "Network/FileTransporter/include/FileTransporter.h"
 #include "cascapplicationmanagerwrapper.h"
 #ifdef Q_OS_WIN
 # include <QProcess>
@@ -64,7 +64,7 @@
 #endif
 
 using std::vector;
-
+using NSNetwork::NSFileTransport::CFileDownloader;
 
 auto currentArch()->QString
 {
@@ -126,8 +126,89 @@ auto destroyStartupTimer(QTimer* &timer)->void
     }
 }
 
+auto getFileHash(const QString &fileName)->QByteArray
+{
+    QFile file(fileName);
+    if (file.open(QFile::ReadOnly)) {
+        QCryptographicHash hash(QCryptographicHash::Md5);
+        if (hash.addData(&file)) {
+            file.close();
+            return hash.result();
+        }
+        file.close();
+    }
+    return QByteArray();
+}
+
+auto generateTmpFileName(const QString &ext)->QString
+{
+    const QUuid uuid = QUuid::createUuid();
+    const QRegularExpression branches = QRegularExpression("[{|}]+");
+    return QDir::tempPath() + "/" + QString(FILE_PREFIX) +
+           uuid.toString().replace(branches, "") + currentArch() + ext;
+}
+
+class CUpdateManager::CUpdateManagerPrivate
+{
+public:
+    CUpdateManagerPrivate(CUpdateManager *owner, wstring &url)
+    {
+        m_pDownloader = new CFileDownloader(url, false);
+        m_pDownloader->SetEvent_OnComplete([=](int error) {
+            const QString filePath = QString::fromStdWString(m_pDownloader->GetFilePath());
+            QMetaObject::invokeMethod(owner, "onCompleteSlot", Qt::QueuedConnection,
+                                      Q_ARG(int, error), Q_ARG(QString, filePath));
+        });
+#ifdef Q_OS_WIN
+        m_pDownloader->SetEvent_OnProgress([=](int percent) {
+            QMetaObject::invokeMethod(owner, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, percent));
+        });
+#endif
+    }
+
+    ~CUpdateManagerPrivate()
+    {
+        delete m_pDownloader, m_pDownloader = nullptr;
+    }
+
+    void downloadFile(const wstring &url, const wstring &filePath)
+    {
+        m_pDownloader->Stop();
+        m_pDownloader->SetFileUrl(url, false);
+        m_pDownloader->SetFilePath(filePath);
+        m_pDownloader->Start(0);
+    }
+
+    void stop()
+    {
+        m_pDownloader->Stop();
+    }
+
+private:
+    CFileDownloader  * m_pDownloader = nullptr;
+};
+
+struct CUpdateManager::PackageData {
+    QString     fileName;
+    wstring     packageUrl,
+                packageArgs;
+    void clear() {
+        fileName.clear();
+        packageUrl.clear();
+        packageArgs.clear();
+    }
+};
+
+struct CUpdateManager::SavedPackageData {
+    QByteArray hash;
+    QString    version,
+               fileName;
+};
+
 CUpdateManager::CUpdateManager(QObject *parent):
     QObject(parent),
+    m_packageData(new PackageData),
+    m_savedPackageData(new SavedPackageData),
     m_checkUrl(L""),
     m_downloadMode(Mode::CHECK_UPDATES),
     m_dialogSchedule(new DialogSchedule(this))
@@ -143,20 +224,12 @@ CUpdateManager::CUpdateManager(QObject *parent):
     if (Utils::getWinVersion() > Utils::WinVer::WinXP && reg_system.value("CheckForUpdates", true).toBool())
         setUrl();
 #else
-    //setUrl();
+    setUrl();
 #endif
 
     if ( !m_checkUrl.empty() ) {
-        m_pDownloader = new CFileDownloader(m_checkUrl, false);
-        m_pDownloader->SetEvent_OnComplete([=](int error) {
-            QMetaObject::invokeMethod(this, "onCompleteSlot", Qt::QueuedConnection, Q_ARG(int, error));
-        });
-
-#ifdef Q_OS_WIN
-        m_pDownloader->SetEvent_OnProgress([=](int percent) {
-            QMetaObject::invokeMethod(this, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, percent));
-        });
-#else
+        m_pimpl = new CUpdateManagerPrivate(this, m_checkUrl);
+#ifdef __linux__
         m_pTimer = new QTimer(this);
         m_pTimer->setSingleShot(false);
         connect(m_pTimer, SIGNAL(timeout()), this, SLOT(checkUpdates()));
@@ -167,32 +240,33 @@ CUpdateManager::CUpdateManager(QObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
-    if ( m_pDownloader )
-        delete m_pDownloader, m_pDownloader = nullptr;
-    if (m_dialogSchedule)
-        delete m_dialogSchedule, m_dialogSchedule = nullptr;
+    delete m_packageData, m_packageData = nullptr;
+    delete m_savedPackageData, m_savedPackageData = nullptr;
+    delete m_dialogSchedule, m_dialogSchedule = nullptr;
+    delete m_pimpl, m_pimpl = nullptr;
 }
 
-void CUpdateManager::onCompleteSlot(const int error)
+void CUpdateManager::onCompleteSlot(const int error, const QString &filePath)
 {
     if (error == 0) {
-        //qDebug() << "Download complete... Mode: " << m_downloadMode;
         switch (m_downloadMode) {
         case Mode::CHECK_UPDATES:
-            onLoadCheckFinished();
+            onLoadCheckFinished(filePath);
             break;
 #ifdef Q_OS_WIN
         case Mode::DOWNLOAD_UPDATES:
-            onLoadUpdateFinished();
+            onLoadUpdateFinished(filePath);
             break;
 #endif
         default: break;
         }
-    }
-    else {
-        auto wgts = QApplication::topLevelWidgets();
-        if (!wgts.isEmpty() && !wgts[0]->isMinimized())
-            CMessage::warning(wgts[0], tr("Server connection error!"));
+    } else
+    if (error == 1) {
+        auto wgt = QApplication::activeWindow();
+        if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
+            CMessage::warning(wgt, tr("Server connection error!"));
+    } else {
+        // Pause or Stop
     }
 }
 
@@ -202,9 +276,9 @@ void CUpdateManager::init()
     GET_REGISTRY_USER(reg_user);
     reg_user.beginGroup("Updates");
 #ifdef _WIN32
-    m_savedPackageData.fileName = reg_user.value("Updates/file", QString()).toString();
-    m_savedPackageData.hash = reg_user.value("Updates/hash", QByteArray()).toByteArray();
-    m_savedPackageData.version = reg_user.value("Updates/version", QString()).toString();
+    m_savedPackageData->fileName = reg_user.value("Updates/file", QString()).toString();
+    m_savedPackageData->hash = reg_user.value("Updates/hash", QByteArray()).toByteArray();
+    m_savedPackageData->version = reg_user.value("Updates/version", QString()).toString();
     reg_user.endGroup();
     checkOnStartup = (getUpdateMode() != UpdateMode::DISABLE);
 #else
@@ -219,20 +293,6 @@ void CUpdateManager::init()
         m_pCheckOnStartupTimer->setInterval(CHECK_ON_STARTUP_MS);
         connect(m_pCheckOnStartupTimer, &QTimer::timeout, this, &CUpdateManager::updateNeededCheking);
         m_pCheckOnStartupTimer->start();
-    }
-}
-
-void CUpdateManager::downloadFile(const std::wstring &url, const QString &ext)
-{
-    if (m_pDownloader) {
-        m_pDownloader->Stop();
-        m_pDownloader->SetFileUrl(url, false);
-        const QUuid uuid = QUuid::createUuid();
-        const QRegularExpression branches = QRegularExpression("[{|}]+");
-        const QString tmp_file = QDir::tempPath() + "/" + QString(FILE_PREFIX) +
-                uuid.toString().replace(branches, "") + currentArch() + ext;
-        m_pDownloader->SetFilePath(tmp_file.toStdWString());
-        m_pDownloader->Start(0);
     }
 }
 
@@ -261,11 +321,9 @@ void CUpdateManager::clearTempFiles(const QString &except)
 void CUpdateManager::checkUpdates()
 {
     destroyStartupTimer(m_pCheckOnStartupTimer);
-    m_newVersion = "";
+    m_newVersion.clear();
 #ifdef Q_OS_WIN
-    m_packageData.packageUrl = L"";
-    m_packageData.packageArgs = L"";
-    m_packageData.fileName = "";
+    m_packageData->clear();
 #else
     m_lastCheck = time(nullptr);
     GET_REGISTRY_USER(reg_user);
@@ -275,7 +333,8 @@ void CUpdateManager::checkUpdates()
 #endif
 
     m_downloadMode = Mode::CHECK_UPDATES;
-    downloadFile(m_checkUrl, ".json");
+    if (m_pimpl)
+        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(".json").toStdWString());
 #ifndef Q_OS_WIN
     QTimer::singleShot(3000, this, [=]() {
         updateNeededCheking();
@@ -331,9 +390,9 @@ void CUpdateManager::onProgressSlot(const int percent)
 
 void CUpdateManager::savePackageData(const QByteArray &hash, const QString &version, const QString &fileName)
 {
-    m_savedPackageData.fileName = fileName;
-    m_savedPackageData.hash = hash;
-    m_savedPackageData.version = version;
+    m_savedPackageData->fileName = fileName;
+    m_savedPackageData->hash = hash;
+    m_savedPackageData->version = version;
     GET_REGISTRY_USER(reg_user);
     reg_user.beginGroup("Updates");
     reg_user.setValue("Updates/file", fileName);
@@ -342,33 +401,20 @@ void CUpdateManager::savePackageData(const QByteArray &hash, const QString &vers
     reg_user.endGroup();
 }
 
-QByteArray CUpdateManager::getFileHash(const QString &fileName)
-{
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QCryptographicHash hash(QCryptographicHash::Md5);
-        if (hash.addData(&file)) {
-            file.close();
-            return hash.result();
-        }
-        file.close();
-    }
-    return QByteArray();
-}
-
 void CUpdateManager::loadUpdates()
 {
-    if (!m_savedPackageData.fileName.isEmpty()
-            && m_savedPackageData.fileName.indexOf(currentArch()) != -1
-            && m_savedPackageData.version == m_newVersion
-            && m_savedPackageData.hash == getFileHash(m_savedPackageData.fileName))
+    if (!m_savedPackageData->fileName.isEmpty()
+            && m_savedPackageData->fileName.indexOf(currentArch()) != -1
+            && m_savedPackageData->version == m_newVersion
+            && m_savedPackageData->hash == getFileHash(m_savedPackageData->fileName))
     {
-        m_packageData.fileName = m_savedPackageData.fileName;
+        m_packageData->fileName = m_savedPackageData->fileName;
         m_dialogSchedule->addToSchedule("showStartInstallMessage");
     } else
-    if (m_packageData.packageUrl != L"") {
+    if (!m_packageData->packageUrl.empty()) {
         m_downloadMode = Mode::DOWNLOAD_UPDATES;
-        downloadFile(m_packageData.packageUrl, ".exe");
+        if (m_pimpl)
+            m_pimpl->downloadFile(m_packageData->packageUrl, generateTmpFileName(".zip").toStdWString());
     }
 }
 
@@ -387,10 +433,10 @@ QString CUpdateManager::getVersion() const
     return m_newVersion;
 }
 
-void CUpdateManager::onLoadUpdateFinished()
+void CUpdateManager::onLoadUpdateFinished(const QString &filePath)
 {
-    m_packageData.fileName = QString::fromStdWString(m_pDownloader->GetFilePath());
-    savePackageData(getFileHash(m_packageData.fileName), m_newVersion, m_packageData.fileName);
+    m_packageData->fileName = filePath;
+    savePackageData(getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);
     m_dialogSchedule->addToSchedule("showStartInstallMessage");
 }
 
@@ -401,13 +447,14 @@ void CUpdateManager::handleAppClose()
         QString prev_inst_lang = reg_system.value("locale", "en").toString();
 
         QStringList args{"/LANG=" + prev_inst_lang};
-        if ( !m_packageData.packageArgs.empty() )
-            args << QString::fromStdWString(m_packageData.packageArgs).split(" ");
-        if (!QProcess::startDetached(m_packageData.fileName, args)) {
+        if ( !m_packageData->packageArgs.empty() )
+            args << QString::fromStdWString(m_packageData->packageArgs).split(" ");
+        if (!QProcess::startDetached(m_packageData->fileName, args)) {
             //qDebug() << "Install command not found!" << m_packageData.fileName << args;
         }
     } else
-        cancelLoading();
+        if (m_pimpl)
+            m_pimpl->stop();;
 }
 
 void CUpdateManager::scheduleRestartForUpdate()
@@ -439,9 +486,10 @@ void CUpdateManager::setNewUpdateSetting(const QString& _rate)
 
 void CUpdateManager::cancelLoading()
 {
+    AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(m_newVersion));
     m_downloadMode = Mode::CHECK_UPDATES;
-    if (m_pDownloader)
-        m_pDownloader->Stop();
+    if (m_pimpl)
+        m_pimpl->stop();
 }
 
 void CUpdateManager::skipVersion()
@@ -468,10 +516,9 @@ int CUpdateManager::getUpdateMode()
 #endif
 }
 
-void CUpdateManager::onLoadCheckFinished()
+void CUpdateManager::onLoadCheckFinished(const QString &filePath)
 {
-    const QString path = QString::fromStdWString(m_pDownloader->GetFilePath());
-    QFile jsonFile(path);
+    QFile jsonFile(filePath);
     if ( jsonFile.open(QIODevice::ReadOnly) ) {
         QByteArray ReplyText = jsonFile.readAll();
         jsonFile.close();
@@ -506,8 +553,8 @@ void CUpdateManager::onLoadCheckFinished()
             QJsonValue win = package.value("win_32");
 # endif
             QJsonObject win_params = win.toObject();
-            m_packageData.packageUrl = win_params.value("url").toString().toStdWString();
-            m_packageData.packageArgs = win_params.value("installArguments").toString().toStdWString();
+            m_packageData->packageUrl = win_params.value("url").toString().toStdWString();
+            m_packageData->packageArgs = win_params.value("installArguments").toString().toStdWString();
 #endif
 
             // parse release notes
@@ -517,9 +564,9 @@ void CUpdateManager::onLoadCheckFinished()
 
             m_newVersion = version;
 #ifdef Q_OS_WIN
-            if (m_newVersion == m_savedPackageData.version
-                    && m_savedPackageData.fileName.indexOf(currentArch()) != -1)
-                clearTempFiles(m_savedPackageData.fileName);
+            if (m_newVersion == m_savedPackageData->version
+                    && m_savedPackageData->fileName.indexOf(currentArch()) != -1)
+                clearTempFiles(m_savedPackageData->fileName);
             else
 #endif
                 clearTempFiles();

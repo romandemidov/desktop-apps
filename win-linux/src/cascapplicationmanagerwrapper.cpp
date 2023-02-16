@@ -302,8 +302,6 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
             } else
             if (params == "abort") {
                 m_pUpdateManager->cancelLoading();
-                const QString new_version = m_pUpdateManager->getVersion();
-                AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(new_version));
             }
 #else
             if (params == "check" || params == "download") {
