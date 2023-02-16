@@ -1,4 +1,6 @@
 
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./res/manifest/update-daemon.manifest"
+
 #include <windows.h>
 # pragma code_page(65001)
 #include "src/version.h"
