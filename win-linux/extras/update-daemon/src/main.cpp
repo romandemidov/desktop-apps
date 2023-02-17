@@ -77,11 +77,11 @@ int main(int argc, char *argv[])
     }   
 
     // Replace unused files to Backup
-    if (!replaceListOfFiles(delList, appPath, tmpPath, "", false)) {
+    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
         showMessage(QString("An error occurred while replace unused files! Restoring from the backup will start."));
 
         // Restore from backup
-        if (!replaceFolderContents(tmpPath, appPath, "", false))
+        if (!replaceFolderContents(tmpPath, appPath))
             showMessage(QString("An error occurred while restore files from backup!"));
         else
             tmpDir.removeRecursively();
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     }
 
     // Move update files to app path
-    if (!replaceListOfFiles(repList, updPath, appPath, tmpPath, true)) {
+    if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
         showMessage(QString("An error occurred while copy files! Restoring from the backup will start."));
 
         // Remove new update-daemon.exe if exist
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             QFile::remove(appFilePath);
 
         // Restore from backup
-        if (!replaceFolderContents(tmpPath, appPath, "", false))
+        if (!replaceFolderContents(tmpPath, appPath))
             showMessage(QString("An error occurred while restore files from backup!"));
         else
             tmpDir.removeRecursively();

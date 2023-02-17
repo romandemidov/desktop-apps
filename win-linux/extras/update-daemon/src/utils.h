@@ -42,11 +42,9 @@ bool readFile(const QString &filePath, QStringList &list);
 bool replaceListOfFiles(const QStringList &list,
                         const QString &fromDir,
                         const QString &toDir,
-                        const QString &tmpDir,
-                        bool useTmp);
+                        const QString &tmpDir = QString());
 bool replaceFolderContents(const QString &fromDir,
                            const QString &toDir,
-                           const QString &tmpDir,
-                           bool useTmp);
+                           const QString &tmpDir = QString());
 
 #endif // UTILS_H

@@ -113,10 +113,9 @@ bool readFile(const QString &filePath, QStringList &list)
 bool replaceListOfFiles(const QStringList &list,
                         const QString &fromDir,
                         const QString &toDir,
-                        const QString &tmpDir,
-                        bool useTmp)
+                        const QString &tmpDir)
 {
-    useTmp = useTmp && !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
+    bool useTmp = !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
     foreach (const QString &relFilePath, list) {
         if (!relFilePath.isEmpty()) {
             if (!moveSingleFile(fromDir + relFilePath,
@@ -132,12 +131,11 @@ bool replaceListOfFiles(const QStringList &list,
 
 bool replaceFolderContents(const QString &fromDir,
                            const QString &toDir,
-                           const QString &tmpDir,
-                           bool useTmp)
+                           const QString &tmpDir)
 {
     QDirIterator it(fromDir, QDirIterator::Subdirectories);
     const int sourceLength = fromDir.length();
-    useTmp = useTmp && !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
+    bool useTmp = !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
 
     while (it.hasNext()) {
         const QString sourcePath = it.next();
