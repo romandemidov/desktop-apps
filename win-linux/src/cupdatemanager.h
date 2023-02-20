@@ -36,9 +36,10 @@
 #include <QObject>
 #include <QTimer>
 #include <ctime>
-#include <QFuture>
+#include <future>
 
 using std::wstring;
+using std::future;
 
 
 #ifdef _WIN32
@@ -99,9 +100,8 @@ private:
     wstring     m_checkUrl;
     int         m_downloadMode;
     QString     m_newVersion,
-                m_appPath,
-                m_updPath;
-    QFuture<void> m_future_unzip,
+                m_appPath;
+    future<void> m_future_unzip,
                  m_future_clear;
 
     class CUpdateManagerPrivate;
