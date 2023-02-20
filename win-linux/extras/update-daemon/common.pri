@@ -1,5 +1,4 @@
-
-QT      += core
+QT      -= core
 
 TARGET  = update-daemon
 CONFIG  += c++11 console
@@ -18,7 +17,8 @@ ADD_DEPENDENCY(kernel)
 INCLUDEPATH += $$PWD/src
 
 HEADERS += $$PWD/src/version.h \
-           $$PWD/src/utils.h
+           $$PWD/src/utils.h \
+           $$PWD/src/resource.h
 
 SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/utils.cpp
@@ -53,7 +53,10 @@ build_xp {
     DEFINES += __OS_WIN_XP
 }
 
-LIBS += -luser32
+LIBS += -luser32 \
+        -lkernel32 \
+        -lshell32 \
+        -lshlwapi
 
 
 OBJECTS_DIR = $$DESTDIR/obj

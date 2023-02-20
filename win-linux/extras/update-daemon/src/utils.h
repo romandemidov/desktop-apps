@@ -33,18 +33,30 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <QFileInfo>
-#include <QDir>
+#include <string>
+#include <list>
 
+using std::wstring;
+using std::list;
 
-void showMessage(const QString& str);
-bool readFile(const QString &filePath, QStringList &list);
-bool replaceListOfFiles(const QStringList &list,
-                        const QString &fromDir,
-                        const QString &toDir,
-                        const QString &tmpDir = QString());
-bool replaceFolderContents(const QString &fromDir,
-                           const QString &toDir,
-                           const QString &tmpDir = QString());
+void showMessage(const wstring& str);
+bool readFile(const wstring &filePath, list<wstring> &list);
+bool replaceListOfFiles(const list<wstring> &filesList,
+                        const wstring &fromDir,
+                        const wstring &toDir,
+                        const wstring &tmpDir = L"");
+bool replaceFolderContents(const wstring &fromDir,
+                           const wstring &toDir,
+                           const wstring &tmpDir = L"");
+bool runProcess(const wstring &fileName, const wstring &args);
+bool fileExists(const wstring &filePath);
+bool dirExists(const wstring &dirName);
+bool makePath(const wstring &path);
+bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath);
+bool removeFile(const wstring &filePath);
+bool removeDirRecursively(const wstring &dir);
+wstring normailze(const wstring &path);
+wstring parentPath(const wstring &path);
+wstring tempPath();
 
 #endif // UTILS_H

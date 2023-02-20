@@ -30,99 +30,108 @@
  *
 */
 
-#include <QCoreApplication>
-#include <QProcess>
 #include "utils.h"
+#include <algorithm>
+#include <shlwapi.h>
 
-#define BACKUP_PATH      "/Backup"
-#define TEMP_DAEMON_NAME "/~update-daemon.exe"
-#define UPDATE_PATH      "/DesktopEditorsUpdates"
-#define APP_LAUNCH_NAME  "/DesktopEditors.exe"
-#define DELETE_LIST      "/delete_list.lst"
-#define REPLACEMENT_LIST "/replacement_list.lst"
+#define BACKUP_PATH      L"DesktopEditorsBackup"
+#define DAEMON_NAME      L"/update-daemon.exe"
+#define TEMP_DAEMON_NAME L"/~update-daemon.exe"
+#define UPDATE_PATH      L"DesktopEditorsUpdates"
+#define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
+#define DELETE_LIST      L"/.delete_list.lst"
+#define REPLACEMENT_LIST L"/.replacement_list.lst"
+#define VERSION_FILE     L"/.version_control.lst"
 
 
-int main(int argc, char *argv[])
+void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
 {
-    QCoreApplication app(argc, argv);
-    QString appPath = QCoreApplication::applicationDirPath();
+    // Restore from backup
+    if (!replaceFolderContents(tmpPath, appPath))
+        showMessage(L"An error occurred while restore files from backup!");
+    else
+        removeDirRecursively(tmpPath);
 
-    QString updPath = QFileInfo(appPath).dir().absolutePath() + UPDATE_PATH;
-    QDir updDir(updPath);
-    if (!updDir.exists()) {
-        showMessage("An error occurred while searching Update dir!");
+    // Restore executable name
+    wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
+    wstring appFilePath = appPath + DAEMON_NAME;
+    if (!replaceFile(appFileRenamedPath, appFilePath))
+        showMessage(L"An error occurred while restore daemon file name!");
+
+    removeDirRecursively(updPath);
+}
+
+int wmain(int argc, wchar_t *argv[])
+{
+    wstring appFilePath = normailze(wstring(argv[0]));
+    wstring appPath = parentPath(appFilePath);
+    wstring updPath = tempPath() + UPDATE_PATH;
+    wstring tmpPath = tempPath() + BACKUP_PATH;
+    if (!dirExists(updPath)) {
+        showMessage(L"An error occurred while searching dir: " + updPath);
+        return 1;
+    }   
+    if (dirExists(tmpPath) && !PathIsDirectoryEmpty(tmpPath.c_str())
+            && !removeDirRecursively(tmpPath)) {
+        showMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
+        return 1;
+    }
+    if (!dirExists(tmpPath) && !makePath(tmpPath)) {
+        showMessage(L"An error occurred while creating dir: " + tmpPath);
         return 1;
     }
 
-    QString tmpPath = QFileInfo(appPath).dir().absolutePath() + BACKUP_PATH;
-    QDir tmpDir(tmpPath);
-    if (tmpDir.exists() && !tmpDir.isEmpty())
-        tmpDir.removeRecursively();
-    if (!tmpDir.mkpath(tmpPath)) {
-        showMessage("An error occurred while creating Backup dir!");
+    // Remove old update-daemon
+    if (fileExists(appPath + TEMP_DAEMON_NAME)
+            && !removeFile(appPath + TEMP_DAEMON_NAME)) {
+        showMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
         return 1;
     }
 
-    QStringList delList, repList;
+    list<wstring> delList, repList;
     if (!readFile(updPath + DELETE_LIST, delList)
             || !readFile(updPath + REPLACEMENT_LIST, repList))
         return 1;
+    repList.push_back(VERSION_FILE);
 
     // Rename current executable
-    QString appFilePath = QCoreApplication::applicationFilePath();
-    QString appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
-    if (!QFile::rename(appFilePath, appFileRenamedPath)) {
-        showMessage("An error occurred while renaming the daemon file!");
+    wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
+    if (!replaceFile(appFilePath, appFileRenamedPath)) {
+        showMessage(L"An error occurred while renaming the daemon file!");
         return 1;
-    }   
+    }
 
     // Replace unused files to Backup
     if (!replaceListOfFiles(delList, appPath, tmpPath)) {
-        showMessage(QString("An error occurred while replace unused files! Restoring from the backup will start."));
-
-        // Restore from backup
-        if (!replaceFolderContents(tmpPath, appPath))
-            showMessage(QString("An error occurred while restore files from backup!"));
-        else
-            tmpDir.removeRecursively();
-
-        // Restore executable name
-        if (!QFile::rename(appFileRenamedPath, appFilePath))
-            showMessage("An error occurred while restore daemon file name!");
-
-        updDir.removeRecursively();
+        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
+        restoreFromBackup(appPath, updPath, tmpPath);
         return 1;
     }
 
     // Move update files to app path
     if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
-        showMessage(QString("An error occurred while copy files! Restoring from the backup will start."));
+        showMessage(L"An error occurred while copy files! Restoring from the backup will start.");
 
         // Remove new update-daemon.exe if exist
-        if (QFile::exists(appFilePath))
-            QFile::remove(appFilePath);
+        if (fileExists(appFilePath))
+            removeFile(appFilePath);
 
-        // Restore from backup
-        if (!replaceFolderContents(tmpPath, appPath))
-            showMessage(QString("An error occurred while restore files from backup!"));
-        else
-            tmpDir.removeRecursively();
-
-        // Restore executable name
-        if (!QFile::rename(appFileRenamedPath, appFilePath))
-            showMessage("An error occurred while restore daemon file name!");
-
-        updDir.removeRecursively();
+        restoreFromBackup(appPath, updPath, tmpPath);
         return 1;
     }
 
     // Remove Update and Temp dirs
-    updDir.removeRecursively();
-    tmpDir.removeRecursively();
+    removeDirRecursively(updPath);
+    removeDirRecursively(tmpPath);
+
+    // Restore executable name if there was no new version
+    if (std::find(repList.begin(), repList.end(), DAEMON_NAME) == repList.end())
+        if (!replaceFile(appFileRenamedPath, appFilePath))
+            showMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
 
     // Restart program
-    if (!QProcess::startDetached(appPath + APP_LAUNCH_NAME, {}, appPath))
-        showMessage("An error occurred while restarting the program!");
+    if (!runProcess(appPath + APP_LAUNCH_NAME, L""))
+        showMessage(L"An error occurred while restarting the program!");
 
     return 0;
 }

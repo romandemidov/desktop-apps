@@ -32,92 +32,124 @@
 
 #include "utils.h"
 #include "version.h"
-#include <QDirIterator>
 #include <Windows.h>
+#include <shellapi.h>
+#include <shlobj_core.h>
+#include <iostream>
+#include <fstream>
+#include <regex>
 
 using std::wstring;
 
 
-QString GetLastErrorAsString()
+wstring GetLastErrorAsString()
 {
     DWORD errorMessageID = ::GetLastError();
     if (errorMessageID == 0)
-        return QString();
+        return L"";
 
-    LPSTR messageBuffer = NULL;
-    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                                 FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID,
-                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                 (LPSTR)&messageBuffer, 0, NULL);
+    LPWSTR messageBuffer = NULL;
+    size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                NULL, errorMessageID,
+                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                (LPWSTR)&messageBuffer, 0, NULL);
 
-    QString message = QString::fromLatin1(messageBuffer, (int)size);
+    wstring message(messageBuffer, (int)size);
     LocalFree(messageBuffer);
     return message;
 }
 
-bool moveSingleFile(const QString &sourceFilePath,
-                    const QString &destFilePath,
-                    const QString &tmpFilePath,
+void GetFilesList(const wstring &path, list<wstring> *lst)
+{
+    WCHAR szDir[MAX_PATH];
+    wstring searchPath = path + L"/*";
+    wcscpy_s(szDir, MAX_PATH, searchPath.c_str());
+
+    WIN32_FIND_DATA ffd;
+    HANDLE hFind = FindFirstFile(szDir, &ffd);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        showMessage(L"Error: FindFirstFile invalid handle value");
+        return;
+    }
+
+    do {
+        if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (!wcscmp(ffd.cFileName, L".")
+                    || !wcscmp(ffd.cFileName, L".."))
+                continue;
+            GetFilesList(path + L"/" + wstring(ffd.cFileName), lst);
+        } else
+            lst->push_back(path + L"/" + wstring(ffd.cFileName));
+
+    } while (FindNextFile(hFind, &ffd) != 0);
+
+    if (GetLastError() != ERROR_NO_MORE_FILES) {
+        showMessage(L"Error while FindFile: " + GetLastErrorAsString());
+    }
+    FindClose(hFind);
+}
+
+bool moveSingleFile(const wstring &source,
+                    const wstring &dest,
+                    const wstring &temp,
                     bool useTmp)
 {
-    wstring source = sourceFilePath.toStdWString();
-    wstring dest = destFilePath.toStdWString();
-    if (QFile::exists(destFilePath)) {
+    if (fileExists(dest)) {
         if (useTmp) {
             // Create a backup
-            if (!QDir().exists(QFileInfo(tmpFilePath).absolutePath())) {
-                if (!QDir().mkpath(QFileInfo(tmpFilePath).absolutePath())) {
-                    showMessage(QString("Can't create path %1.").arg(QFileInfo(tmpFilePath).absolutePath()));
-                    return false;
-                }
+            if (!dirExists(parentPath(temp)) && !makePath(parentPath(temp))) {
+                showMessage(L"Can't create path: " + parentPath(temp));
+                return false;
             }
-            wstring temp = tmpFilePath.toStdWString();
-            if ((MoveFileExW(dest.c_str(), temp.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == 0) ) {
-                showMessage(QString("Can't move file from %1 to %2. %3").arg(destFilePath, tmpFilePath, GetLastErrorAsString()));
+            if (!replaceFile(dest, temp)) {
+                showMessage(L"Can't move file from " + dest + L" to " + temp + L". " + GetLastErrorAsString());
                 return false;
             }
         }
     } else {
-        if (!QDir().mkpath(QFileInfo(destFilePath).absolutePath())) {
-            showMessage(QString("Can't create path %1.").arg(QFileInfo(destFilePath).absolutePath()));
+        if (!dirExists(parentPath(dest)) && !makePath(parentPath(dest))) {
+            showMessage(L"Can't create path: " + parentPath(dest));
             return false;
         }
     }
 
-    if (MoveFileExW(source.c_str(), dest.c_str(), MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) == 0) {
-        showMessage(QString("Can't move file from %1 to %2. %3").arg(sourceFilePath, destFilePath, GetLastErrorAsString()));
+    if (!replaceFile(source, dest)) {
+        showMessage(L"Can't move file from " + source + L" to " + dest + L". " + GetLastErrorAsString());
         return false;
     }
     return true;
 }
 
-void showMessage(const QString& str)
+void showMessage(const wstring& str)
 {
-    wstring lpText = str.toStdWString();
-    MessageBoxW(NULL, lpText.c_str(), TEXT(VER_PRODUCTNAME_STR), MB_ICONWARNING | MB_OK | MB_SETFOREGROUND);
+    MessageBoxW(NULL, str.c_str(), TEXT(VER_PRODUCTNAME_STR),
+                MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
 }
 
-bool readFile(const QString &filePath, QStringList &list)
+bool readFile(const wstring &filePath, list<wstring> &listFiles)
 {
-    QFile file(filePath);
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        showMessage("An error occurred while opening " + filePath);
+    std::wifstream file(filePath.c_str(), std::ios_base::in);
+    if (!file.is_open()) {
+        showMessage(L"An error occurred while opening " + filePath);
         return false;
     }
-    list = QString(file.readAll()).split('\n');
+    wstring line;
+    while (std::getline(file, line))
+        listFiles.push_back(line);
+
     file.close();
     return true;
 }
 
-bool replaceListOfFiles(const QStringList &list,
-                        const QString &fromDir,
-                        const QString &toDir,
-                        const QString &tmpDir)
+bool replaceListOfFiles(const list<wstring> &filesList,
+                        const wstring &fromDir,
+                        const wstring &toDir,
+                        const wstring &tmpDir)
 {
-    bool useTmp = !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
-    foreach (const QString &relFilePath, list) {
-        if (!relFilePath.isEmpty()) {
+    bool useTmp = !tmpDir.empty() && fromDir != tmpDir && toDir != tmpDir;
+    for (const wstring &relFilePath: filesList) {
+        if (!relFilePath.empty()) {
             if (!moveSingleFile(fromDir + relFilePath,
                                 toDir + relFilePath,
                                 tmpDir + relFilePath,
@@ -129,36 +161,116 @@ bool replaceListOfFiles(const QStringList &list,
     return true;
 }
 
-bool replaceFolderContents(const QString &fromDir,
-                           const QString &toDir,
-                           const QString &tmpDir)
+bool replaceFolderContents(const wstring &fromDir,
+                           const wstring &toDir,
+                           const wstring &tmpDir)
 {
-    QDirIterator it(fromDir, QDirIterator::Subdirectories);
-    const int sourceLength = fromDir.length();
-    bool useTmp = !tmpDir.isEmpty() && fromDir != tmpDir && toDir != tmpDir;
-
-    while (it.hasNext()) {
-        const QString sourcePath = it.next();
-        const auto fileInfo = it.fileInfo();
-        if (!fileInfo.isHidden()) { // filters dot and dotdot
-            const QString destPath = toDir + sourcePath.mid(sourceLength);
-            if (fileInfo.isDir()) {
-                if (!QDir().exists(destPath)) {
-                    if (!QDir().mkpath(destPath)) {
-                        showMessage("Can't create path: " + destPath);
-                        return false;
-                    }
-                }
-            } else
-            if (fileInfo.isFile()) {
-                if (!moveSingleFile(sourcePath,
-                                    destPath,
-                                    tmpDir + sourcePath.mid(sourceLength),
-                                    useTmp)) {
-                    return false;
-                }
+    list<wstring> filesList;
+    GetFilesList(fromDir, &filesList);
+    const size_t sourceLength = fromDir.length();
+    bool useTmp = !tmpDir.empty() && fromDir != tmpDir && toDir != tmpDir;
+    for (const wstring &sourcePath : filesList) {
+        if (!sourcePath.empty()) {
+            if (!moveSingleFile(sourcePath,
+                                toDir + sourcePath.substr(sourceLength),
+                                tmpDir + sourcePath.substr(sourceLength),
+                                useTmp)) {
+                return false;
             }
         }
     }
     return true;
+}
+
+bool runProcess(const wstring &fileName, const wstring &args)
+{
+    PROCESS_INFORMATION ProcessInfo;
+    STARTUPINFO StartupInfo;
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
+    if (CreateProcessW(fileName.c_str(), (wchar_t*)args.c_str(),
+                       NULL, NULL, FALSE,
+                       CREATE_NO_WINDOW, NULL, NULL,
+                       &StartupInfo, &ProcessInfo)) {
+        //WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+        CloseHandle(ProcessInfo.hThread);
+        CloseHandle(ProcessInfo.hProcess);
+        return true;
+    }
+    return false;
+}
+
+bool fileExists(const wstring &filePath)
+{
+    DWORD attr = ::GetFileAttributes(filePath.c_str());
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+bool dirExists(const wstring &dirName) {
+    DWORD attr = ::GetFileAttributes(dirName.c_str());
+    return (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+bool makePath(const wstring &path)
+{
+    list<wstring> pathsList;
+    wstring last_path(path);
+    while (!last_path.empty() && !dirExists(last_path)) {
+        pathsList.push_front(last_path);
+        last_path = parentPath(last_path);
+    }
+    for (list<wstring>::iterator it = pathsList.begin(); it != pathsList.end(); ++it) {
+        if (::CreateDirectory(it->c_str(), NULL) == 0)
+            return false;
+    }
+    return true;
+}
+
+bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath)
+{
+    return MoveFileExW(oldFilePath.c_str(), newFilePath.c_str(),
+                       MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0 ? true : false;
+}
+
+bool removeFile(const wstring &filePath)
+{
+    return DeleteFile(filePath.c_str()) != 0 ? true : false;
+}
+
+bool removeDirRecursively(const wstring &dir)
+{
+    WCHAR pFrom[_MAX_PATH + 1];
+    swprintf_s(pFrom, sizeof(pFrom)/sizeof(WCHAR), L"%s%c", dir.c_str(), '\0');
+    SHFILEOPSTRUCT fop = {
+        NULL,
+        FO_DELETE,
+        pFrom,
+        NULL,
+        FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
+        FALSE,
+        0,
+        NULL
+    };
+    return (SHFileOperation(&fop) == 0) ? true : false;
+}
+
+wstring normailze(const wstring &path)
+{
+    return std::regex_replace(path, std::wregex(L"\\\\"), L"/");
+}
+
+wstring parentPath(const wstring &path)
+{
+    wstring::size_type delim = path.find_last_of(L"\\/");
+    return (delim == wstring::npos) ? L"" : path.substr(0, delim);
+}
+
+wstring tempPath()
+{
+    WCHAR buff[MAX_PATH];
+    DWORD res = ::GetTempPathW(MAX_PATH, buff);
+    if (res != 0) {
+        return normailze(wstring(buff));
+    }
+    return L"";
 }
