@@ -39,9 +39,8 @@
 #define TEMP_DAEMON_NAME L"/~update-daemon.exe"
 #define UPDATE_PATH      L"DesktopEditorsUpdates"
 #define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
-#define DELETE_LIST      L"/.delete_list.lst"
+//#define DELETE_LIST      L"/.delete_list.lst"
 #define REPLACEMENT_LIST L"/.replacement_list.lst"
-#define VERSION_FILE     L"/.version_control.lst"
 
 
 void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
@@ -53,9 +52,7 @@ void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wst
         removeDirRecursively(tmpPath);
 
     // Restore executable name
-    wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
-    wstring appFilePath = appPath + DAEMON_NAME;
-    if (!replaceFile(appFileRenamedPath, appFilePath))
+    if (!replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
         showMessage(L"An error occurred while restore daemon file name!");
 
     removeDirRecursively(updPath);
@@ -88,11 +85,9 @@ int wmain(int argc, wchar_t *argv[])
         return 1;
     }
 
-    list<wstring> delList, repList;
-    if (!readFile(updPath + DELETE_LIST, delList)
-            || !readFile(updPath + REPLACEMENT_LIST, repList))
+    list<wstring> repList;
+    if (!readFile(updPath + REPLACEMENT_LIST, repList))
         return 1;
-    repList.push_back(VERSION_FILE);
 
     // Rename current executable
     wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
@@ -101,12 +96,12 @@ int wmain(int argc, wchar_t *argv[])
         return 1;
     }
 
-    // Replace unused files to Backup
-    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
-        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
-        restoreFromBackup(appPath, updPath, tmpPath);
-        return 1;
-    }
+//    // Replace unused files to Backup
+//    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
+//        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
+//        restoreFromBackup(appPath, updPath, tmpPath);
+//        return 1;
+//    }
 
     // Move update files to app path
     if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {

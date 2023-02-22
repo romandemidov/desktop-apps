@@ -105,9 +105,9 @@ private:
                  m_future_clear;
 
     class CUpdateManagerPrivate;
-    CUpdateManagerPrivate *m_pimpl;
+    CUpdateManagerPrivate *m_pimpl = nullptr;
     class DialogSchedule;
-    DialogSchedule *m_dialogSchedule;
+    DialogSchedule *m_dialogSchedule = nullptr;
 
     enum Mode {
         CHECK_UPDATES=0, DOWNLOAD_CHANGELOG=1, DOWNLOAD_UPDATES=2

@@ -59,14 +59,13 @@
 # include "platform_win/updatedialog.h"
 # define DAEMON_NAME "/update-daemon.exe"
 # define TEMP_DAEMON_NAME "/~update-daemon.exe"
-# define VERSION_FILE "/.version_control.lst"
-# define DELETE_LIST "/.delete_list.lst"
+//# define DELETE_LIST "/.delete_list.lst"
 # define REPLACEMENT_LIST "/.replacement_list.lst"
 # define SUCCES_UNPACKED "/.success_unpacked"
 #endif
 
+#define CHECK_DIRECTORY
 #define UPDATE_PATH "/DesktopEditorsUpdates"
-#define MAGIC_NUMBER 0x836A05F0
 #define CHECK_ON_STARTUP_MS 9000
 #define CMD_ARGUMENT_CHECK_URL L"--updates-appcast-url"
 #ifndef URL_APPCAST_UPDATES
@@ -76,12 +75,6 @@
 using std::vector;
 using NSNetwork::NSFileTransport::CFileDownloader;
 
-
-struct UserData {
-    const QString *updPath;
-    QString lastError;
-    QVector<QString> *filesVec;
-};
 
 auto currentArch()->QString
 {
@@ -186,51 +179,6 @@ auto isSuccessUnpacked(const QString &successFilePath, const QString &version)->
     return true;
 }
 
-void dataReceiver(const wstring &path, BYTE *pBuff, const long &nSize, void *pParam)
-{
-    UserData *uData = (UserData*)pParam;
-    const QString fullPath = *uData->updPath + "/" + QString::fromStdWString(path);
-    int pos = fullPath.lastIndexOf('/');
-    if (!fullPath.midRef(pos + 1).isEmpty()) {
-        // is file
-        QVector<QString> *filesVec = uData->filesVec;
-        if (filesVec->contains(QString::fromStdWString(L"/" + path))) {
-            const QString dirPath = fullPath.mid(0, pos);
-            if (!QDir().exists(dirPath) && !QDir().mkpath(dirPath)) {
-                uData->lastError = "Cannot create dir: " + dirPath;
-                return;
-            }
-            QFile file(fullPath);
-            if (!file.open(QFile::WriteOnly)) {
-                uData->lastError = "Cannot write file: " + fullPath;
-                return;
-            }
-            if (file.write((const char*)pBuff, nSize) != nSize) {
-                file.close();
-                uData->lastError = "Cannot write data to file: " + fullPath;
-                return;
-            }
-            file.close();
-        }
-    }
-}
-
-auto extractFiles(const QString &zipFilePath, const QString &updPath, QVector<QString> *filesVec)->bool
-{
-    COfficeUtils utils;
-    bool result;
-    UserData uData;
-    uData.updPath = &updPath;
-    uData.lastError = "";
-    uData.filesVec = filesVec;
-    HRESULT res = utils.ExtractFilesToMemory(zipFilePath.toStdWString(), dataReceiver, (void*)&uData, &result);
-    if (res != S_OK || !result || !uData.lastError.isEmpty()) {
-        criticalMsg(QObject::tr("An error occurred while unpacking zip file! ") + uData.lastError);
-        return false;
-    }
-    return true;
-}
-
 auto unzipArchive(const QString &zipFilePath, const QString &updPath, const QString &appPath, const QString &version)->bool
 {
     QDir updDir(updPath);
@@ -239,79 +187,45 @@ auto unzipArchive(const QString &zipFilePath, const QString &updPath, const QStr
         return false;
     }
 
-    // Extract and save new version control file
-    QVector<QString> verFileVec{VERSION_FILE};
-    if (!extractFiles(zipFilePath, updPath, &verFileVec))
+    // Extract files
+    COfficeUtils utils;
+    HRESULT res = utils.ExtractToDirectory(zipFilePath.toStdWString(), updPath.toStdWString(), nullptr, 0);
+    if (res != S_OK) {
+        criticalMsg(QObject::tr("An error occurred while unpacking zip file!"));
         return false;
-
-    // Read new version control file
-    QMap<QString, QString> updFilesMap;
-    {
-        QFile newVerFile(updPath + VERSION_FILE);
-        if (!newVerFile.open(QFile::ReadOnly)) {
-            criticalMsg(QObject::tr("An error occurred while opening file: ") + updPath + VERSION_FILE);
-            return false;
-        }
-        QDataStream in(&newVerFile);
-        in.setVersion(QDataStream::Qt_5_9);
-        quint32 magic;
-        in >> magic;
-        if (magic != MAGIC_NUMBER) {
-            newVerFile.close();
-            criticalMsg(QObject::tr("Invalid version or corrupted file: ") + updPath + VERSION_FILE);
-            return false;
-        }
-        int mapSize;
-        in >> updFilesMap;
-        in >> mapSize;
-        if (updFilesMap.isEmpty() || updFilesMap.size() != mapSize) {
-            newVerFile.close();
-            criticalMsg(QObject::tr("Invalid or corrupted file: ") + updPath + VERSION_FILE);
-            return false;
-        }
-        newVerFile.close();
     }
 
-    // Read current version control file
-    QMap<QString, QString> appFilesMap;
-    {
-        QFile currVerFile(appPath + VERSION_FILE);
-        if (!currVerFile.open(QFile::ReadOnly)) {
-            criticalMsg(QObject::tr("An error occurred while opening file: ") + appPath + VERSION_FILE);
-            return false;
+    auto fillSubpathVector = [](const QString &path, QVector<QString> &vec) {
+        QStringList filters{"*.*"};
+        QDirIterator it(path, filters, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString subPath = it.next().mid(path.length());
+            vec.push_back(std::move(subPath));
         }
-        QDataStream in(&currVerFile);
-        in.setVersion(QDataStream::Qt_5_9);
-        quint32 magic;
-        in >> magic;
-        if (magic != MAGIC_NUMBER) {
-            currVerFile.close();
-            criticalMsg(QObject::tr("Invalid or corrupted file: ") + appPath + VERSION_FILE);
-            return false;
-        }
-        in >> appFilesMap;
-        currVerFile.close();
-    }  
+    };
 
-    // Create a list of files to delete
-    {
-        const QString delListFilePath = updPath + DELETE_LIST;
-        QFile delListFile(delListFilePath);
-        if (!delListFile.open(QFile::WriteOnly)) {
-            criticalMsg(QObject::tr("Can't create file: ") + delListFilePath);
-            return false;
-        }
-        QTextStream out(&delListFile);
-        foreach (auto &appFile, appFilesMap.keys()) {
-            if (!updFilesMap.contains(appFile) && appFile != DAEMON_NAME)
-                out << appFile << "\n";
-        }
-        delListFile.close();
-    }
+    QVector<QString> updVec, appVec;
+    fillSubpathVector(appPath, appVec);
+    fillSubpathVector(updPath, updVec);
+
+//    // Create a list of files to delete
+//    {
+//        const QString delListFilePath = updPath + DELETE_LIST;
+//        QFile delListFile(delListFilePath);
+//        if (!delListFile.open(QFile::WriteOnly)) {
+//            criticalMsg(QObject::tr("Can't create file: ") + delListFilePath);
+//            return false;
+//        }
+//        QTextStream out(&delListFile);
+//        foreach (auto &appFile, appVec) {
+//            if (!updVec.contains(appFile) && appFile != DAEMON_NAME)
+//                out << appFile << "\n";
+//        }
+//        delListFile.close();
+//    }
 
     // Create a list of files to replacement
-    QVector<QString> replaceVec;
-    {        
+    {
         const QString repListFilePath = updPath + REPLACEMENT_LIST;
         QFile repListFile(repListFilePath);
         if (!repListFile.open(QFile::WriteOnly)) {
@@ -319,24 +233,18 @@ auto unzipArchive(const QString &zipFilePath, const QString &updPath, const QStr
             return false;
         }
         QTextStream out(&repListFile);
-        foreach (auto &updFile, updFilesMap.keys()) {
-            if (appFilesMap.contains(updFile)) {
-                auto updFileHash = updFilesMap.value(updFile);
-                if (updFileHash.isEmpty() || updFileHash != appFilesMap.value(updFile)) {
+        foreach (auto &updFile, updVec) {
+            int ind = appVec.indexOf(updFile);
+            if (ind != -1) {
+                auto updFileHash = getFileHash(updPath + updFile);
+                if (updFileHash.isEmpty() || updFileHash != getFileHash(appPath + appVec[ind]))
                     out << updFile << "\n";
-                    replaceVec.push_back(updFile);
-                }
-            } else {
+
+            } else
                 out << updFile << "\n";
-                replaceVec.push_back(updFile);
-            }
         }
         repListFile.close();
-    }
-
-    // Extract files needed for replacement
-    if (!extractFiles(zipFilePath, updPath, &replaceVec))
-        return false;
+    }   
 
     // Сreate a file about successful unpacking for use in subsequent launches
     QFile successFile(updPath + SUCCES_UNPACKED);
@@ -464,7 +372,17 @@ CUpdateManager::CUpdateManager(QObject *parent):
 #endif
 
     m_appPath = qApp->applicationDirPath();
-    if ( !m_checkUrl.empty()) {
+    bool isDirectoryValid = true;
+#ifdef CHECK_DIRECTORY
+    if (QFileInfo(m_appPath).baseName() != QString(REG_APP_NAME)) {
+        isDirectoryValid = false;
+        QTimer::singleShot(2000, this, [] {
+            criticalMsg(tr("This folder configuration does not allow for "
+                           "updates! The folder name should be: ") + QString(REG_APP_NAME));
+        });
+    }
+#endif
+    if ( !m_checkUrl.empty() && isDirectoryValid) {
         m_pimpl = new CUpdateManagerPrivate(this, m_checkUrl);
 #ifdef __linux__
         m_pTimer = new QTimer(this);
@@ -729,7 +647,7 @@ void CUpdateManager::handleAppClose()
         }
     } else
         if (m_pimpl)
-            m_pimpl->stop();;
+            m_pimpl->stop();
 }
 
 void CUpdateManager::scheduleRestartForUpdate()
