@@ -19,11 +19,17 @@ INCLUDEPATH += $$PWD/src
 HEADERS += $$PWD/src/version.h \
            $$PWD/src/utils.h \
            $$PWD/src/resource.h \
-           $$PWD/src/svccontrol.h
+           $$PWD/src/svccontrol.h \
+           $$PWD/src/classes/capplication.h \
+           $$PWD/src/classes/cobject.h \
+           $$PWD/src/classes/csocket.h
 
 SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/utils.cpp \
-           $$PWD/src/svccontrol.cpp
+           $$PWD/src/svccontrol.cpp \
+           $$PWD/src/classes/capplication.cpp \
+           $$PWD/src/classes/cobject.cpp \
+           $$PWD/src/classes/csocket.cpp
 
 
 ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
@@ -34,6 +40,9 @@ ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
 }
 
 RC_FILE = $$PWD/version.rc
+
+CONFIG += embed_manifest_exe
+QMAKE_LFLAGS += /MANIFESTUAC:$$quote(\"level=\'requireAdministrator\' uiAccess=\'false\'\")
 
 contains(QMAKE_TARGET.arch, x86_64):{
     QMAKE_LFLAGS_WINDOWS = /SUBSYSTEM:WINDOWS,5.02
@@ -64,7 +73,8 @@ LIBS += -luser32 \
         -lcomsuppw \
         -ladvapi32 \
         -lurlmon \
-        -lwininet
+        -lwininet \
+        -lgdi32
 
 OBJECTS_DIR = $$DESTDIR/obj
 MOC_DIR = $$DESTDIR/moc

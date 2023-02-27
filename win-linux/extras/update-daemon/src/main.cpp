@@ -33,9 +33,11 @@
 #include "utils.h"
 //#include <algorithm>
 //#include <shlwapi.h>
-#include <cstdio>
+//#include <cstdio>
 #include "svccontrol.h"
 #include "event_message/event_message.h"
+#include "classes/capplication.h"
+#include "classes/csocket.h"
 
 using std::string;
 using std::to_string;
@@ -150,11 +152,11 @@ int wmain(int argc, wchar_t *argv[])
 
 */
 
-void write_txt_file(string file_name, string input) {
+/*void write_txt_file(string file_name, string input) {
     FILE *f = fopen(file_name.c_str(), "a+");
     fprintf(f, "%s\n", input.c_str());
     fclose(f);
-}
+}*/
 
 int __cdecl _tmain (int argc, TCHAR *argv[])
 {
@@ -210,9 +212,7 @@ int __cdecl _tmain (int argc, TCHAR *argv[])
 
 VOID WINAPI SvcMain(DWORD argc, LPTSTR *argv)
 {
-    gSvcStatusHandle = RegisterServiceCtrlHandler(
-                            SERVICE_NAME,
-                            SvcCtrlHandler);
+    gSvcStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, SvcCtrlHandler);
     if (gSvcStatusHandle == NULL) {
         Utils::ShowMessage(L"RegisterServiceCtrlHandler returned error:", true);
         return;
@@ -282,22 +282,31 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
 {
     OutputDebugString(_T("Service: ServiceWorkerThread: Entry"));
-    int i = 0;
+    /*int i = 0;
     //  Periodically check if the service has been requested to stop
     while (WaitForSingleObject(gSvcStopEvent, 0) != WAIT_OBJECT_0)
     {
-        /*
-         * Perform main service function here
-         */
         write_txt_file("C:\\Program Files\\ONLYOFFICE\\DesktopEditors\\out.txt", "Writing...#" + to_string(i));
 
         Sleep(3000);
         i++;
-    }
+    }*/
+    CApplication app;
+    UINT_PTR timer = 0L;
+    timer = app.setTimer(2000, [&app, &timer]() {
+        if (WaitForSingleObject(gSvcStopEvent, 0) == WAIT_OBJECT_0) {
+            app.closeTimer(timer);
+            app.exit(0);
+        }
+    });
 
-    OutputDebugString(_T("Service: ServiceWorkerThread: Exit"));
+    CSocket sock(nullptr, TEXT(VER_PRODUCTNAME_STR), L"");
+    sock.onMessageReceived([](COPYDATASTRUCT *udata) {
+        Utils::ShowMessage(L"Message received!!!");
+    });
 
-    return ERROR_SUCCESS;
+
+    return (DWORD)app.exec();
 }
 
 VOID ReportSvcStatus(DWORD dwCurrentState,
