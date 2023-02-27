@@ -33,6 +33,7 @@
 #include "utils.h"
 #include "version.h"
 #include <Windows.h>
+#include <wininet.h>
 #include <shellapi.h>
 #include <shlobj_core.h>
 #include <combaseapi.h>
@@ -41,8 +42,6 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
-
-using std::wstring;
 
 
 wstring GetLastErrorAsString()
@@ -369,4 +368,102 @@ bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath)
 //    {
 //        CoUninitialize();
 //    }
+}
+
+
+
+
+
+
+
+
+
+class DownloadProgress : public IBindStatusCallback
+{
+public:
+    DownloadProgress()
+    {
+
+    }
+    HRESULT __stdcall QueryInterface(const IID &, void **) {
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef(void) {
+        return 1;
+    }
+    ULONG STDMETHODCALLTYPE Release(void) {
+        return 1;
+    }
+    HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD dwReserved, IBinding *pib) {
+        return E_NOTIMPL;
+    }
+    virtual HRESULT STDMETHODCALLTYPE GetPriority(LONG *pnPriority) {
+        return E_NOTIMPL;
+    }
+    virtual HRESULT STDMETHODCALLTYPE OnLowResource(DWORD reserved) {
+        return S_OK;
+    }
+    virtual HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT hresult, LPCWSTR szError) {
+        return E_NOTIMPL;
+    }
+    virtual HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD *grfBINDF, BINDINFO *pbindinfo) {
+        return E_NOTIMPL;
+    }
+    virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed) {
+        return E_NOTIMPL;
+    }
+    virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID riid, IUnknown *punk) {
+        return E_NOTIMPL;
+    }
+
+    virtual HRESULT __stdcall OnProgress(ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
+    {
+        printf("Progress: %lul of %lul\n", ulProgress, ulProgressMax);
+        if (szStatusText) {
+            wstring varname(szStatusText);
+        }
+        /*if (ulProgressMax - ulProgress < (ulProgressMax/2))
+            return E_ABORT;*/
+        return S_OK;
+    }
+private:
+
+};
+
+wstring Utils::GetLastErrorAsString()
+{
+    DWORD errorMessageID = ::GetLastError();
+    if (errorMessageID == 0)
+        return L"";
+
+    LPWSTR messageBuffer = NULL;
+    size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                NULL, errorMessageID,
+                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                (LPWSTR)&messageBuffer, 0, NULL);
+
+    wstring message(messageBuffer, (int)size);
+    LocalFree(messageBuffer);
+    return message;
+}
+
+void Utils::ShowMessage(wstring str, bool showError)
+{
+    if (showError)
+        str += L" " + GetLastErrorAsString();
+    MessageBoxW(NULL, str.c_str(), TEXT(VER_PRODUCTNAME_STR),
+                MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
+}
+
+
+void Utils::DownloadUrl()
+{
+    LPCWSTR url = L"https://download.onlyoffice.com/install/desktop/editors/windows/onlyoffice/updates/editors_update_x64.exe";
+    DeleteUrlCacheEntry(url);
+    DownloadProgress progress;
+    HRESULT hr = URLDownloadToFile(0,
+        url,
+        L"E:/test.exe", 0,
+        static_cast<IBindStatusCallback*>(&progress));
 }

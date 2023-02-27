@@ -37,6 +37,7 @@
 #include <list>
 
 using std::wstring;
+using std::to_wstring;
 using std::list;
 
 void showMessage(const wstring& str);
@@ -60,5 +61,12 @@ wstring nativeSeprators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
 bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath);
+
+namespace Utils
+{
+wstring GetLastErrorAsString();
+void ShowMessage(wstring str, bool showError = false);
+void DownloadUrl();
+}
 
 #endif // UTILS_H

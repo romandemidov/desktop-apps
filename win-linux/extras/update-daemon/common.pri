@@ -1,8 +1,8 @@
-QT      -= core
 
 TARGET  = update-daemon
 CONFIG  += c++11 console
 CONFIG  -= app_bundle
+CONFIG  -= qt
 CONFIG  -= debug_and_release debug_and_release_target
 
 TEMPLATE = app
@@ -12,16 +12,18 @@ CORE_ROOT_DIR = $$PWD/../../../../core
 CONFIG += core_no_dst
 include($$CORE_ROOT_DIR/Common/base.pri)
 
-ADD_DEPENDENCY(kernel)
+#ADD_DEPENDENCY(kernel)
 
 INCLUDEPATH += $$PWD/src
 
 HEADERS += $$PWD/src/version.h \
            $$PWD/src/utils.h \
-           $$PWD/src/resource.h
+           $$PWD/src/resource.h \
+           $$PWD/src/svccontrol.h
 
 SOURCES += $$PWD/src/main.cpp \
-           $$PWD/src/utils.cpp
+           $$PWD/src/utils.cpp \
+           $$PWD/src/svccontrol.cpp
 
 
 ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
@@ -59,8 +61,10 @@ LIBS += -luser32 \
         -lshlwapi \
         -lole32 \
         -loleaut32 \
-        -lcomsuppw
-
+        -lcomsuppw \
+        -ladvapi32 \
+        -lurlmon \
+        -lwininet
 
 OBJECTS_DIR = $$DESTDIR/obj
 MOC_DIR = $$DESTDIR/moc
