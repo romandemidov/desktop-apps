@@ -56,7 +56,10 @@ build_xp {
 LIBS += -luser32 \
         -lkernel32 \
         -lshell32 \
-        -lshlwapi
+        -lshlwapi \
+        -lole32 \
+        -loleaut32 \
+        -lcomsuppw
 
 
 OBJECTS_DIR = $$DESTDIR/obj

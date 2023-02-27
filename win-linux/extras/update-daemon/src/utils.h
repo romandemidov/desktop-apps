@@ -56,7 +56,9 @@ bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath);
 bool removeFile(const wstring &filePath);
 bool removeDirRecursively(const wstring &dir);
 wstring normailze(const wstring &path);
+wstring nativeSeprators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
+bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath);
 
 #endif // UTILS_H

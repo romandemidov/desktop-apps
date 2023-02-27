@@ -35,6 +35,9 @@
 #include <Windows.h>
 #include <shellapi.h>
 #include <shlobj_core.h>
+#include <combaseapi.h>
+#include <comutil.h>
+#include <oleauto.h>
 #include <iostream>
 #include <fstream>
 #include <regex>
@@ -259,6 +262,11 @@ wstring normailze(const wstring &path)
     return std::regex_replace(path, std::wregex(L"\\\\"), L"/");
 }
 
+wstring nativeSeprators(const wstring &path)
+{
+    return std::regex_replace(path, std::wregex(L"\\/"), L"\\");
+}
+
 wstring parentPath(const wstring &path)
 {
     wstring::size_type delim = path.find_last_of(L"\\/");
@@ -273,4 +281,92 @@ wstring tempPath()
         return normailze(wstring(buff));
     }
     return L"";
+}
+
+bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath)
+{
+    wstring file = nativeSeprators(zipFilePath);
+    wstring path = nativeSeprators(folderPath);
+    _bstr_t lpZipFile(file.c_str());
+    _bstr_t lpFolder(path.c_str());
+
+    IShellDispatch *pISD;
+
+    Folder  *pZippedFile = 0L;
+    Folder  *pDestination = 0L;
+
+    long FilesCount = 0;
+    IDispatch* pItem = 0L;
+    FolderItems *pFilesInside = 0L;
+
+    VARIANT Options, OutFolder, InZipFile, Item;
+    CoInitialize(NULL);
+//    __try {
+        if (CoCreateInstance(CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, IID_IShellDispatch, (void**)&pISD) != S_OK) {
+            CoUninitialize();
+            return false;
+        }
+
+        InZipFile.vt = VT_BSTR;
+        InZipFile.bstrVal = lpZipFile.GetBSTR();
+        pISD->NameSpace(InZipFile, &pZippedFile);
+        if (!pZippedFile)
+        {
+            pISD->Release();
+            CoUninitialize();
+            return false;
+        }
+
+        OutFolder.vt = VT_BSTR;
+        OutFolder.bstrVal = lpFolder.GetBSTR();
+        pISD->NameSpace(OutFolder, &pDestination);
+        if (!pDestination)
+        {
+            pZippedFile->Release();
+            pISD->Release();
+            CoUninitialize();
+            return false;
+        }
+
+        pZippedFile->Items(&pFilesInside);
+        if (!pFilesInside)
+        {
+            pDestination->Release();
+            pZippedFile->Release();
+            pISD->Release();
+            CoUninitialize();
+            return false;
+        }
+
+        pFilesInside->get_Count(&FilesCount);
+        if (FilesCount < 1)
+        {
+            pFilesInside->Release();
+            pDestination->Release();
+            pZippedFile->Release();
+            pISD->Release();
+            CoUninitialize();
+            return false;
+        }
+
+        pFilesInside->QueryInterface(IID_IDispatch,(void**)&pItem);
+
+        Item.vt = VT_DISPATCH;
+        Item.pdispVal = pItem;
+
+        Options.vt = VT_I4;
+        Options.lVal = 1024 | 512 | 16 | 4;
+        bool retval = pDestination->CopyHere( Item, Options) == S_OK;
+        pItem->Release(); pItem = 0L;
+        pFilesInside->Release(); pFilesInside = 0L;
+        pDestination->Release(); pDestination = 0L;
+        pZippedFile->Release(); pZippedFile = 0L;
+        pISD->Release(); pISD = 0L;
+        CoUninitialize();
+        return retval;
+//    }
+//    __finally
+//    {
+//        CoUninitialize();
+//    }
 }
