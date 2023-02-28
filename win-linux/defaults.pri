@@ -252,13 +252,15 @@ core_windows {
                $$PWD/src/platform_win/singleapplication.h \
                $$PWD/src/platform_win/filechooser.h \
                $$PWD/src/platform_win/message.h \
-               $$PWD/src/platform_win/resource.h
+               $$PWD/src/platform_win/resource.h \
+               $$PWD/src/platform_win/csocket.h
 
     SOURCES += $$PWD/src/windows/platform_win/cwindowplatform.cpp \
                $$PWD/src/windows/platform_win/csnap.cpp \
                $$PWD/src/platform_win/singleapplication.cpp \
                $$PWD/src/platform_win/filechooser.cpp \
-               $$PWD/src/platform_win/message.cpp
+               $$PWD/src/platform_win/message.cpp \
+               $$PWD/src/platform_win/csocket.cpp
 
     updmodule:!build_xp {
         HEADERS += $$PWD/src/platform_win/updatedialog.h

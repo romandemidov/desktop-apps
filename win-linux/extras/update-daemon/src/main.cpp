@@ -38,6 +38,7 @@
 #include "event_message/event_message.h"
 #include "classes/capplication.h"
 #include "classes/csocket.h"
+#include "classes/cobject.h"
 
 using std::string;
 using std::to_string;
@@ -49,6 +50,9 @@ using std::to_string;
 #define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
 //#define DELETE_LIST      L"/.delete_list.lst"
 #define REPLACEMENT_LIST L"/.replacement_list.lst"
+
+#define SENDER_PORT   12010
+#define RECEIVER_PORT 12011
 
 SERVICE_STATUS          gSvcStatus;
 SERVICE_STATUS_HANDLE   gSvcStatusHandle;
@@ -292,17 +296,27 @@ DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
         i++;
     }*/
     CApplication app;
+
+    CObject obj;
+    CSocket sock(SENDER_PORT, RECEIVER_PORT);
+
+    UINT_PTR timer1 = 0L;
+    timer1 = obj.setTimer(1000, [&sock]() {
+        const char *str = "Message from service...";
+        sock.sendMessage((void*)str, 23);
+    });
+
     UINT_PTR timer = 0L;
-    timer = app.setTimer(2000, [&app, &timer]() {
+    timer = obj.setTimer(2000, [&app, &obj, &timer]() {
         if (WaitForSingleObject(gSvcStopEvent, 0) == WAIT_OBJECT_0) {
-            app.closeTimer(timer);
+            obj.closeTimer(timer);
             app.exit(0);
         }
     });
 
-    CSocket sock(12010, 12011);
+
     sock.onMessageReceived([](void *data, size_t size) {
-        Logger::WriteLog("E:/log.txt", "Message received!!!", __LINE__);
+        Logger::WriteLog("E:/log.txt", (const char*)data, __LINE__);
     });
 
 

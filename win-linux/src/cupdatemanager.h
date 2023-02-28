@@ -37,6 +37,7 @@
 #include <QTimer>
 #include <ctime>
 #include <future>
+#include "platform_win/csocket.h"
 
 using std::wstring;
 using std::future;
@@ -108,6 +109,8 @@ private:
     CUpdateManagerPrivate *m_pimpl = nullptr;
     class DialogSchedule;
     DialogSchedule *m_dialogSchedule = nullptr;
+
+    CSocket *m_socket = nullptr;
 
     enum Mode {
         CHECK_UPDATES=0, DOWNLOAD_CHANGELOG=1, DOWNLOAD_UPDATES=2

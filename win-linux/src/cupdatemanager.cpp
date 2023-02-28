@@ -64,7 +64,9 @@
 # define SUCCES_UNPACKED "/.success_unpacked"
 #endif
 
-#define CHECK_DIRECTORY
+//#define CHECK_DIRECTORY
+#define SENDER_PORT   12011
+#define RECEIVER_PORT 12010
 #define UPDATE_PATH "/DesktopEditorsUpdates"
 #define CHECK_ON_STARTUP_MS 9000
 #define CMD_ARGUMENT_CHECK_URL L"--updates-appcast-url"
@@ -355,8 +357,12 @@ CUpdateManager::CUpdateManager(QObject *parent):
     m_savedPackageData(new SavedPackageData),
     m_checkUrl(L""),
     m_downloadMode(Mode::CHECK_UPDATES),
-    m_dialogSchedule(new DialogSchedule(this))
+    m_dialogSchedule(new DialogSchedule(this)),
+    m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT))
 {
+    m_socket->onMessageReceived([](void *data, size_t size) {
+        qDebug() << "Received data:" << QString::fromUtf8((const char*)data, size);
+    });
     // =========== Set updates URL ============
     auto setUrl = [=] {
         if ( InputArgs::contains(CMD_ARGUMENT_CHECK_URL) ) {
@@ -403,6 +409,7 @@ CUpdateManager::~CUpdateManager()
     delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_dialogSchedule, m_dialogSchedule = nullptr;
     delete m_pimpl, m_pimpl = nullptr;
+    delete m_socket, m_socket = nullptr;
 }
 
 void CUpdateManager::onCompleteSlot(const int error, const QString &filePath)
@@ -823,6 +830,8 @@ void CUpdateManager::showUpdateMessage(QWidget *parent) {
         break;
     }
     default:
+        const char *str = "Test message...";
+        m_socket->sendMessage((void*)str, 15);
         break;
     }
 # else
