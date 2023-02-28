@@ -69,4 +69,9 @@ void ShowMessage(wstring str, bool showError = false);
 void DownloadUrl();
 }
 
+namespace Logger
+{
+void WriteLog(const char *filePath, const char *log, int line);
+}
+
 #endif // UTILS_H

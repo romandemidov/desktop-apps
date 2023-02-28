@@ -42,6 +42,7 @@
 #include <iostream>
 #include <fstream>
 #include <regex>
+#include <cstdio>
 
 
 wstring GetLastErrorAsString()
@@ -466,4 +467,14 @@ void Utils::DownloadUrl()
         url,
         L"E:/test.exe", 0,
         static_cast<IBindStatusCallback*>(&progress));
+}
+
+void Logger::WriteLog(const char *filePath, const char *log, int line)
+{
+    FILE *stream;
+    errno_t err = fopen_s(&stream, filePath, "a+");
+    if (err == 0) {
+        fprintf(stream, "Log: %s Line: %d\n", log, line);
+        fclose(stream);
+    }
 }
