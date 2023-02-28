@@ -1,5 +1,5 @@
 #include "csocket.h"
-#include "utils.h"
+//#include "utils.h"
 #include <stdio.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -190,8 +190,8 @@ CSocket::CSocket(int sender_port, int receiver_port) :
     m_future = std::async(std::launch::async, [=]() {
         if (pimpl->createSocket(receiver_port))
             pimpl->startReadMessages();
-        else
-            Logger::WriteLog("E:/log.txt", "Cannot create socket!", __LINE__);
+        /*else
+            Logger::WriteLog("E:/log.txt", "Cannot create socket!", __LINE__);*/
     });
 }
 
@@ -212,7 +212,7 @@ bool CSocket::sendMessage(void *data, size_t size)
         return false;
 
     if (!pimpl->connectToSocket(m_sender_port)) {
-        Logger::WriteLog("E:/log.txt", "Cannot connect to socket!", __LINE__);
+        //Logger::WriteLog("E:/log.txt", "Cannot connect to socket!", __LINE__);
         return false;
     }
 

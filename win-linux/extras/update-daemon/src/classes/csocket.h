@@ -9,7 +9,7 @@ class CSocket
 {
 public:
     CSocket(int sender_port, int receiver_port);
-    virtual ~CSocket();
+    ~CSocket();
 
     /* callback */
     bool sendMessage(void *data, size_t size);

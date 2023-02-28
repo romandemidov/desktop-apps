@@ -15,14 +15,13 @@
 #ifndef WIN32_LEAN_AND_MEAN
 # define WIN32_LEAN_AND_MEAN
 #endif
-#pragma comment(lib, "Ws2_32.lib")
 #include <Windows.h>
 #include <winsock2.h>
 #include <sys/types.h>
 #include <io.h>
 #define AF_TYPE AF_INET
 #define INADDR "127.0.0.1"
-#include "components/cmessage.h"
+
 #define SEND_DELAY_MS 50
 #define RETRIES_DELAY 50
 #define RETRIES_COUNT 10
@@ -191,8 +190,8 @@ CSocket::CSocket(int sender_port, int receiver_port) :
     m_future = std::async(std::launch::async, [=]() {
         if (pimpl->createSocket(receiver_port))
             pimpl->startReadMessages();
-        else
-            CMessage::warning(nullptr, "Cannot create socket!");
+        /*else
+            Logger::WriteLog("E:/log.txt", "Cannot create socket!", __LINE__);*/
     });
 }
 
@@ -213,7 +212,7 @@ bool CSocket::sendMessage(void *data, size_t size)
         return false;
 
     if (!pimpl->connectToSocket(m_sender_port)) {
-        CMessage::warning(nullptr, "Cannot connect to socket!");
+        //Logger::WriteLog("E:/log.txt", "Cannot connect to socket!", __LINE__);
         return false;
     }
 

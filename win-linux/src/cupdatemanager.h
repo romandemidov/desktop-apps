@@ -37,7 +37,7 @@
 #include <QTimer>
 #include <ctime>
 #include <future>
-#include "platform_win/csocket.h"
+#include "csocket.h"
 
 using std::wstring;
 using std::future;

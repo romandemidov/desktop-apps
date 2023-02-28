@@ -9,11 +9,11 @@ class CSocket
 {
 public:
     CSocket(int sender_port, int receiver_port);
-    virtual ~CSocket();
+    ~CSocket();
 
     /* callback */
     bool sendMessage(void *data, size_t size);
-    void onMessageReceived(FnVoidData callback);    
+    void onMessageReceived(FnVoidData callback);
 
 private:
     FnVoidData m_received_callback;
