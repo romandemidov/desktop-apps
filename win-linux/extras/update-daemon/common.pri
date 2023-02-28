@@ -74,7 +74,7 @@ LIBS += -luser32 \
         -ladvapi32 \
         -lurlmon \
         -lwininet \
-        -lgdi32
+        -lws2_32
 
 OBJECTS_DIR = $$DESTDIR/obj
 MOC_DIR = $$DESTDIR/moc

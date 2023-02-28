@@ -300,9 +300,9 @@ DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
         }
     });
 
-    CSocket sock(nullptr, TEXT(VER_PRODUCTNAME_STR), L"");
-    sock.onMessageReceived([](COPYDATASTRUCT *udata) {
-        Utils::ShowMessage(L"Message received!!!");
+    CSocket sock(12010, 12011);
+    sock.onMessageReceived([](void *data, size_t size) {
+        Logger::WriteLog("E:/log.txt", "Message received!!!", __LINE__);
     });
 
 
