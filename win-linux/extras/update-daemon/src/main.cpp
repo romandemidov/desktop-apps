@@ -314,6 +314,14 @@ DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
         }
     });
 
+    sock.onError([](const char* error) {
+        /*size_t num;
+        wchar_t errorDescription[20];
+        mbstowcs_s(&num, errorDescription, error, strlen(error) + 1);
+        LPTSTR errorDescription = (LPTSTR)_T("Testing error messages...");
+        SvcReportEvent(errorDescription);*/
+        Logger::WriteLog("E:/log.txt", error, 0);
+    });
 
     sock.onMessageReceived([](void *data, size_t size) {
         Logger::WriteLog("E:/log.txt", (const char*)data, __LINE__);
@@ -350,17 +358,13 @@ VOID ReportSvcStatus(DWORD dwCurrentState,
     }
 }
 
-VOID SvcReportEvent(LPTSTR szFunction)
+VOID SvcReportEvent(LPTSTR errorDescription)
 {
-    HANDLE hEventSource;
-    LPCTSTR lpszStrings[2];
-    TCHAR Buffer[80];
-
-    hEventSource = RegisterEventSource(NULL, SERVICE_NAME);
-
+    HANDLE hEventSource = RegisterEventSource(NULL, SERVICE_NAME);
     if (hEventSource != NULL) {
-        StringCchPrintf(Buffer, 80, TEXT("%s failed with %d"), szFunction, GetLastError());
-
+        TCHAR Buffer[80];
+        StringCchPrintf(Buffer, 80, TEXT("%s"), errorDescription);
+        LPCTSTR lpszStrings[2];
         lpszStrings[0] = SERVICE_NAME;
         lpszStrings[1] = Buffer;
 

@@ -3,7 +3,8 @@
 
 #include <future>
 
-typedef std::function<void(void*, int)> FnVoidData;
+typedef std::function<void(void*, size_t)> FnVoidData;
+typedef std::function<void(const char*)> FnVoidCharPtr;
 
 class CSocket
 {
@@ -14,9 +15,12 @@ public:
     /* callback */
     bool sendMessage(void *data, size_t size);
     void onMessageReceived(FnVoidData callback);
+    void onError(FnVoidCharPtr callback);
 
 private:
+    void postError(const char*);
     FnVoidData m_received_callback;
+    FnVoidCharPtr m_error_callback;
     int m_sender_port;
     std::future<void> m_future;
     class CSocketPrv;
