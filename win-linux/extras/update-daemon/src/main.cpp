@@ -156,11 +156,6 @@ int wmain(int argc, wchar_t *argv[])
 
 */
 
-/*void write_txt_file(string file_name, string input) {
-    FILE *f = fopen(file_name.c_str(), "a+");
-    fprintf(f, "%s\n", input.c_str());
-    fclose(f);
-}*/
 
 int __cdecl _tmain (int argc, TCHAR *argv[])
 {
@@ -234,9 +229,6 @@ VOID WINAPI SvcMain(DWORD argc, LPTSTR *argv)
     //   ReportSvcStatus with SERVICE_STOPPED.
     //   Create an event. The control handler function, SvcCtrlHandler,
     //   signals this event when it receives the stop control code.
-
-    OutputDebugString(_T("ServiceMain: Performing Service Start Operations"));
-
     gSvcStopEvent = CreateEvent(NULL,  // default security attributes
                                 TRUE,  // manual reset event
                                 FALSE, // not signaled
@@ -252,17 +244,9 @@ VOID WINAPI SvcMain(DWORD argc, LPTSTR *argv)
 
     // Start the thread that will perform the main task of the service
     HANDLE hThread = CreateThread(NULL, 0, SvcWorkerThread, NULL, 0, NULL);
-    OutputDebugString(_T("Service: Waiting for Worker Thread to complete"));
-    // Wait until worker thread exits effectively signaling that the service needs to stop
     WaitForSingleObject(hThread, INFINITE);
-    OutputDebugString(_T("Service: Worker Thread Stop Event signaled"));
-
-    OutputDebugString(_T("Service: Performing Cleanup Operations"));
-    //WaitForSingleObject(gSvcStopEvent, INFINITE);
     ReportSvcStatus(SERVICE_STOPPED, NO_ERROR, 0);
     CloseHandle(gSvcStopEvent);
-
-    OutputDebugString(_T("Service: Exit"));
 }
 
 VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
@@ -285,18 +269,7 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 
 DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
 {
-    OutputDebugString(_T("Service: ServiceWorkerThread: Entry"));
-    /*int i = 0;
-    //  Periodically check if the service has been requested to stop
-    while (WaitForSingleObject(gSvcStopEvent, 0) != WAIT_OBJECT_0)
-    {
-        write_txt_file("C:\\Program Files\\ONLYOFFICE\\DesktopEditors\\out.txt", "Writing...#" + to_string(i));
-
-        Sleep(3000);
-        i++;
-    }*/
     CApplication app;
-
     CObject obj;
     CSocket sock(SENDER_PORT, RECEIVER_PORT);
 

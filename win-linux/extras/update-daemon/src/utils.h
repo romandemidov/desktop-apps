@@ -40,7 +40,15 @@ using std::wstring;
 using std::to_wstring;
 using std::list;
 
-void showMessage(const wstring& str);
+namespace Utils
+{
+wstring GetLastErrorAsString();
+void ShowMessage(wstring str, bool showError = false);
+}
+
+namespace File
+{
+bool GetFilesList(const wstring &path, list<wstring> *lst, wstring &error);
 bool readFile(const wstring &filePath, list<wstring> &list);
 bool replaceListOfFiles(const list<wstring> &filesList,
                         const wstring &fromDir,
@@ -56,18 +64,14 @@ bool makePath(const wstring &path);
 bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath);
 bool removeFile(const wstring &filePath);
 bool removeDirRecursively(const wstring &dir);
-wstring normailze(const wstring &path);
-wstring nativeSeprators(const wstring &path);
+wstring fromNativeSeparators(const wstring &path);
+wstring toNativeSeparators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
-bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath);
-
-namespace Utils
-{
-wstring GetLastErrorAsString();
-void ShowMessage(wstring str, bool showError = false);
-void DownloadUrl();
+bool unzipArchive(const wstring &zipFilePath, const wstring &folderPath);
 }
+
+void DownloadUrl();
 
 namespace Logger
 {

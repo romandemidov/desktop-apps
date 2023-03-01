@@ -45,7 +45,7 @@
 #include <cstdio>
 
 
-wstring GetLastErrorAsString()
+wstring Utils::GetLastErrorAsString()
 {
     DWORD errorMessageID = ::GetLastError();
     if (errorMessageID == 0)
@@ -63,7 +63,15 @@ wstring GetLastErrorAsString()
     return message;
 }
 
-void GetFilesList(const wstring &path, list<wstring> *lst)
+void Utils::ShowMessage(wstring str, bool showError)
+{
+    if (showError)
+        str += L" " + GetLastErrorAsString();
+    MessageBoxW(NULL, str.c_str(), TEXT(VER_PRODUCTNAME_STR),
+                MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
+}
+
+bool File::GetFilesList(const wstring &path, list<wstring> *lst, wstring &error)
 {
     WCHAR szDir[MAX_PATH];
     wstring searchPath = path + L"/*";
@@ -72,8 +80,8 @@ void GetFilesList(const wstring &path, list<wstring> *lst)
     WIN32_FIND_DATA ffd;
     HANDLE hFind = FindFirstFile(szDir, &ffd);
     if (hFind == INVALID_HANDLE_VALUE) {
-        showMessage(L"Error: FindFirstFile invalid handle value");
-        return;
+        error = wstring(L"FindFirstFile invalid handle value: ") + szDir;
+        return false;
     }
 
     do {
@@ -81,16 +89,22 @@ void GetFilesList(const wstring &path, list<wstring> *lst)
             if (!wcscmp(ffd.cFileName, L".")
                     || !wcscmp(ffd.cFileName, L".."))
                 continue;
-            GetFilesList(path + L"/" + wstring(ffd.cFileName), lst);
+            if (!GetFilesList(path + L"/" + wstring(ffd.cFileName), lst, error)) {
+                FindClose(hFind);
+                return false;
+            }
         } else
             lst->push_back(path + L"/" + wstring(ffd.cFileName));
 
     } while (FindNextFile(hFind, &ffd) != 0);
 
     if (GetLastError() != ERROR_NO_MORE_FILES) {
-        showMessage(L"Error while FindFile: " + GetLastErrorAsString());
+        FindClose(hFind);
+        error = wstring(L"Error while FindFile: ") + szDir;
+        return false;
     }
     FindClose(hFind);
+    return true;
 }
 
 bool moveSingleFile(const wstring &source,
@@ -98,43 +112,37 @@ bool moveSingleFile(const wstring &source,
                     const wstring &temp,
                     bool useTmp)
 {
-    if (fileExists(dest)) {
+    if (File::fileExists(dest)) {
         if (useTmp) {
             // Create a backup
-            if (!dirExists(parentPath(temp)) && !makePath(parentPath(temp))) {
-                showMessage(L"Can't create path: " + parentPath(temp));
+            if (!File::dirExists(File::parentPath(temp)) && !File::makePath(File::parentPath(temp))) {
+                Utils::ShowMessage(L"Can't create path: " + File::parentPath(temp));
                 return false;
             }
-            if (!replaceFile(dest, temp)) {
-                showMessage(L"Can't move file from " + dest + L" to " + temp + L". " + GetLastErrorAsString());
+            if (!File::replaceFile(dest, temp)) {
+                Utils::ShowMessage(L"Can't move file from " + dest + L" to " + temp + L". ", true);
                 return false;
             }
         }
     } else {
-        if (!dirExists(parentPath(dest)) && !makePath(parentPath(dest))) {
-            showMessage(L"Can't create path: " + parentPath(dest));
+        if (!File::dirExists(File::parentPath(dest)) && !File::makePath(File::parentPath(dest))) {
+            Utils::ShowMessage(L"Can't create path: " + File::parentPath(dest));
             return false;
         }
     }
 
-    if (!replaceFile(source, dest)) {
-        showMessage(L"Can't move file from " + source + L" to " + dest + L". " + GetLastErrorAsString());
+    if (!File::replaceFile(source, dest)) {
+        Utils::ShowMessage(L"Can't move file from " + source + L" to " + dest + L". ", true);
         return false;
     }
     return true;
 }
 
-void showMessage(const wstring& str)
-{
-    MessageBoxW(NULL, str.c_str(), TEXT(VER_PRODUCTNAME_STR),
-                MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
-}
-
-bool readFile(const wstring &filePath, list<wstring> &listFiles)
+bool File::readFile(const wstring &filePath, list<wstring> &listFiles)
 {
     std::wifstream file(filePath.c_str(), std::ios_base::in);
     if (!file.is_open()) {
-        showMessage(L"An error occurred while opening " + filePath);
+        Utils::ShowMessage(L"An error occurred while opening " + filePath);
         return false;
     }
     wstring line;
@@ -145,7 +153,7 @@ bool readFile(const wstring &filePath, list<wstring> &listFiles)
     return true;
 }
 
-bool replaceListOfFiles(const list<wstring> &filesList,
+bool File::replaceListOfFiles(const list<wstring> &filesList,
                         const wstring &fromDir,
                         const wstring &toDir,
                         const wstring &tmpDir)
@@ -164,12 +172,15 @@ bool replaceListOfFiles(const list<wstring> &filesList,
     return true;
 }
 
-bool replaceFolderContents(const wstring &fromDir,
+bool File::replaceFolderContents(const wstring &fromDir,
                            const wstring &toDir,
                            const wstring &tmpDir)
 {
     list<wstring> filesList;
-    GetFilesList(fromDir, &filesList);
+    wstring error;
+    if (!GetFilesList(fromDir, &filesList, error))
+        return false;
+
     const size_t sourceLength = fromDir.length();
     bool useTmp = !tmpDir.empty() && fromDir != tmpDir && toDir != tmpDir;
     for (const wstring &sourcePath : filesList) {
@@ -185,7 +196,7 @@ bool replaceFolderContents(const wstring &fromDir,
     return true;
 }
 
-bool runProcess(const wstring &fileName, const wstring &args)
+bool File::runProcess(const wstring &fileName, const wstring &args)
 {
     PROCESS_INFORMATION ProcessInfo;
     STARTUPINFO StartupInfo;
@@ -203,18 +214,18 @@ bool runProcess(const wstring &fileName, const wstring &args)
     return false;
 }
 
-bool fileExists(const wstring &filePath)
+bool File::fileExists(const wstring &filePath)
 {
     DWORD attr = ::GetFileAttributes(filePath.c_str());
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool dirExists(const wstring &dirName) {
+bool File::dirExists(const wstring &dirName) {
     DWORD attr = ::GetFileAttributes(dirName.c_str());
     return (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-bool makePath(const wstring &path)
+bool File::makePath(const wstring &path)
 {
     list<wstring> pathsList;
     wstring last_path(path);
@@ -229,18 +240,18 @@ bool makePath(const wstring &path)
     return true;
 }
 
-bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath)
+bool File::replaceFile(const wstring &oldFilePath, const wstring &newFilePath)
 {
     return MoveFileExW(oldFilePath.c_str(), newFilePath.c_str(),
                        MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) != 0 ? true : false;
 }
 
-bool removeFile(const wstring &filePath)
+bool File::removeFile(const wstring &filePath)
 {
     return DeleteFile(filePath.c_str()) != 0 ? true : false;
 }
 
-bool removeDirRecursively(const wstring &dir)
+bool File::removeDirRecursively(const wstring &dir)
 {
     WCHAR pFrom[_MAX_PATH + 1];
     swprintf_s(pFrom, sizeof(pFrom)/sizeof(WCHAR), L"%s%c", dir.c_str(), '\0');
@@ -257,36 +268,36 @@ bool removeDirRecursively(const wstring &dir)
     return (SHFileOperation(&fop) == 0) ? true : false;
 }
 
-wstring normailze(const wstring &path)
+wstring File::fromNativeSeparators(const wstring &path)
 {
     return std::regex_replace(path, std::wregex(L"\\\\"), L"/");
 }
 
-wstring nativeSeprators(const wstring &path)
+wstring File::toNativeSeparators(const wstring &path)
 {
     return std::regex_replace(path, std::wregex(L"\\/"), L"\\");
 }
 
-wstring parentPath(const wstring &path)
+wstring File::parentPath(const wstring &path)
 {
     wstring::size_type delim = path.find_last_of(L"\\/");
     return (delim == wstring::npos) ? L"" : path.substr(0, delim);
 }
 
-wstring tempPath()
+wstring File::tempPath()
 {
     WCHAR buff[MAX_PATH];
     DWORD res = ::GetTempPathW(MAX_PATH, buff);
     if (res != 0) {
-        return normailze(wstring(buff));
+        return fromNativeSeparators(wstring(buff));
     }
     return L"";
 }
 
-bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath)
+bool File::unzipArchive(const wstring &zipFilePath, const wstring &folderPath)
 {
-    wstring file = nativeSeprators(zipFilePath);
-    wstring path = nativeSeprators(folderPath);
+    wstring file = toNativeSeparators(zipFilePath);
+    wstring path = toNativeSeparators(folderPath);
     _bstr_t lpZipFile(file.c_str());
     _bstr_t lpFolder(path.c_str());
 
@@ -376,9 +387,6 @@ bool UnzipArchive(const wstring &zipFilePath, const wstring &folderPath)
 
 
 
-
-
-
 class DownloadProgress : public IBindStatusCallback
 {
 public:
@@ -431,34 +439,7 @@ private:
 
 };
 
-wstring Utils::GetLastErrorAsString()
-{
-    DWORD errorMessageID = ::GetLastError();
-    if (errorMessageID == 0)
-        return L"";
-
-    LPWSTR messageBuffer = NULL;
-    size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                                FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                NULL, errorMessageID,
-                                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                (LPWSTR)&messageBuffer, 0, NULL);
-
-    wstring message(messageBuffer, (int)size);
-    LocalFree(messageBuffer);
-    return message;
-}
-
-void Utils::ShowMessage(wstring str, bool showError)
-{
-    if (showError)
-        str += L" " + GetLastErrorAsString();
-    MessageBoxW(NULL, str.c_str(), TEXT(VER_PRODUCTNAME_STR),
-                MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
-}
-
-
-void Utils::DownloadUrl()
+void DownloadUrl()
 {
     LPCWSTR url = L"https://download.onlyoffice.com/install/desktop/editors/windows/onlyoffice/updates/editors_update_x64.exe";
     DeleteUrlCacheEntry(url);
