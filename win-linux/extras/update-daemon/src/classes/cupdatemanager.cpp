@@ -50,7 +50,7 @@
 #include "version.h"
 //#include "clangater.h"
 //#include "components/cmessage.h"
-//#include "Network/FileTransporter/include/FileTransporter.h"
+#include "classes/cdownloader.h"
 //#include "cascapplicationmanagerwrapper.h"
 //# include <QCryptographicHash>
 # include <Windows.h>
@@ -72,7 +72,6 @@
 #endif
 
 using std::vector;
-//using NSNetwork::NSFileTransport::CFileDownloader;
 
 
 auto currentArch()->string
@@ -204,14 +203,13 @@ class CUpdateManager::CUpdateManagerPrivate
 public:
     CUpdateManagerPrivate(CUpdateManager *owner, wstring &url)
     {
-        m_pDownloader = new CFileDownloader(url, false);
-        m_pDownloader->SetEvent_OnComplete([=](int error) {
-            const QString filePath = QString::fromStdWString(m_pDownloader->GetFilePath());
-            QMetaObject::invokeMethod(owner, "onCompleteSlot", Qt::QueuedConnection,
-                                      Q_ARG(int, error), Q_ARG(QString, filePath));
+        m_pDownloader = new CDownloader;
+        m_pDownloader->onComplete([=](int error) {
+            const wstring filePath = m_pDownloader->GetFilePath();
+            owner->onCompleteSlot(error, filePath);
         });
-        m_pDownloader->SetEvent_OnProgress([=](int percent) {
-            QMetaObject::invokeMethod(owner, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, percent));
+        m_pDownloader->onProgress([=](int percent) {
+            owner->onProgressSlot(percent);
         });
     }
 
@@ -222,19 +220,16 @@ public:
 
     void downloadFile(const wstring &url, const wstring &filePath)
     {
-        m_pDownloader->Stop();
-        m_pDownloader->SetFileUrl(url, false);
-        m_pDownloader->SetFilePath(filePath);
-        m_pDownloader->Start(0);
+        m_pDownloader->downloadFile(url, filePath);
     }
 
     void stop()
     {
-        m_pDownloader->Stop();
+        m_pDownloader->stop();
     }
 
 private:
-    CFileDownloader  * m_pDownloader = nullptr;
+    CDownloader  * m_pDownloader = nullptr;
 };
 
 struct CUpdateManager::PackageData {

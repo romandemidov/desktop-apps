@@ -60,6 +60,7 @@ private:
 };
 
 bool CDownloader::m_run = true;
+bool CDownloader::m_lock = false;
 
 CDownloader::CDownloader(CObject *parent) :
     CObject(parent)
@@ -91,8 +92,11 @@ void CDownloader::handle_signal(int signal)
 
 void CDownloader::downloadFile(const std::wstring &url, const std::wstring &filePath)
 {
-    if (url.empty() || filePath.empty())
+    m_url.clear();
+    m_filePath.clear();
+    if (url.empty() || filePath.empty() || m_lock)
         return;
+
     m_url = url;
     m_filePath = filePath;
     start();
@@ -100,16 +104,19 @@ void CDownloader::downloadFile(const std::wstring &url, const std::wstring &file
 
 void CDownloader::start()
 {
-    if (m_url.empty() || m_filePath.empty())
+    if (m_url.empty() || m_filePath.empty() || m_lock)
         return;
 
+    m_run = true;
+    m_lock = true;
     m_future = std::async(std::launch::async, [=]() {
         DeleteUrlCacheEntry(m_url.c_str());
         DownloadProgress progress(this);
-        HRESULT hr = URLDownloadToFile(0, m_url.c_str(), m_filePath.c_str(), 0,
+        HRESULT hr = URLDownloadToFile(NULL, m_url.c_str(), m_filePath.c_str(), 0,
                                        static_cast<IBindStatusCallback*>(&progress));
         if (m_complete_callback)
             m_complete_callback((int)hr);
+        m_lock = false;
     });
 }
 
@@ -118,6 +125,11 @@ void CDownloader::stop()
     m_run = false;
     /*if (!m_url.empty())
         DeleteUrlCacheEntry(m_url.c_str());*/
+}
+
+wstring CDownloader::GetFilePath()
+{
+    return m_filePath;
 }
 
 void CDownloader::onComplete(FnVoidInt callback)
