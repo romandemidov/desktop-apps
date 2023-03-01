@@ -60,6 +60,7 @@ bool replaceFolderContents(const wstring &fromDir,
 bool runProcess(const wstring &fileName, const wstring &args);
 bool fileExists(const wstring &filePath);
 bool dirExists(const wstring &dirName);
+bool dirIsEmpty(const wstring &dirName);
 bool makePath(const wstring &path);
 bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath);
 bool removeFile(const wstring &filePath);
@@ -68,10 +69,9 @@ wstring fromNativeSeparators(const wstring &path);
 wstring toNativeSeparators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
+wstring appPath();
 bool unzipArchive(const wstring &zipFilePath, const wstring &folderPath);
 }
-
-void DownloadUrl();
 
 namespace Logger
 {

@@ -33,8 +33,8 @@
 #include "utils.h"
 #include "version.h"
 #include <Windows.h>
-#include <wininet.h>
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <shlobj_core.h>
 #include <combaseapi.h>
 #include <comutil.h>
@@ -225,6 +225,11 @@ bool File::dirExists(const wstring &dirName) {
     return (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
+bool File::dirIsEmpty(const wstring &dirName)
+{
+    return PathIsDirectoryEmpty(dirName.c_str());
+}
+
 bool File::makePath(const wstring &path)
 {
     list<wstring> pathsList;
@@ -289,7 +294,17 @@ wstring File::tempPath()
     WCHAR buff[MAX_PATH];
     DWORD res = ::GetTempPathW(MAX_PATH, buff);
     if (res != 0) {
-        return fromNativeSeparators(wstring(buff));
+        return fromNativeSeparators(parentPath(wstring(buff)));
+    }
+    return L"";
+}
+
+wstring File::appPath()
+{
+    WCHAR buff[MAX_PATH];
+    DWORD res = ::GetModuleFileName(NULL, buff, MAX_PATH);
+    if (res != 0) {
+        return fromNativeSeparators(parentPath(wstring(buff)));
     }
     return L"";
 }
@@ -380,74 +395,6 @@ bool File::unzipArchive(const wstring &zipFilePath, const wstring &folderPath)
 //    {
 //        CoUninitialize();
 //    }
-}
-
-
-
-
-
-
-class DownloadProgress : public IBindStatusCallback
-{
-public:
-    DownloadProgress()
-    {
-
-    }
-    HRESULT __stdcall QueryInterface(const IID &, void **) {
-        return E_NOINTERFACE;
-    }
-    ULONG STDMETHODCALLTYPE AddRef(void) {
-        return 1;
-    }
-    ULONG STDMETHODCALLTYPE Release(void) {
-        return 1;
-    }
-    HRESULT STDMETHODCALLTYPE OnStartBinding(DWORD dwReserved, IBinding *pib) {
-        return E_NOTIMPL;
-    }
-    virtual HRESULT STDMETHODCALLTYPE GetPriority(LONG *pnPriority) {
-        return E_NOTIMPL;
-    }
-    virtual HRESULT STDMETHODCALLTYPE OnLowResource(DWORD reserved) {
-        return S_OK;
-    }
-    virtual HRESULT STDMETHODCALLTYPE OnStopBinding(HRESULT hresult, LPCWSTR szError) {
-        return E_NOTIMPL;
-    }
-    virtual HRESULT STDMETHODCALLTYPE GetBindInfo(DWORD *grfBINDF, BINDINFO *pbindinfo) {
-        return E_NOTIMPL;
-    }
-    virtual HRESULT STDMETHODCALLTYPE OnDataAvailable(DWORD grfBSCF, DWORD dwSize, FORMATETC *pformatetc, STGMEDIUM *pstgmed) {
-        return E_NOTIMPL;
-    }
-    virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable(REFIID riid, IUnknown *punk) {
-        return E_NOTIMPL;
-    }
-
-    virtual HRESULT __stdcall OnProgress(ULONG ulProgress, ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
-    {
-        printf("Progress: %lul of %lul\n", ulProgress, ulProgressMax);
-        if (szStatusText) {
-            wstring varname(szStatusText);
-        }
-        /*if (ulProgressMax - ulProgress < (ulProgressMax/2))
-            return E_ABORT;*/
-        return S_OK;
-    }
-private:
-
-};
-
-void DownloadUrl()
-{
-    LPCWSTR url = L"https://download.onlyoffice.com/install/desktop/editors/windows/onlyoffice/updates/editors_update_x64.exe";
-    DeleteUrlCacheEntry(url);
-    DownloadProgress progress;
-    HRESULT hr = URLDownloadToFile(0,
-        url,
-        L"E:/test.exe", 0,
-        static_cast<IBindStatusCallback*>(&progress));
 }
 
 void Logger::WriteLog(const char *filePath, const char *log, int line)

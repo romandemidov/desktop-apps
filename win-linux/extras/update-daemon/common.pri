@@ -22,15 +22,18 @@ HEADERS += $$PWD/src/version.h \
            $$PWD/src/svccontrol.h \
            $$PWD/src/classes/capplication.h \
            $$PWD/src/classes/cobject.h \
-           $$PWD/src/classes/csocket.h
+           $$PWD/src/classes/csocket.h \
+#           $$PWD/src/classes/cupdatemanager.h \
+           $$PWD/src/classes/cdownloader.h
 
 SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/utils.cpp \
            $$PWD/src/svccontrol.cpp \
            $$PWD/src/classes/capplication.cpp \
            $$PWD/src/classes/cobject.cpp \
-           $$PWD/src/classes/csocket.cpp
-
+           $$PWD/src/classes/csocket.cpp \
+#           $$PWD/src/classes/cupdatemanager.cpp \
+           $$PWD/src/classes/cdownloader.cpp
 
 ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
 !isEmpty(ENV_PRODUCT_VERSION) {
