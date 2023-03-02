@@ -114,8 +114,13 @@ void CDownloader::start()
         DownloadProgress progress(this);
         HRESULT hr = URLDownloadToFile(NULL, m_url.c_str(), m_filePath.c_str(), 0,
                                        static_cast<IBindStatusCallback*>(&progress));
+        int error = (hr == S_OK) ? 0 :
+                    (hr == E_ABORT) ? 1 :
+                    (hr == E_OUTOFMEMORY) ? -1 :
+                    (hr == INET_E_DOWNLOAD_FAILURE) ? -2 : -3;
+
         if (m_complete_callback)
-            m_complete_callback((int)hr);
+            m_complete_callback(error);
         m_lock = false;
     });
 }

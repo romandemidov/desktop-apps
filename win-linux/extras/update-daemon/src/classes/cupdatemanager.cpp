@@ -142,33 +142,24 @@ auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstr
     {
         list<wstring> replList;
         for (auto &updFile : updVec) {
-            auto ind = std::find(appVec.begin(), appVec.end(), updFile);
-            if (ind != appVec.end()) {
+            auto it_appFile = std::find(appVec.begin(), appVec.end(), updFile);
+            if (it_appFile != appVec.end()) {
                 auto updFileHash = File::getFileHash(updPath + updFile);
-                if (updFileHash.empty() || updFileHash != File::getFileHash(appPath + appVec[ind]))
+                if (updFileHash.empty() || updFileHash != File::getFileHash(appPath + *it_appFile))
                     replList.push_back(updFile);
 
             } else
                 replList.push_back(updFile);
         }
-
-        const wstring repListFilePath = updPath + REPLACEMENT_LIST;
-        if (!File::writeToFile(repListFilePath, replList))
+        if (!File::writeToFile(updPath + REPLACEMENT_LIST, replList))
             return false;
     }   
 
     // Сreate a file about successful unpacking for use in subsequent launches
     {
-        QFile successFile(updPath + SUCCES_UNPACKED);
-        if (!successFile.open(QFile::WriteOnly)) {
-            criticalMsg(QObject::tr("An error occurred while creating success unpack file!"));
+        list<wstring> successList{version};
+        if (!File::writeToFile(updPath + SUCCES_UNPACKED, successList))
             return false;
-        }
-        if (successFile.write(version.toUtf8()) == -1) {
-            successFile.close();
-            return false;
-        }
-        successFile.close();
     }
     return true;
 }
@@ -176,7 +167,7 @@ auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstr
 class CUpdateManager::CUpdateManagerPrivate
 {
 public:
-    CUpdateManagerPrivate(CUpdateManager *owner, wstring &url)
+    CUpdateManagerPrivate(CUpdateManager *owner)
     {
         m_pDownloader = new CDownloader;
         m_pDownloader->onComplete([=](int error) {
@@ -188,7 +179,7 @@ public:
         });
     }
 
-    ~CUpdateManagerPrivate()
+    virtual ~CUpdateManagerPrivate()
     {
         delete m_pDownloader, m_pDownloader = nullptr;
     }
@@ -230,37 +221,13 @@ CUpdateManager::CUpdateManager(CObject *parent):
     m_savedPackageData(new SavedPackageData),
     m_checkUrl(L""),
     m_downloadMode(Mode::CHECK_UPDATES),
-    m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT))
+    m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT)),
+    m_pimpl(new CUpdateManagerPrivate(this))
 {
     m_socket->onMessageReceived([](void *data, size_t size) {
-        //qDebug() << "Received data:" << QString::fromUtf8((const char*)data, size);
-    });
-    // =========== Set updates URL ============
-    auto setUrl = [=] {
-        if ( InputArgs::contains(CMD_ARGUMENT_CHECK_URL) ) {
-            m_checkUrl = InputArgs::argument_value(CMD_ARGUMENT_CHECK_URL);
-        } else
-            m_checkUrl = TEXT(URL_APPCAST_UPDATES);
-    };
-    GET_REGISTRY_SYSTEM(reg_system)
-    if (Utils::getWinVersion() > Utils::WinVer::WinXP && reg_system.value("CheckForUpdates", true).toBool())
-        setUrl();
 
-    m_appPath = File::appPath();
-    bool isDirectoryValid = true;
-#ifdef CHECK_DIRECTORY
-    if (QFileInfo(m_appPath).baseName() != QString(REG_APP_NAME)) {
-        isDirectoryValid = false;
-        QTimer::singleShot(2000, this, [] {
-            criticalMsg(tr("This folder configuration does not allow for "
-                           "updates! The folder name should be: ") + QString(REG_APP_NAME));
-        });
-    }
-#endif
-    if (!m_checkUrl.empty() && isDirectoryValid) {
-        m_pimpl = new CUpdateManagerPrivate(this, m_checkUrl);
-        init();
-    }
+    });
+    init();
 }
 
 CUpdateManager::~CUpdateManager()
@@ -290,9 +257,9 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
         }
     } else
     if (error == 1) {
-        auto wgt = QApplication::activeWindow();
+        /*auto wgt = QApplication::activeWindow();
         if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
-            CMessage::warning(wgt, tr("Server connection error!"));
+            CMessage::warning(wgt, tr("Server connection error!"));*/
     } else {
         // Pause or Stop
     }
@@ -300,7 +267,7 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
 
 void CUpdateManager::init()
 {
-    GET_REGISTRY_USER(reg_user);
+    /*GET_REGISTRY_USER(reg_user);
     reg_user.beginGroup("Updates");
     m_savedPackageData->fileName = reg_user.value("Updates/file", QString()).toString();
     m_savedPackageData->hash = reg_user.value("Updates/hash", QByteArray()).toByteArray();
@@ -312,12 +279,12 @@ void CUpdateManager::init()
         m_pCheckOnStartupTimer->setInterval(CHECK_ON_STARTUP_MS);
         connect(m_pCheckOnStartupTimer, &QTimer::timeout, this, &CUpdateManager::updateNeededCheking);
         m_pCheckOnStartupTimer->start();
-    }
+    }*/
 }
 
 void CUpdateManager::clearTempFiles(const wstring &except)
 {
-    static bool lock = false;
+    /*static bool lock = false;
     if (!lock) { // for one-time cleaning
         lock = true;
         m_future_clear = std::async(std::launch::async, [=]() {
@@ -332,18 +299,18 @@ void CUpdateManager::clearTempFiles(const wstring &except)
         });
     }
     if (except.empty())
-        savePackageData();
+        savePackageData();*/
 }
 
 void CUpdateManager::checkUpdates()
 {
-    destroyStartupTimer(m_pCheckOnStartupTimer);
+    /*destroyStartupTimer(m_pCheckOnStartupTimer);
     m_newVersion.clear();
     m_packageData->clear();
 
     m_downloadMode = Mode::CHECK_UPDATES;
     if (m_pimpl)
-        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(L".json"));
+        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(L".json"));*/
 }
 
 void CUpdateManager::updateNeededCheking()
@@ -353,13 +320,13 @@ void CUpdateManager::updateNeededCheking()
 
 void CUpdateManager::onProgressSlot(const int percent)
 {
-    if (m_downloadMode == Mode::DOWNLOAD_UPDATES)
-        emit progresChanged(percent);
+    /*if (m_downloadMode == Mode::DOWNLOAD_UPDATES)
+        emit progresChanged(percent);*/
 }
 
-void CUpdateManager::savePackageData(const QByteArray &hash, const string &version, const wstring &fileName)
+void CUpdateManager::savePackageData(const string &hash, const wstring &version, const wstring &fileName)
 {
-    m_savedPackageData->fileName = fileName;
+    /*m_savedPackageData->fileName = fileName;
     m_savedPackageData->hash = hash;
     m_savedPackageData->version = version;
     GET_REGISTRY_USER(reg_user);
@@ -367,7 +334,7 @@ void CUpdateManager::savePackageData(const QByteArray &hash, const string &versi
     reg_user.setValue("Updates/file", fileName);
     reg_user.setValue("Updates/hash", hash);
     reg_user.setValue("Updates/version", version);
-    reg_user.endGroup();
+    reg_user.endGroup();*/
 }
 
 void CUpdateManager::loadUpdates()
@@ -375,7 +342,7 @@ void CUpdateManager::loadUpdates()
     if (m_lock)
         return;
     if (!m_savedPackageData->fileName.empty()
-            && m_savedPackageData->fileName.indexOf(currentArch()) != -1
+            && m_savedPackageData->fileName.find(currentArch()) != wstring::npos
             && m_savedPackageData->version == m_newVersion
             && m_savedPackageData->hash == File::getFileHash(m_savedPackageData->fileName))
     {
@@ -392,12 +359,12 @@ void CUpdateManager::loadUpdates()
 
 void CUpdateManager::installUpdates()
 {
-    GET_REGISTRY_USER(reg_user);
+    /*GET_REGISTRY_USER(reg_user);
     reg_user.beginGroup("Updates");
     const string ignored_ver = reg_user.value("Updates/ignored_ver").toString();
     reg_user.endGroup();
     if (ignored_ver != getVersion())
-        m_dialogSchedule->addToSchedule("showStartInstallMessage");
+        m_dialogSchedule->addToSchedule("showStartInstallMessage");*/
 }
 
 wstring CUpdateManager::getVersion() const
@@ -407,8 +374,8 @@ wstring CUpdateManager::getVersion() const
 
 void CUpdateManager::onLoadUpdateFinished(const wstring &filePath)
 {
-    m_packageData->fileName = filePath;
-    savePackageData(File::getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);
+    /*m_packageData->fileName = filePath;
+    savePackageData(File::getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);*/
     unzipIfNeeded();
 }
 
@@ -420,7 +387,7 @@ void CUpdateManager::unzipIfNeeded()
     const wstring updPath = File::tempPath() + UPDATE_PATH;
     auto unzip = [=]()->void {
         if (!unzipArchive(m_packageData->fileName, updPath,
-                            m_appPath, m_newVersion)) {
+                            File::appPath(), m_newVersion)) {
             m_lock = false;
             return;
         }
@@ -436,7 +403,7 @@ void CUpdateManager::unzipIfNeeded()
     } else {
         if (isSuccessUnpacked(updPath + SUCCES_UNPACKED, m_newVersion)) {
             m_lock = false;
-            m_dialogSchedule->addToSchedule("showStartInstallMessage");
+            //m_dialogSchedule->addToSchedule("showStartInstallMessage");
         } else {
             File::removeDirRecursively(updPath);
             m_future_unzip = std::async(std::launch::async, unzip);
@@ -448,11 +415,11 @@ void CUpdateManager::handleAppClose()
 {
     if ( m_restartForUpdate ) {
         /*GET_REGISTRY_SYSTEM(reg_system)
-        wstring filePath = (m_appPath + DAEMON_NAME).toStdWString();
+        wstring filePath = (File::appPath() + DAEMON_NAME).toStdWString();
         wstring args = L"/LANG=" + reg_system.value("locale", "en").toString().toStdWString();
         args += L" " + m_packageData->packageArgs;
         if (!runProcess(filePath.c_str(), (wchar_t*)args.c_str())) {
-            criticalMsg(QString("Unable to start process: %1").arg(m_appPath + DAEMON_NAME));
+            criticalMsg(QString("Unable to start process: %1").arg(File::appPath() + DAEMON_NAME));
         }*/
     } else
         if (m_pimpl)
@@ -470,9 +437,9 @@ void CUpdateManager::setNewUpdateSetting(const string& _rate)
     reg_user.setValue("autoUpdateMode", _rate);
     int mode = (_rate == "silent") ?
                     UpdateMode::SILENT : (_rate == "ask") ?
-                        UpdateMode::ASK : UpdateMode::DISABLE;*/
+                        UpdateMode::ASK : UpdateMode::DISABLE;
     if (mode == UpdateMode::DISABLE)
-        destroyStartupTimer(m_pCheckOnStartupTimer);
+        destroyStartupTimer(m_pCheckOnStartupTimer);*/
 }
 
 void CUpdateManager::cancelLoading()
@@ -500,11 +467,12 @@ int CUpdateManager::getUpdateMode()
     return (mode == "silent") ?
                 UpdateMode::SILENT : (mode == "ask") ?
                     UpdateMode::ASK : UpdateMode::DISABLE;*/
+    return 0;
 }
 
 void CUpdateManager::onLoadCheckFinished(const wstring &filePath)
 {
-    QFile jsonFile(filePath);
+    /*QFile jsonFile(filePath);
     if ( jsonFile.open(QIODevice::ReadOnly) ) {
         QByteArray ReplyText = jsonFile.readAll();
         jsonFile.close();
@@ -561,10 +529,10 @@ void CUpdateManager::onLoadCheckFinished(const wstring &filePath)
         }
     } else {
         onCheckFinished(true, false, "", "Error receiving updates...");
-    }
+    }*/
 }
 
-void CUpdateManager::onCheckFinished(bool error, bool updateExist, const string &version, const string &changelog)
+void CUpdateManager::onCheckFinished(bool error, bool updateExist, const wstring &version, const string &changelog)
 {
     /*Q_UNUSED(changelog);
     if (!error && updateExist) {

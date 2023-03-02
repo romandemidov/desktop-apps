@@ -71,9 +71,9 @@ private:
     void onCheckFinished(bool error, bool updateExist, const wstring &version, const string &changelog);
     void onLoadUpdateFinished(const wstring &filePath);
     void unzipIfNeeded();
-    void savePackageData(/*const QByteArray &hash = QByteArray(),
-                         const string &version = string(),
-                         const string &fileName = string()*/);
+    void savePackageData(const string &hash = string(),
+                         const wstring &version = wstring(),
+                         const wstring &fileName = wstring());
 
     struct PackageData;
     struct SavedPackageData;
@@ -84,7 +84,6 @@ private:
                 m_lock = false;
 
     wstring     m_checkUrl,
-                m_appPath,
                 m_newVersion;
     int         m_downloadMode;
     future<void> m_future_unzip,
