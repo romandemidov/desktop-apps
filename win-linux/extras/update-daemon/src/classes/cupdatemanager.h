@@ -57,7 +57,7 @@ public:
     void cancelLoading();
     void skipVersion();
     int  getUpdateMode();
-    string getVersion() const;
+    wstring getVersion() const;
     void scheduleRestartForUpdate();
     void handleAppClose();
     void loadUpdates();
@@ -68,7 +68,7 @@ private:
     void clearTempFiles(const wstring &except = wstring());
     void updateNeededCheking();
     void onLoadCheckFinished(const wstring &filePath);
-    void onCheckFinished(bool error, bool updateExist, const string &version, const string &changelog);
+    void onCheckFinished(bool error, bool updateExist, const wstring &version, const string &changelog);
     void onLoadUpdateFinished(const wstring &filePath);
     void unzipIfNeeded();
     void savePackageData(/*const QByteArray &hash = QByteArray(),
@@ -84,9 +84,9 @@ private:
                 m_lock = false;
 
     wstring     m_checkUrl,
-                m_appPath;
+                m_appPath,
+                m_newVersion;
     int         m_downloadMode;
-    string      m_newVersion;
     future<void> m_future_unzip,
                  m_future_clear;
 

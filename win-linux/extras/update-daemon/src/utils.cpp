@@ -43,6 +43,12 @@
 #include <fstream>
 #include <regex>
 #include <cstdio>
+#include <Wincrypt.h>
+#include <vector>
+#include <sstream>
+
+#define BUFSIZE 1024
+#define MD5LEN  16
 
 
 wstring Utils::GetLastErrorAsString()
@@ -138,7 +144,7 @@ bool moveSingleFile(const wstring &source,
     return true;
 }
 
-bool File::readFile(const wstring &filePath, list<wstring> &listFiles)
+bool File::readFile(const wstring &filePath, list<wstring> &linesList)
 {
     std::wifstream file(filePath.c_str(), std::ios_base::in);
     if (!file.is_open()) {
@@ -147,7 +153,21 @@ bool File::readFile(const wstring &filePath, list<wstring> &listFiles)
     }
     wstring line;
     while (std::getline(file, line))
-        listFiles.push_back(line);
+        linesList.push_back(line);
+
+    file.close();
+    return true;
+}
+
+bool File::writeToFile(const wstring &filePath, list<wstring> &linesList)
+{
+    std::wofstream file(filePath.c_str(), std::ios_base::out);
+    if (!file.is_open()) {
+        Utils::ShowMessage(L"An error occurred while writing " + filePath);
+        return false;
+    }
+    for (auto &line : linesList)
+        file << line << std::endl;
 
     file.close();
     return true;
@@ -307,6 +327,104 @@ wstring File::appPath()
         return fromNativeSeparators(parentPath(wstring(buff)));
     }
     return L"";
+}
+
+string File::getFileHash(const wstring &fileName)
+{
+    //DWORD dwStatus = 0;
+    BOOL bResult = FALSE;
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    HANDLE hFile = NULL;
+    BYTE rgbFile[BUFSIZE];
+    DWORD cbRead = 0;
+    BYTE rgbHash[MD5LEN];
+    DWORD cbHash = 0;
+    CHAR rgbDigits[] = "0123456789abcdef";
+
+    hFile = CreateFile(fileName.c_str(),
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_SEQUENTIAL_SCAN,
+        NULL);
+
+    if (hFile == INVALID_HANDLE_VALUE) {
+        // Error opening file
+        //dwStatus = GetLastError();
+        return "";
+    }
+
+    // Get handle to the crypto provider
+    if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        // CryptAcquireContext failed
+        //dwStatus = GetLastError();
+        CloseHandle(hFile);
+        return "";
+    }
+
+    if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
+        // CryptAcquireContext failed
+        //dwStatus = GetLastError();
+        CloseHandle(hFile);
+        CryptReleaseContext(hProv, 0);
+        return "";
+    }
+
+    while ((bResult = ReadFile(hFile, rgbFile, BUFSIZE, &cbRead, NULL))) {
+        if (cbRead == 0)
+            break;
+
+        if (!CryptHashData(hHash, rgbFile, cbRead, 0)) {
+            // CryptHashData failed
+            //dwStatus = GetLastError();
+            CryptReleaseContext(hProv, 0);
+            CryptDestroyHash(hHash);
+            CloseHandle(hFile);
+            return "";
+        }
+    }
+
+    if (!bResult) {
+        // ReadFile failed
+        //dwStatus = GetLastError();
+        CryptReleaseContext(hProv, 0);
+        CryptDestroyHash(hHash);
+        CloseHandle(hFile);
+        return "";
+    }
+
+    DWORD cbHashSize = 0, dwCount = sizeof(DWORD);
+    if (!CryptGetHashParam( hHash, HP_HASHSIZE, (BYTE*)&cbHashSize, &dwCount, 0)) {
+        CryptReleaseContext(hProv, 0);
+        CryptDestroyHash(hHash);
+        CloseHandle(hFile);
+        return "";
+    }
+
+    cbHash = MD5LEN;
+    std::vector<BYTE> buffer(cbHashSize);
+    if (!CryptGetHashParam(hHash, HP_HASHVAL, reinterpret_cast<BYTE*>(&buffer[0]), &cbHashSize, 0)) {
+        // CryptGetHashParam failed
+        //dwStatus = GetLastError();
+        CryptReleaseContext(hProv, 0);
+        CryptDestroyHash(hHash);
+        CloseHandle(hFile);
+        return "";
+    }
+
+    std::ostringstream oss;
+    for (std::vector<BYTE>::const_iterator it = buffer.begin(); it != buffer.end(); ++it) {
+        oss.fill('0');
+        oss.width(2);
+        oss << std::hex << static_cast<const int>(*it);
+    }
+
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv, 0);
+    CloseHandle(hFile);
+    return oss.str();
 }
 
 bool File::unzipArchive(const wstring &zipFilePath, const wstring &folderPath)

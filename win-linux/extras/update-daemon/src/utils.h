@@ -36,6 +36,7 @@
 #include <string>
 #include <list>
 
+using std::string;
 using std::wstring;
 using std::to_wstring;
 using std::list;
@@ -49,7 +50,8 @@ void ShowMessage(wstring str, bool showError = false);
 namespace File
 {
 bool GetFilesList(const wstring &path, list<wstring> *lst, wstring &error);
-bool readFile(const wstring &filePath, list<wstring> &list);
+bool readFile(const wstring &filePath, list<wstring> &linesList);
+bool writeToFile(const wstring &filePath, list<wstring> &linesList);
 bool replaceListOfFiles(const list<wstring> &filesList,
                         const wstring &fromDir,
                         const wstring &toDir,
@@ -70,6 +72,7 @@ wstring toNativeSeparators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
 wstring appPath();
+string getFileHash(const wstring &fileName);
 bool unzipArchive(const wstring &zipFilePath, const wstring &folderPath);
 }
 

@@ -31,36 +31,21 @@
  */
 
 #include "cupdatemanager.h"
-//#include <QApplication>
-//#include <QSettings>
-//#include <QDir>
-//#include <QDirIterator>
-//#include <QDataStream>
-//#include <QUuid>
-//#include <QJsonDocument>
-//#include <QJsonObject>
-//#include <QRegularExpression>
-//#include <QtConcurrent/QtConcurrent>
 #include <algorithm>
 #include <iostream>
 #include <functional>
 #include <vector>
 #include "utils.h"
-//#include "defines.h"
+#include "../../src/defines.h"
 #include "version.h"
 //#include "clangater.h"
-//#include "components/cmessage.h"
 #include "classes/cdownloader.h"
-//#include "cascapplicationmanagerwrapper.h"
-//# include <QCryptographicHash>
 # include <Windows.h>
-//# include "OfficeUtils.h"
-//# include "platform_win/updatedialog.h"
-# define DAEMON_NAME "/update-daemon.exe"
-# define TEMP_DAEMON_NAME "/~update-daemon.exe"
-//# define DELETE_LIST "/.delete_list.lst"
-# define REPLACEMENT_LIST "/.replacement_list.lst"
-# define SUCCES_UNPACKED L"/.success_unpacked"
+# define DAEMON_NAME L"/update-daemon.exe"
+# define TEMP_DAEMON_NAME L"/~update-daemon.exe"
+//# define DELETE_LIST L"/.delete_list.lst"
+# define REPLACEMENT_LIST L"/.replacement_list.lst"
+# define SUCCES_UNPACKED  L"/.success_unpacked"
 
 //#define CHECK_DIRECTORY
 #define SENDER_PORT   12011
@@ -74,77 +59,68 @@
 using std::vector;
 
 
-auto currentArch()->string
+auto currentArch()->wstring
 {
 #ifdef _WIN64
-    return "_x64";
+    return L"_x64";
 #else
-    return "_x86";
+    return L"_x86";
 #endif
 }
 
-auto getFileHash(const wstring &fileName)->string
+auto generateTmpFileName(const wstring &ext)->wstring
 {
-    QFile file(fileName);
-    if (file.open(QFile::ReadOnly)) {
-        QCryptographicHash hash(QCryptographicHash::Md5);
-        if (hash.addData(&file)) {
-            file.close();
-            return hash.result();
-        }
-        file.close();
+    wstring uuid_wstr;
+    UUID uuid = {0};
+    RPC_WSTR wszUuid = NULL;
+    if (UuidCreate(&uuid) == RPC_S_OK && UuidToStringW(&uuid, &wszUuid) == RPC_S_OK) {
+        uuid_wstr = ((wchar_t*)wszUuid);
+        RpcStringFreeW(&wszUuid);
+    } else
+        uuid_wstr = L"00000000-0000-0000-0000-000000000000";
+    return File::tempPath() + L"/" + TEXT(FILE_PREFIX) + uuid_wstr + currentArch() + ext;
+}
+
+auto isSuccessUnpacked(const wstring &successFilePath, const wstring &version)->bool
+{
+    list<wstring> lines;
+    if (File::readFile(successFilePath, lines)) {
+        if (std::find(lines.begin(), lines.end(), version) != lines.end())
+            return true;
     }
-    return string();
+    return false;
 }
 
-auto generateTmpFileName(const string &ext)->wstring
-{
-    const QUuid uuid = QUuid::createUuid();
-    const QRegularExpression branches = QRegularExpression("[{|}]+");
-    return File::tempPath() + L"/" + TEXT(FILE_PREFIX) +
-           uuid.toString().replace(branches, "") + currentArch() + ext;
-}
-
-auto isSuccessUnpacked(const wstring &successFilePath, const string &version)->bool
-{
-    QFile successFile(successFilePath);
-    if (!successFile.open(QFile::ReadOnly))
-        return false;
-    if (QString(successFile.readAll()).indexOf(version) == -1) {
-        successFile.close();
-        return false;
-    }
-    successFile.close();
-    return true;
-}
-
-auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstring &appPath, const string &version)->bool
+auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstring &appPath, const wstring &version)->bool
 {
     if (!File::dirExists(updPath) && !File::makePath(updPath)) {
-        criticalMsg(QObject::tr("An error occurred while creating dir: ") + updPath);
+        Utils::ShowMessage(L"An error occurred while creating dir: " + updPath);
         return false;
     }
 
     // Extract files
-    COfficeUtils utils;
-    HRESULT res = utils.ExtractToDirectory(zipFilePath.toStdWString(), updPath.toStdWString(), nullptr, 0);
-    if (res != S_OK) {
-        criticalMsg(QObject::tr("An error occurred while unpacking zip file!"));
+    if (!File::unzipArchive(zipFilePath, updPath)) {
+        Utils::ShowMessage(L"An error occurred while unpacking zip file!");
         return false;
     }
 
-    auto fillSubpathVector = [](const QString &path, QVector<QString> &vec) {
-        QStringList filters{"*.*"};
-        QDirIterator it(path, filters, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QString subPath = it.next().mid(path.length());
+    auto fillSubpathVector = [](const wstring &path, vector<wstring> &vec)->bool {
+        list<wstring> filesList;
+        wstring error;
+        if (!File::GetFilesList(path, &filesList, error)) {
+            Utils::ShowMessage(L"An error occurred while get files list!");
+            return false;
+        }
+        for (auto &filePath : filesList) {
+            wstring subPath = filePath.substr(path.length());
             vec.push_back(std::move(subPath));
         }
+        return true;
     };
 
     vector<wstring> updVec, appVec;
-    fillSubpathVector(appPath, appVec);
-    fillSubpathVector(updPath, updVec);
+    if (!fillSubpathVector(appPath, appVec) || fillSubpathVector(updPath, updVec))
+        return false;
 
 //    // Create a list of files to delete
 //    {
@@ -164,37 +140,36 @@ auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstr
 
     // Create a list of files to replacement
     {
-        const QString repListFilePath = updPath + REPLACEMENT_LIST;
-        QFile repListFile(repListFilePath);
-        if (!repListFile.open(QFile::WriteOnly)) {
-            criticalMsg(QObject::tr("Can't create file: ") + repListFilePath);
-            return false;
-        }
-        QTextStream out(&repListFile);
-        foreach (auto &updFile, updVec) {
-            int ind = appVec.indexOf(updFile);
-            if (ind != -1) {
-                auto updFileHash = getFileHash(updPath + updFile);
-                if (updFileHash.isEmpty() || updFileHash != getFileHash(appPath + appVec[ind]))
-                    out << updFile << "\n";
+        list<wstring> replList;
+        for (auto &updFile : updVec) {
+            auto ind = std::find(appVec.begin(), appVec.end(), updFile);
+            if (ind != appVec.end()) {
+                auto updFileHash = File::getFileHash(updPath + updFile);
+                if (updFileHash.empty() || updFileHash != File::getFileHash(appPath + appVec[ind]))
+                    replList.push_back(updFile);
 
             } else
-                out << updFile << "\n";
+                replList.push_back(updFile);
         }
-        repListFile.close();
+
+        const wstring repListFilePath = updPath + REPLACEMENT_LIST;
+        if (!File::writeToFile(repListFilePath, replList))
+            return false;
     }   
 
     // Сreate a file about successful unpacking for use in subsequent launches
-    QFile successFile(updPath + SUCCES_UNPACKED);
-    if (!successFile.open(QFile::WriteOnly)) {
-        criticalMsg(QObject::tr("An error occurred while creating success unpack file!"));
-        return false;
-    }
-    if (successFile.write(version.toUtf8()) == -1) {
+    {
+        QFile successFile(updPath + SUCCES_UNPACKED);
+        if (!successFile.open(QFile::WriteOnly)) {
+            criticalMsg(QObject::tr("An error occurred while creating success unpack file!"));
+            return false;
+        }
+        if (successFile.write(version.toUtf8()) == -1) {
+            successFile.close();
+            return false;
+        }
         successFile.close();
-        return false;
     }
-    successFile.close();
     return true;
 }
 
@@ -233,8 +208,8 @@ private:
 };
 
 struct CUpdateManager::PackageData {
-    wstring     fileName;
-    wstring     packageUrl,
+    wstring     fileName,
+                packageUrl,
                 packageArgs;
     void clear() {
         fileName.clear();
@@ -245,8 +220,8 @@ struct CUpdateManager::PackageData {
 
 struct CUpdateManager::SavedPackageData {
     string     hash;
-    string     version;
-    wstring    fileName;
+    wstring    version,
+               fileName;
 };
 
 CUpdateManager::CUpdateManager(CObject *parent):
@@ -368,7 +343,7 @@ void CUpdateManager::checkUpdates()
 
     m_downloadMode = Mode::CHECK_UPDATES;
     if (m_pimpl)
-        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(".json").toStdWString());
+        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(L".json"));
 }
 
 void CUpdateManager::updateNeededCheking()
@@ -402,7 +377,7 @@ void CUpdateManager::loadUpdates()
     if (!m_savedPackageData->fileName.empty()
             && m_savedPackageData->fileName.indexOf(currentArch()) != -1
             && m_savedPackageData->version == m_newVersion
-            && m_savedPackageData->hash == getFileHash(m_savedPackageData->fileName))
+            && m_savedPackageData->hash == File::getFileHash(m_savedPackageData->fileName))
     {
         m_packageData->fileName = m_savedPackageData->fileName;
         unzipIfNeeded();
@@ -411,7 +386,7 @@ void CUpdateManager::loadUpdates()
     if (!m_packageData->packageUrl.empty()) {
         m_downloadMode = Mode::DOWNLOAD_UPDATES;
         if (m_pimpl)
-            m_pimpl->downloadFile(m_packageData->packageUrl, generateTmpFileName(".zip").toStdWString());
+            m_pimpl->downloadFile(m_packageData->packageUrl, generateTmpFileName(L".zip"));
     }
 }
 
@@ -425,7 +400,7 @@ void CUpdateManager::installUpdates()
         m_dialogSchedule->addToSchedule("showStartInstallMessage");
 }
 
-string CUpdateManager::getVersion() const
+wstring CUpdateManager::getVersion() const
 {
     return m_newVersion;
 }
@@ -433,7 +408,7 @@ string CUpdateManager::getVersion() const
 void CUpdateManager::onLoadUpdateFinished(const wstring &filePath)
 {
     m_packageData->fileName = filePath;
-    savePackageData(getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);
+    savePackageData(File::getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);
     unzipIfNeeded();
 }
 

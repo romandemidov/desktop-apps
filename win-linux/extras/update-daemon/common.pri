@@ -15,6 +15,7 @@ include($$CORE_ROOT_DIR/Common/base.pri)
 #ADD_DEPENDENCY(kernel)
 
 INCLUDEPATH += $$PWD/src
+INCLUDEPATH += $$PWD/../../src/prop
 
 HEADERS += $$PWD/src/version.h \
            $$PWD/src/utils.h \
@@ -77,7 +78,8 @@ LIBS += -luser32 \
         -ladvapi32 \
         -lurlmon \
         -lwininet \
-        -lws2_32
+        -lws2_32 \
+        -lrpcrt4
 
 OBJECTS_DIR = $$DESTDIR/obj
 MOC_DIR = $$DESTDIR/moc
