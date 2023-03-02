@@ -263,7 +263,7 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
 
 void CUpdateManager::init()
 {
-    m_socket->onMessageReceived([](void *data, size_t size) {
+    m_socket->onMessageReceived([=](void *data, size_t size) {
         //Logger::WriteLog("E:/log.txt", (const char*)data, size);
         wstring str((const wchar_t*)data), tmp;
         vector<wstring> params;
@@ -271,7 +271,31 @@ void CUpdateManager::init()
         while (std::getline(wss, tmp, L'|'))
             params.push_back(std::move(tmp));
         if (params.size() == 4) {
+            switch (std::stoi(params[0])) {
+            case MSG_CheckUpdates: {
+                m_downloadMode = Mode::CHECK_UPDATES;
+                if (m_pimpl)
+                    m_pimpl->downloadFile(params[1], generateTmpFileName(L".json"));
+                break;
+            }
+            case MSG_LoadUpdates: {
+                m_downloadMode = Mode::DOWNLOAD_UPDATES;
+                if (m_pimpl)
+                    m_pimpl->downloadFile(params[1], generateTmpFileName(L".zip"));
+                break;
+            }
+            case MSG_StopDownload: {
+                m_downloadMode = Mode::CHECK_UPDATES;
+                if (m_pimpl)
+                    m_pimpl->stop();
+                break;
+            }
+            case MSG_UnzipIfNeeded:
 
+                break;
+            default:
+                break;
+            }
         }
     });
 
@@ -309,17 +333,6 @@ void CUpdateManager::clearTempFiles(const wstring &except)
     }
     if (except.empty())
         savePackageData();*/
-}
-
-void CUpdateManager::checkUpdates()
-{
-    /*destroyStartupTimer(m_pCheckOnStartupTimer);
-    m_newVersion.clear();
-    m_packageData->clear();
-
-    m_downloadMode = Mode::CHECK_UPDATES;
-    if (m_pimpl)
-        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(L".json"));*/
 }
 
 void CUpdateManager::updateNeededCheking()

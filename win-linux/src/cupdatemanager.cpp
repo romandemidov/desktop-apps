@@ -298,41 +298,18 @@ auto runProcess(const WCHAR *fileName, WCHAR *args)->BOOL
 class CUpdateManager::CUpdateManagerPrivate
 {
 public:
-    CUpdateManagerPrivate(CUpdateManager *owner, wstring &url)
+    CUpdateManagerPrivate(CUpdateManager *owner)
     {
-        m_pDownloader = new CFileDownloader(url, false);
-        m_pDownloader->SetEvent_OnComplete([=](int error) {
-            const QString filePath = QString::fromStdWString(m_pDownloader->GetFilePath());
-            QMetaObject::invokeMethod(owner, "onCompleteSlot", Qt::QueuedConnection,
-                                      Q_ARG(int, error), Q_ARG(QString, filePath));
-        });
-#ifdef Q_OS_WIN
-        m_pDownloader->SetEvent_OnProgress([=](int percent) {
-            QMetaObject::invokeMethod(owner, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, percent));
-        });
-#endif
+
     }
 
     ~CUpdateManagerPrivate()
     {
-        delete m_pDownloader, m_pDownloader = nullptr;
-    }
 
-    void downloadFile(const wstring &url, const wstring &filePath)
-    {
-        m_pDownloader->Stop();
-        m_pDownloader->SetFileUrl(url, false);
-        m_pDownloader->SetFilePath(filePath);
-        m_pDownloader->Start(0);
-    }
-
-    void stop()
-    {
-        m_pDownloader->Stop();
     }
 
 private:
-    CFileDownloader  * m_pDownloader = nullptr;
+
 };
 
 struct CUpdateManager::PackageData {
@@ -387,7 +364,7 @@ CUpdateManager::CUpdateManager(QObject *parent):
     }
 #endif
     if ( !m_checkUrl.empty() && isDirectoryValid) {
-        m_pimpl = new CUpdateManagerPrivate(this, m_checkUrl);
+        m_pimpl = new CUpdateManagerPrivate(this);
 #ifdef __linux__
         m_pTimer = new QTimer(this);
         m_pTimer->setSingleShot(false);
@@ -408,30 +385,6 @@ CUpdateManager::~CUpdateManager()
     delete m_dialogSchedule, m_dialogSchedule = nullptr;
     delete m_pimpl, m_pimpl = nullptr;
     delete m_socket, m_socket = nullptr;
-}
-
-void CUpdateManager::onCompleteSlot(const int error, const QString &filePath)
-{
-    if (error == 0) {
-        switch (m_downloadMode) {
-        case Mode::CHECK_UPDATES:
-            onLoadCheckFinished(filePath);
-            break;
-#ifdef Q_OS_WIN
-        case Mode::DOWNLOAD_UPDATES:
-            onLoadUpdateFinished(filePath);
-            break;
-#endif
-        default: break;
-        }
-    } else
-    if (error == 1) {
-        auto wgt = QApplication::activeWindow();
-        if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
-            CMessage::warning(wgt, tr("Server connection error!"));
-    } else {
-        // Pause or Stop
-    }
 }
 
 void CUpdateManager::init()
@@ -459,7 +412,7 @@ void CUpdateManager::init()
         m_pCheckOnStartupTimer->start();
     }
 
-    m_socket->onMessageReceived([](void *data, size_t size) {
+    m_socket->onMessageReceived([this](void *data, size_t size) {
         wstring str((const wchar_t*)data), tmp;
         vector<wstring> params;
         std::wstringstream wss(str);
@@ -468,9 +421,29 @@ void CUpdateManager::init()
 
         if (params.size() == 4) {
             switch (std::stoi(params[0])) {
-            case MSG_CHECK_UPDATES:
+            case MSG_LoadCheckFinished:
 
                 break;
+
+            case MSG_LoadUpdateFinished:
+
+                break;
+
+            case MSG_ShowStartInstallMessage:
+
+                break;
+
+            case MSG_Progress:
+                QMetaObject::invokeMethod(this, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, std::stoi(params[1])));
+                break;
+
+            case MSG_DownloadingError: {
+                auto wgt = QApplication::activeWindow();
+                if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
+                    CMessage::warning(wgt, tr("Server connection error!"));
+                break;
+            }
+
             default:
                 break;
             }
@@ -516,8 +489,7 @@ void CUpdateManager::checkUpdates()
 #endif
 
     m_downloadMode = Mode::CHECK_UPDATES;
-    if (m_pimpl)
-        m_pimpl->downloadFile(m_checkUrl, generateTmpFileName(".json").toStdWString());
+    sendMessage(MSG_CheckUpdates, m_checkUrl);
 #ifndef Q_OS_WIN
     QTimer::singleShot(3000, this, [=]() {
         updateNeededCheking();
@@ -606,8 +578,7 @@ void CUpdateManager::loadUpdates()
     } else
     if (!m_packageData->packageUrl.empty()) {
         m_downloadMode = Mode::DOWNLOAD_UPDATES;
-        if (m_pimpl)
-            m_pimpl->downloadFile(m_packageData->packageUrl, generateTmpFileName(".zip").toStdWString());
+        sendMessage(MSG_LoadUpdates, m_packageData->packageUrl);
     }
 }
 
@@ -714,8 +685,7 @@ void CUpdateManager::cancelLoading()
         return;
     AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(m_newVersion));
     m_downloadMode = Mode::CHECK_UPDATES;
-    if (m_pimpl)
-        m_pimpl->stop();
+    sendMessage(MSG_StopDownload);
 }
 
 void CUpdateManager::skipVersion()

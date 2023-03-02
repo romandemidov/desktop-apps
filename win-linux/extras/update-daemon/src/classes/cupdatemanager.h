@@ -101,7 +101,6 @@ private:
         CHECK_UPDATES=0, DOWNLOAD_CHANGELOG=1, DOWNLOAD_UPDATES=2
     };
 
-    void checkUpdates();
     void progresChanged(const int percent);
 
 private:

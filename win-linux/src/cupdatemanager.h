@@ -131,7 +131,6 @@ signals:
 
 private slots:
     void showUpdateMessage(QWidget *parent);
-    void onCompleteSlot(const int error, const QString &filePath);
 #ifdef Q_OS_WIN
     void showStartInstallMessage(QWidget *parent);
     void onProgressSlot(const int percent);

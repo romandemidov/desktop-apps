@@ -8,7 +8,12 @@ typedef std::function<void(const char*)> FnVoidCharPtr;
 
 
 enum MsgCommands {
-    MSG_CHECK_UPDATES = 0
+    MSG_CheckUpdates = 0,
+    MSG_LoadUpdates,
+    MSG_LoadCheckFinished,
+    MSG_LoadUpdateFinished,
+    MSG_ShowStartInstallMessage,
+    MSG_Progress
 };
 
 class CSocket
