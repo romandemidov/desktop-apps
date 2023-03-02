@@ -81,6 +81,11 @@ private:
                          const QString &version = QString(),
                          const QString &fileName = QString());
 
+    bool sendMessage(int cmd,
+                     const wstring &param1 = wstring(),
+                     const wstring &param2 = wstring(),
+                     const wstring &param3 = wstring());
+
     struct PackageData;
     struct SavedPackageData;
     PackageData      *m_packageData;

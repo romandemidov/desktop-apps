@@ -6,6 +6,11 @@
 typedef std::function<void(void*, size_t)> FnVoidData;
 typedef std::function<void(const char*)> FnVoidCharPtr;
 
+
+enum MsgCommands {
+    MSG_CHECK_UPDATES = 0
+};
+
 class CSocket
 {
 public:

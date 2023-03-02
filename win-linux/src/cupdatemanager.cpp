@@ -45,6 +45,7 @@
 #include <iostream>
 #include <functional>
 #include <vector>
+#include <sstream>
 #include "utils.h"
 #include "defines.h"
 #include "version.h"
@@ -360,9 +361,6 @@ CUpdateManager::CUpdateManager(QObject *parent):
     m_dialogSchedule(new DialogSchedule(this)),
     m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT))
 {
-    m_socket->onMessageReceived([](void *data, size_t size) {
-        qDebug() << "Received data:" << QString::fromUtf8((const char*)data, size);
-    });
     // =========== Set updates URL ============
     auto setUrl = [=] {
         if ( InputArgs::contains(CMD_ARGUMENT_CHECK_URL) ) {
@@ -460,6 +458,25 @@ void CUpdateManager::init()
         connect(m_pCheckOnStartupTimer, &QTimer::timeout, this, &CUpdateManager::updateNeededCheking);
         m_pCheckOnStartupTimer->start();
     }
+
+    m_socket->onMessageReceived([](void *data, size_t size) {
+        wstring str((const wchar_t*)data), tmp;
+        vector<wstring> params;
+        std::wstringstream wss(str);
+        while (std::getline(wss, tmp, L'|'))
+            params.push_back(std::move(tmp));
+
+        if (params.size() == 4) {
+            switch (std::stoi(params[0])) {
+            case MSG_CHECK_UPDATES:
+
+                break;
+            default:
+                break;
+            }
+            qDebug() << QString::fromStdWString(params[0]) << QString::fromStdWString(params[1]) << QString::fromStdWString(params[2]) << QString::fromStdWString(params[3]);
+        }
+    });
 }
 
 void CUpdateManager::clearTempFiles(const QString &except)
@@ -565,6 +582,13 @@ void CUpdateManager::savePackageData(const QByteArray &hash, const QString &vers
     reg_user.setValue("Updates/hash", hash);
     reg_user.setValue("Updates/version", version);
     reg_user.endGroup();
+}
+
+bool CUpdateManager::sendMessage(int cmd, const wstring &param1, const wstring &param2, const wstring &param3)
+{
+    wstring str = std::to_wstring(cmd) + L"|" + param1 + L"|" + param2 + L"|" + param3;
+    size_t sz = str.size() * sizeof(str.front());
+    return m_socket->sendMessage((void*)str.c_str(), sz);
 }
 
 void CUpdateManager::loadUpdates()

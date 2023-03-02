@@ -40,21 +40,20 @@
 #include "version.h"
 //#include "clangater.h"
 #include "classes/cdownloader.h"
-# include <Windows.h>
-# define DAEMON_NAME L"/update-daemon.exe"
-# define TEMP_DAEMON_NAME L"/~update-daemon.exe"
-//# define DELETE_LIST L"/.delete_list.lst"
-# define REPLACEMENT_LIST L"/.replacement_list.lst"
-# define SUCCES_UNPACKED  L"/.success_unpacked"
+#include <Windows.h>
+#include <shlwapi.h>
+#include <sstream>
 
-//#define CHECK_DIRECTORY
-#define SENDER_PORT   12011
-#define RECEIVER_PORT 12010
-#define UPDATE_PATH L"/DesktopEditorsUpdates"
-#define CMD_ARGUMENT_CHECK_URL L"--updates-appcast-url"
-#ifndef URL_APPCAST_UPDATES
-# define URL_APPCAST_UPDATES ""
-#endif
+#define SENDER_PORT   12010
+#define RECEIVER_PORT 12011
+#define UPDATE_PATH      L"/DesktopEditorsUpdates"
+#define BACKUP_PATH      L"/DesktopEditorsBackup"
+#define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
+#define DAEMON_NAME      L"/update-daemon.exe"
+#define TEMP_DAEMON_NAME L"/~update-daemon.exe"
+//#define DELETE_LIST L"/.delete_list.lst"
+#define REPLACEMENT_LIST L"/.replacement_list.lst"
+#define SUCCES_UNPACKED  L"/.success_unpacked"
 
 using std::vector;
 
@@ -224,9 +223,6 @@ CUpdateManager::CUpdateManager(CObject *parent):
     m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT)),
     m_pimpl(new CUpdateManagerPrivate(this))
 {
-    m_socket->onMessageReceived([](void *data, size_t size) {
-
-    });
     init();
 }
 
@@ -257,29 +253,42 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
         }
     } else
     if (error == 1) {
+        // Pause or Stop
+    } else {
         /*auto wgt = QApplication::activeWindow();
         if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
             CMessage::warning(wgt, tr("Server connection error!"));*/
-    } else {
-        // Pause or Stop
     }
 }
 
 void CUpdateManager::init()
 {
-    /*GET_REGISTRY_USER(reg_user);
-    reg_user.beginGroup("Updates");
-    m_savedPackageData->fileName = reg_user.value("Updates/file", QString()).toString();
-    m_savedPackageData->hash = reg_user.value("Updates/hash", QByteArray()).toByteArray();
-    m_savedPackageData->version = reg_user.value("Updates/version", QString()).toString();
-    reg_user.endGroup();
-    if (getUpdateMode() != UpdateMode::DISABLE) {
-        m_pCheckOnStartupTimer = new QTimer(this);
-        m_pCheckOnStartupTimer->setSingleShot(true);
-        m_pCheckOnStartupTimer->setInterval(CHECK_ON_STARTUP_MS);
-        connect(m_pCheckOnStartupTimer, &QTimer::timeout, this, &CUpdateManager::updateNeededCheking);
-        m_pCheckOnStartupTimer->start();
-    }*/
+    m_socket->onMessageReceived([](void *data, size_t size) {
+        //Logger::WriteLog("E:/log.txt", (const char*)data, size);
+        wstring str((const wchar_t*)data), tmp;
+        vector<wstring> params;
+        std::wstringstream wss(str);
+        while (std::getline(wss, tmp, L'|'))
+            params.push_back(std::move(tmp));
+        if (params.size() == 4) {
+
+        }
+    });
+
+    m_socket->onError([](const char* error) {
+        /*size_t num;
+        wchar_t errorDescription[20];
+        mbstowcs_s(&num, errorDescription, error, strlen(error) + 1);
+        LPTSTR errorDescription = (LPTSTR)_T("Testing error messages...");
+        SvcReportEvent(errorDescription);*/
+        //Logger::WriteLog("E:/log.txt", error, 0);
+    });
+
+    UINT_PTR timer1 = 0L;
+    timer1 = setTimer(1000, [=]() {
+        sendMessage(9, L"gttttttttttttttttttrrrrrryrrrh", L"", L"ledggsfddddddddddffffffffffffffffffffffffffh");
+
+    });
 }
 
 void CUpdateManager::clearTempFiles(const wstring &except)
@@ -335,6 +344,13 @@ void CUpdateManager::savePackageData(const string &hash, const wstring &version,
     reg_user.setValue("Updates/hash", hash);
     reg_user.setValue("Updates/version", version);
     reg_user.endGroup();*/
+}
+
+bool CUpdateManager::sendMessage(int cmd, const wstring &param1, const wstring &param2, const wstring &param3)
+{
+    wstring str = to_wstring(cmd) + L"|" + param1 + L"|" + param2 + L"|" + param3;
+    size_t sz = str.size() * sizeof(str.front());
+    return m_socket->sendMessage((void*)str.c_str(), sz);
 }
 
 void CUpdateManager::loadUpdates()
@@ -605,3 +621,94 @@ void CUpdateManager::showStartInstallMessage(/*QWidget *parent*/)
         break;
     }*/
 }
+
+/*
+void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
+{
+    // Restore from backup
+    if (!replaceFolderContents(tmpPath, appPath))
+        showMessage(L"An error occurred while restore files from backup!");
+    else
+        removeDirRecursively(tmpPath);
+
+    // Restore executable name
+    if (!replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
+        showMessage(L"An error occurred while restore daemon file name!");
+
+    removeDirRecursively(updPath);
+}
+
+int wmain(int argc, wchar_t *argv[])
+{
+    wstring appFilePath = normailze(wstring(argv[0]));
+    wstring appPath = parentPath(appFilePath);
+    wstring updPath = tempPath() + UPDATE_PATH;
+    wstring tmpPath = tempPath() + BACKUP_PATH;
+    if (!dirExists(updPath)) {
+        showMessage(L"An error occurred while searching dir: " + updPath);
+        return 1;
+    }
+    if (dirExists(tmpPath) && !PathIsDirectoryEmpty(tmpPath.c_str())
+            && !removeDirRecursively(tmpPath)) {
+        showMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
+        return 1;
+    }
+    if (!dirExists(tmpPath) && !makePath(tmpPath)) {
+        showMessage(L"An error occurred while creating dir: " + tmpPath);
+        return 1;
+    }
+
+    // Remove old update-daemon
+    if (fileExists(appPath + TEMP_DAEMON_NAME)
+            && !removeFile(appPath + TEMP_DAEMON_NAME)) {
+        showMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
+        return 1;
+    }
+
+    list<wstring> repList;
+    if (!readFile(updPath + REPLACEMENT_LIST, repList))
+        return 1;
+
+    // Rename current executable
+    wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
+    if (!replaceFile(appFilePath, appFileRenamedPath)) {
+        showMessage(L"An error occurred while renaming the daemon file!");
+        return 1;
+    }
+
+//    // Replace unused files to Backup
+//    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
+//        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
+//        restoreFromBackup(appPath, updPath, tmpPath);
+//        return 1;
+//    }
+
+    // Move update files to app path
+    if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
+        showMessage(L"An error occurred while copy files! Restoring from the backup will start.");
+
+        // Remove new update-daemon.exe if exist
+        if (fileExists(appFilePath))
+            removeFile(appFilePath);
+
+        restoreFromBackup(appPath, updPath, tmpPath);
+        return 1;
+    }
+
+    // Remove Update and Temp dirs
+    removeDirRecursively(updPath);
+    removeDirRecursively(tmpPath);
+
+    // Restore executable name if there was no new version
+    if (std::find(repList.begin(), repList.end(), DAEMON_NAME) == repList.end())
+        if (!replaceFile(appFileRenamedPath, appFilePath))
+            showMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
+
+    // Restart program
+    if (!runProcess(appPath + APP_LAUNCH_NAME, L""))
+        showMessage(L"An error occurred while restarting the program!");
+
+    return 0;
+}
+
+*/

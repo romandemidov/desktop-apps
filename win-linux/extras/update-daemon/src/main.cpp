@@ -31,28 +31,10 @@
 */
 
 #include "utils.h"
-//#include <algorithm>
-//#include <shlwapi.h>
-//#include <cstdio>
 #include "svccontrol.h"
 #include "event_message/event_message.h"
 #include "classes/capplication.h"
-#include "classes/csocket.h"
-#include "classes/cobject.h"
-
-using std::string;
-using std::to_string;
-
-#define BACKUP_PATH      L"DesktopEditorsBackup"
-#define DAEMON_NAME      L"/update-daemon.exe"
-#define TEMP_DAEMON_NAME L"/~update-daemon.exe"
-#define UPDATE_PATH      L"DesktopEditorsUpdates"
-#define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
-//#define DELETE_LIST      L"/.delete_list.lst"
-#define REPLACEMENT_LIST L"/.replacement_list.lst"
-
-#define SENDER_PORT   12010
-#define RECEIVER_PORT 12011
+#include "classes/cupdatemanager.h"
 
 SERVICE_STATUS          gSvcStatus;
 SERVICE_STATUS_HANDLE   gSvcStatusHandle;
@@ -64,97 +46,6 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl);
 DWORD WINAPI SvcWorkerThread(LPVOID lpParam);
 VOID ReportSvcStatus(DWORD, DWORD, DWORD);
 VOID SvcReportEvent(LPTSTR);
-
-/*
-void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
-{
-    // Restore from backup
-    if (!replaceFolderContents(tmpPath, appPath))
-        showMessage(L"An error occurred while restore files from backup!");
-    else
-        removeDirRecursively(tmpPath);
-
-    // Restore executable name
-    if (!replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
-        showMessage(L"An error occurred while restore daemon file name!");
-
-    removeDirRecursively(updPath);
-}
-
-int wmain(int argc, wchar_t *argv[])
-{
-    wstring appFilePath = normailze(wstring(argv[0]));
-    wstring appPath = parentPath(appFilePath);
-    wstring updPath = tempPath() + UPDATE_PATH;
-    wstring tmpPath = tempPath() + BACKUP_PATH;
-    if (!dirExists(updPath)) {
-        showMessage(L"An error occurred while searching dir: " + updPath);
-        return 1;
-    }   
-    if (dirExists(tmpPath) && !PathIsDirectoryEmpty(tmpPath.c_str())
-            && !removeDirRecursively(tmpPath)) {
-        showMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
-        return 1;
-    }
-    if (!dirExists(tmpPath) && !makePath(tmpPath)) {
-        showMessage(L"An error occurred while creating dir: " + tmpPath);
-        return 1;
-    }
-
-    // Remove old update-daemon
-    if (fileExists(appPath + TEMP_DAEMON_NAME)
-            && !removeFile(appPath + TEMP_DAEMON_NAME)) {
-        showMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
-        return 1;
-    }
-
-    list<wstring> repList;
-    if (!readFile(updPath + REPLACEMENT_LIST, repList))
-        return 1;
-
-    // Rename current executable
-    wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
-    if (!replaceFile(appFilePath, appFileRenamedPath)) {
-        showMessage(L"An error occurred while renaming the daemon file!");
-        return 1;
-    }
-
-//    // Replace unused files to Backup
-//    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
-//        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
-//        restoreFromBackup(appPath, updPath, tmpPath);
-//        return 1;
-//    }
-
-    // Move update files to app path
-    if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
-        showMessage(L"An error occurred while copy files! Restoring from the backup will start.");
-
-        // Remove new update-daemon.exe if exist
-        if (fileExists(appFilePath))
-            removeFile(appFilePath);
-
-        restoreFromBackup(appPath, updPath, tmpPath);
-        return 1;
-    }
-
-    // Remove Update and Temp dirs
-    removeDirRecursively(updPath);
-    removeDirRecursively(tmpPath);
-
-    // Restore executable name if there was no new version
-    if (std::find(repList.begin(), repList.end(), DAEMON_NAME) == repList.end())
-        if (!replaceFile(appFileRenamedPath, appFilePath))
-            showMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
-
-    // Restart program
-    if (!runProcess(appPath + APP_LAUNCH_NAME, L""))
-        showMessage(L"An error occurred while restarting the program!");
-
-    return 0;
-}
-
-*/
 
 
 int __cdecl _tmain (int argc, TCHAR *argv[])
@@ -270,37 +161,15 @@ VOID WINAPI SvcCtrlHandler(DWORD dwCtrl)
 DWORD WINAPI SvcWorkerThread(LPVOID lpParam)
 {
     CApplication app;
-    CObject obj;
-    CSocket sock(SENDER_PORT, RECEIVER_PORT);
-
-    UINT_PTR timer1 = 0L;
-    timer1 = obj.setTimer(1000, [&sock]() {
-        const char *str = "Message from service...";
-        sock.sendMessage((void*)str, 23);
-    });
+    CUpdateManager upd;
 
     UINT_PTR timer = 0L;
-    timer = obj.setTimer(2000, [&app, &obj, &timer]() {
+    timer = upd.setTimer(2000, [&app, &upd, &timer]() {
         if (WaitForSingleObject(gSvcStopEvent, 0) == WAIT_OBJECT_0) {
-            obj.closeTimer(timer);
+            upd.closeTimer(timer);
             app.exit(0);
         }
     });
-
-    sock.onError([](const char* error) {
-        /*size_t num;
-        wchar_t errorDescription[20];
-        mbstowcs_s(&num, errorDescription, error, strlen(error) + 1);
-        LPTSTR errorDescription = (LPTSTR)_T("Testing error messages...");
-        SvcReportEvent(errorDescription);*/
-        Logger::WriteLog("E:/log.txt", error, 0);
-    });
-
-    sock.onMessageReceived([](void *data, size_t size) {
-        Logger::WriteLog("E:/log.txt", (const char*)data, __LINE__);
-    });
-
-
     return (DWORD)app.exec();
 }
 
