@@ -12,8 +12,13 @@ enum MsgCommands {
     MSG_LoadUpdates,
     MSG_LoadCheckFinished,
     MSG_LoadUpdateFinished,
+    MSG_UnzipIfNeeded,
     MSG_ShowStartInstallMessage,
-    MSG_Progress
+    MSG_StartReplacingFiles,
+    MSG_Progress,
+    MSG_StopDownload,
+    MSG_DownloadingError,
+    MSG_OtherError
 };
 
 class CSocket

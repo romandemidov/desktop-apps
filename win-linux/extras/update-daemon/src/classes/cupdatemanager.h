@@ -34,18 +34,12 @@
 #define CUPDATEMANAGER_H
 
 #include "classes/cobject.h"
-//#include <ctime>
 #include <future>
 #include "csocket.h"
 
-using std::string;
 using std::wstring;
 using std::future;
 
-
-enum UpdateMode {
-    DISABLE=0, SILENT=1, ASK=2
-};
 
 class CUpdateManager: public CObject
 {
@@ -53,45 +47,17 @@ public:
     explicit CUpdateManager(CObject *parent = nullptr);
     ~CUpdateManager();
 
-    void setNewUpdateSetting(const string& _rate);
-    void cancelLoading();
-    void skipVersion();
-    int  getUpdateMode();
-    wstring getVersion() const;
-    void scheduleRestartForUpdate();
-    void handleAppClose();
-    void loadUpdates();
-    void installUpdates();
-
 private:
     void init();
-    void clearTempFiles(const wstring &except = wstring());
-    void updateNeededCheking();
-    void onLoadCheckFinished(const wstring &filePath);
-    void onCheckFinished(bool error, bool updateExist, const wstring &version, const string &changelog);
-    void onLoadUpdateFinished(const wstring &filePath);
-    void unzipIfNeeded();
-    void savePackageData(const string &hash = string(),
-                         const wstring &version = wstring(),
-                         const wstring &fileName = wstring());
+    void unzipIfNeeded(const wstring &filePath, const wstring &newVersion);
     bool sendMessage(int cmd,
                      const wstring &param1 = wstring(),
                      const wstring &param2 = wstring(),
                      const wstring &param3 = wstring());
 
-    struct PackageData;
-    struct SavedPackageData;
-    PackageData      *m_packageData;
-    SavedPackageData *m_savedPackageData;
-
-    bool        m_restartForUpdate = false,
-                m_lock = false;
-
-    wstring     m_checkUrl,
-                m_newVersion;
-    int         m_downloadMode;
-    future<void> m_future_unzip,
-                 m_future_clear;
+    bool         m_lock = false;
+    int          m_downloadMode;
+    future<void> m_future_unzip;
 
     CSocket *m_socket = nullptr;
     class CUpdateManagerPrivate;
@@ -101,14 +67,10 @@ private:
         CHECK_UPDATES=0, DOWNLOAD_CHANGELOG=1, DOWNLOAD_UPDATES=2
     };
 
-    void progresChanged(const int percent);
-
-private:
-    void showUpdateMessage(/*QWidget *parent*/);
     void onCompleteSlot(const int error, const wstring &filePath);
-    void showStartInstallMessage(/*QWidget *parent*/);
     void onProgressSlot(const int percent);
+    void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath);
+    void startReplacingFiles();
 };
-
 
 #endif // CUPDATEMANAGER_H

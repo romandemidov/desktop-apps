@@ -33,14 +33,10 @@
 #include "cupdatemanager.h"
 #include <QApplication>
 #include <QSettings>
-#include <QDir>
 #include <QDirIterator>
-#include <QDataStream>
-#include <QUuid>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
-#include <QtConcurrent/QtConcurrent>
 #include <algorithm>
 #include <iostream>
 #include <functional>
@@ -51,12 +47,10 @@
 #include "version.h"
 #include "clangater.h"
 #include "components/cmessage.h"
-#include "Network/FileTransporter/include/FileTransporter.h"
 #include "cascapplicationmanagerwrapper.h"
 #ifdef Q_OS_WIN
 # include <QCryptographicHash>
 # include <Windows.h>
-# include "OfficeUtils.h"
 # include "platform_win/updatedialog.h"
 # define DAEMON_NAME "/update-daemon.exe"
 # define TEMP_DAEMON_NAME "/~update-daemon.exe"
@@ -76,7 +70,6 @@
 #endif
 
 using std::vector;
-using NSNetwork::NSFileTransport::CFileDownloader;
 
 
 auto currentArch()->QString
@@ -161,108 +154,6 @@ auto getFileHash(const QString &fileName)->QByteArray
     return QByteArray();
 }
 
-auto generateTmpFileName(const QString &ext)->QString
-{
-    const QUuid uuid = QUuid::createUuid();
-    const QRegularExpression branches = QRegularExpression("[{|}]+");
-    return QDir::tempPath() + "/" + QString(FILE_PREFIX) +
-           uuid.toString().replace(branches, "") + currentArch() + ext;
-}
-
-auto isSuccessUnpacked(const QString &successFilePath, const QString &version)->bool
-{
-    QFile successFile(successFilePath);
-    if (!successFile.open(QFile::ReadOnly))
-        return false;
-    if (QString(successFile.readAll()).indexOf(version) == -1) {
-        successFile.close();
-        return false;
-    }
-    successFile.close();
-    return true;
-}
-
-auto unzipArchive(const QString &zipFilePath, const QString &updPath, const QString &appPath, const QString &version)->bool
-{
-    QDir updDir(updPath);
-    if (!updDir.exists() && !updDir.mkpath(updPath)) {
-        criticalMsg(QObject::tr("An error occurred while creating dir: ") + updPath);
-        return false;
-    }
-
-    // Extract files
-    COfficeUtils utils;
-    HRESULT res = utils.ExtractToDirectory(zipFilePath.toStdWString(), updPath.toStdWString(), nullptr, 0);
-    if (res != S_OK) {
-        criticalMsg(QObject::tr("An error occurred while unpacking zip file!"));
-        return false;
-    }
-
-    auto fillSubpathVector = [](const QString &path, QVector<QString> &vec) {
-        QStringList filters{"*.*"};
-        QDirIterator it(path, filters, QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-        while (it.hasNext()) {
-            QString subPath = it.next().mid(path.length());
-            vec.push_back(std::move(subPath));
-        }
-    };
-
-    QVector<QString> updVec, appVec;
-    fillSubpathVector(appPath, appVec);
-    fillSubpathVector(updPath, updVec);
-
-//    // Create a list of files to delete
-//    {
-//        const QString delListFilePath = updPath + DELETE_LIST;
-//        QFile delListFile(delListFilePath);
-//        if (!delListFile.open(QFile::WriteOnly)) {
-//            criticalMsg(QObject::tr("Can't create file: ") + delListFilePath);
-//            return false;
-//        }
-//        QTextStream out(&delListFile);
-//        foreach (auto &appFile, appVec) {
-//            if (!updVec.contains(appFile) && appFile != DAEMON_NAME)
-//                out << appFile << "\n";
-//        }
-//        delListFile.close();
-//    }
-
-    // Create a list of files to replacement
-    {
-        const QString repListFilePath = updPath + REPLACEMENT_LIST;
-        QFile repListFile(repListFilePath);
-        if (!repListFile.open(QFile::WriteOnly)) {
-            criticalMsg(QObject::tr("Can't create file: ") + repListFilePath);
-            return false;
-        }
-        QTextStream out(&repListFile);
-        foreach (auto &updFile, updVec) {
-            int ind = appVec.indexOf(updFile);
-            if (ind != -1) {
-                auto updFileHash = getFileHash(updPath + updFile);
-                if (updFileHash.isEmpty() || updFileHash != getFileHash(appPath + appVec[ind]))
-                    out << updFile << "\n";
-
-            } else
-                out << updFile << "\n";
-        }
-        repListFile.close();
-    }   
-
-    // Сreate a file about successful unpacking for use in subsequent launches
-    QFile successFile(updPath + SUCCES_UNPACKED);
-    if (!successFile.open(QFile::WriteOnly)) {
-        criticalMsg(QObject::tr("An error occurred while creating success unpack file!"));
-        return false;
-    }
-    if (successFile.write(version.toUtf8()) == -1) {
-        successFile.close();
-        return false;
-    }
-    successFile.close();
-    return true;
-}
-
 auto runProcess(const WCHAR *fileName, WCHAR *args)->BOOL
 {
 //    PROCESS_INFORMATION ProcessInfo;
@@ -295,7 +186,7 @@ auto runProcess(const WCHAR *fileName, WCHAR *args)->BOOL
     return FALSE;
 }
 
-class CUpdateManager::CUpdateManagerPrivate
+/*class CUpdateManager::CUpdateManagerPrivate
 {
 public:
     CUpdateManagerPrivate(CUpdateManager *owner)
@@ -310,7 +201,7 @@ public:
 
 private:
 
-};
+};*/
 
 struct CUpdateManager::PackageData {
     QString     fileName;
@@ -334,7 +225,6 @@ CUpdateManager::CUpdateManager(QObject *parent):
     m_packageData(new PackageData),
     m_savedPackageData(new SavedPackageData),
     m_checkUrl(L""),
-    m_downloadMode(Mode::CHECK_UPDATES),
     m_dialogSchedule(new DialogSchedule(this)),
     m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT))
 {
@@ -364,7 +254,7 @@ CUpdateManager::CUpdateManager(QObject *parent):
     }
 #endif
     if ( !m_checkUrl.empty() && isDirectoryValid) {
-        m_pimpl = new CUpdateManagerPrivate(this);
+        //m_pimpl = new CUpdateManagerPrivate(this);
 #ifdef __linux__
         m_pTimer = new QTimer(this);
         m_pTimer->setSingleShot(false);
@@ -383,7 +273,7 @@ CUpdateManager::~CUpdateManager()
     delete m_packageData, m_packageData = nullptr;
     delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_dialogSchedule, m_dialogSchedule = nullptr;
-    delete m_pimpl, m_pimpl = nullptr;
+    //delete m_pimpl, m_pimpl = nullptr;
     delete m_socket, m_socket = nullptr;
 }
 
@@ -422,16 +312,21 @@ void CUpdateManager::init()
         if (params.size() == 4) {
             switch (std::stoi(params[0])) {
             case MSG_LoadCheckFinished:
-
+                QMetaObject::invokeMethod(this, "onLoadCheckFinished", Qt::QueuedConnection, Q_ARG(QString, QString::fromStdWString(params[1])));
                 break;
 
             case MSG_LoadUpdateFinished:
-
+                QMetaObject::invokeMethod(this, "onLoadUpdateFinished", Qt::QueuedConnection, Q_ARG(QString, QString::fromStdWString(params[1])));
                 break;
 
-            case MSG_ShowStartInstallMessage:
-
+            case MSG_ShowStartInstallMessage: {
+                m_lock = false;
+                QMetaObject::invokeMethod(this->m_dialogSchedule,
+                                          "addToSchedule",
+                                          Qt::QueuedConnection,
+                                          Q_ARG(QString, QString("showStartInstallMessage")));
                 break;
+            }
 
             case MSG_Progress:
                 QMetaObject::invokeMethod(this, "onProgressSlot", Qt::QueuedConnection, Q_ARG(int, std::stoi(params[1])));
@@ -443,6 +338,11 @@ void CUpdateManager::init()
                     CMessage::warning(wgt, tr("Server connection error!"));
                 break;
             }
+
+            case MSG_OtherError:
+                //QMetaObject::invokeMethod(this, "criticalMsg", Qt::QueuedConnection, Q_ARG(int, std::stoi(params[1])));
+                criticalMsg(QString::fromStdWString(params[1]));
+                break;
 
             default:
                 break;
@@ -488,8 +388,9 @@ void CUpdateManager::checkUpdates()
     reg_user.endGroup();
 #endif
 
-    m_downloadMode = Mode::CHECK_UPDATES;
-    sendMessage(MSG_CheckUpdates, m_checkUrl);
+    if (!sendMessage(MSG_CheckUpdates, m_checkUrl)) {
+        criticalMsg(QObject::tr("An error occurred while check updates: Update Service not found!"));
+    }
 #ifndef Q_OS_WIN
     QTimer::singleShot(3000, this, [=]() {
         updateNeededCheking();
@@ -539,8 +440,7 @@ void CUpdateManager::updateNeededCheking()
 #ifdef Q_OS_WIN
 void CUpdateManager::onProgressSlot(const int percent)
 {
-    if (m_downloadMode == Mode::DOWNLOAD_UPDATES)
-        emit progresChanged(percent);
+    emit progresChanged(percent);
 }
 
 void CUpdateManager::savePackageData(const QByteArray &hash, const QString &version, const QString &fileName)
@@ -577,8 +477,9 @@ void CUpdateManager::loadUpdates()
 
     } else
     if (!m_packageData->packageUrl.empty()) {
-        m_downloadMode = Mode::DOWNLOAD_UPDATES;
-        sendMessage(MSG_LoadUpdates, m_packageData->packageUrl);
+        if (!sendMessage(MSG_LoadUpdates, m_packageData->packageUrl)) {
+            criticalMsg(QObject::tr("An error occurred while loading updates: Update Service not found!"));
+        }
     }
 }
 
@@ -609,47 +510,21 @@ void CUpdateManager::unzipIfNeeded()
     if (m_lock)
         return;
     m_lock = true;
-    const QString updPath = QDir::tempPath() + UPDATE_PATH;
-    auto unzip = [=]()->void {
-        if (!unzipArchive(m_packageData->fileName, updPath,
-                            m_appPath, m_newVersion)) {
-            m_lock = false;
-            return;
-        }
-        m_lock = false;
-        QMetaObject::invokeMethod(this->m_dialogSchedule,
-                                  "addToSchedule",
-                                  Qt::QueuedConnection,
-                                  Q_ARG(QString, QString("showStartInstallMessage")));
-    };
 
-    QDir updDir(updPath);
-    if (!updDir.exists() || updDir.isEmpty()) {
-        m_future_unzip = std::async(std::launch::async, unzip);
-    } else {
-        if (isSuccessUnpacked(updPath + SUCCES_UNPACKED, m_newVersion)) {
-            m_lock = false;
-            m_dialogSchedule->addToSchedule("showStartInstallMessage");
-        } else {
-            updDir.removeRecursively();
-            m_future_unzip = std::async(std::launch::async, unzip);
-        }
+    if (!sendMessage(MSG_UnzipIfNeeded, m_packageData->fileName.toStdWString(), m_newVersion.toStdWString())) {
+        m_lock = false;
+        criticalMsg(QObject::tr("An error occurred while unzip updates: Update Service not found!"));
     }
 }
 
 void CUpdateManager::handleAppClose()
 {
     if ( m_restartForUpdate ) {
-        GET_REGISTRY_SYSTEM(reg_system)
-        wstring filePath = (m_appPath + DAEMON_NAME).toStdWString();
-        wstring args = L"/LANG=" + reg_system.value("locale", "en").toString().toStdWString();
-        args += L" " + m_packageData->packageArgs;
-        if (!runProcess(filePath.c_str(), (wchar_t*)args.c_str())) {
-            criticalMsg(QString("Unable to start process: %1").arg(m_appPath + DAEMON_NAME));
+        if (!sendMessage(MSG_StartReplacingFiles)) {
+            criticalMsg(QObject::tr("An error occurred while start replacing files: Update Service not found!"));;
         }
     } else
-        if (m_pimpl)
-            m_pimpl->stop();
+        sendMessage(MSG_StopDownload);
 }
 
 void CUpdateManager::scheduleRestartForUpdate()
@@ -684,7 +559,6 @@ void CUpdateManager::cancelLoading()
     if (m_lock)
         return;
     AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(m_newVersion));
-    m_downloadMode = Mode::CHECK_UPDATES;
     sendMessage(MSG_StopDownload);
 }
 
@@ -736,7 +610,9 @@ void CUpdateManager::onLoadCheckFinished(const QString &filePath)
             if (ver.at(i).toInt() > curr_ver.at(i).toInt()) {
                 updateExist = (version != ignored_ver);
                 break;
-            }
+            } else
+            if (ver.at(i).toInt() < curr_ver.at(i).toInt())
+                break;
         }
 
         if ( updateExist ) {
@@ -824,8 +700,6 @@ void CUpdateManager::showUpdateMessage(QWidget *parent) {
         break;
     }
     default:
-        const char *str = "Test message...";
-        m_socket->sendMessage((void*)str, 15);
         break;
     }
 # else

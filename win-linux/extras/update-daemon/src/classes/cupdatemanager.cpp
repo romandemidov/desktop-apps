@@ -38,7 +38,6 @@
 #include "utils.h"
 #include "../../src/defines.h"
 #include "version.h"
-//#include "clangater.h"
 #include "classes/cdownloader.h"
 #include <Windows.h>
 #include <shlwapi.h>
@@ -197,28 +196,8 @@ private:
     CDownloader  * m_pDownloader = nullptr;
 };
 
-struct CUpdateManager::PackageData {
-    wstring     fileName,
-                packageUrl,
-                packageArgs;
-    void clear() {
-        fileName.clear();
-        packageUrl.clear();
-        packageArgs.clear();
-    }
-};
-
-struct CUpdateManager::SavedPackageData {
-    string     hash;
-    wstring    version,
-               fileName;
-};
-
 CUpdateManager::CUpdateManager(CObject *parent):
     CObject(parent),
-    m_packageData(new PackageData),
-    m_savedPackageData(new SavedPackageData),
-    m_checkUrl(L""),
     m_downloadMode(Mode::CHECK_UPDATES),
     m_socket(new CSocket(SENDER_PORT, RECEIVER_PORT)),
     m_pimpl(new CUpdateManagerPrivate(this))
@@ -228,12 +207,12 @@ CUpdateManager::CUpdateManager(CObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
-    if (m_future_clear.valid())
-        m_future_clear.wait();
+    //if (m_future_clear.valid())
+      //  m_future_clear.wait();
     if (m_future_unzip.valid())
         m_future_unzip.wait();
-    delete m_packageData, m_packageData = nullptr;
-    delete m_savedPackageData, m_savedPackageData = nullptr;
+    //delete m_packageData, m_packageData = nullptr;
+    //delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_pimpl, m_pimpl = nullptr;
     delete m_socket, m_socket = nullptr;
 }
@@ -243,10 +222,10 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
     if (error == 0) {
         switch (m_downloadMode) {
         case Mode::CHECK_UPDATES:
-            onLoadCheckFinished(filePath);
+            sendMessage(MSG_LoadCheckFinished, filePath);
             break;
         case Mode::DOWNLOAD_UPDATES:
-            onLoadUpdateFinished(filePath);
+            sendMessage(MSG_LoadUpdateFinished, filePath);
             break;
         default:
             break;
@@ -255,16 +234,13 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
     if (error == 1) {
         // Pause or Stop
     } else {
-        /*auto wgt = QApplication::activeWindow();
-        if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
-            CMessage::warning(wgt, tr("Server connection error!"));*/
+        sendMessage(MSG_DownloadingError);
     }
 }
 
 void CUpdateManager::init()
 {
     m_socket->onMessageReceived([=](void *data, size_t size) {
-        //Logger::WriteLog("E:/log.txt", (const char*)data, size);
         wstring str((const wchar_t*)data), tmp;
         vector<wstring> params;
         std::wstringstream wss(str);
@@ -291,7 +267,10 @@ void CUpdateManager::init()
                 break;
             }
             case MSG_UnzipIfNeeded:
-
+                unzipIfNeeded(params[1], params[2]);
+                break;
+            case MSG_StartReplacingFiles:
+                startReplacingFiles();
                 break;
             default:
                 break;
@@ -308,55 +287,17 @@ void CUpdateManager::init()
         //Logger::WriteLog("E:/log.txt", error, 0);
     });
 
-    UINT_PTR timer1 = 0L;
+    /*UINT_PTR timer1 = 0L;
     timer1 = setTimer(1000, [=]() {
         sendMessage(9, L"gttttttttttttttttttrrrrrryrrrh", L"", L"ledggsfddddddddddffffffffffffffffffffffffffh");
 
-    });
-}
-
-void CUpdateManager::clearTempFiles(const wstring &except)
-{
-    /*static bool lock = false;
-    if (!lock) { // for one-time cleaning
-        lock = true;
-        m_future_clear = std::async(std::launch::async, [=]() {
-            QStringList filter{"*.json", "*.zip"};
-            QDirIterator it(QDir::tempPath(), filter, QDir::Files | QDir::NoSymLinks |
-                            QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-            while (it.hasNext()) {
-                const QString tmp = it.next();
-                if (tmp.toLower().indexOf(FILE_PREFIX) != -1 && tmp != except)
-                    QDir().remove(tmp);
-            }
-        });
-    }
-    if (except.empty())
-        savePackageData();*/
-}
-
-void CUpdateManager::updateNeededCheking()
-{
-    checkUpdates();
+    });*/
 }
 
 void CUpdateManager::onProgressSlot(const int percent)
 {
-    /*if (m_downloadMode == Mode::DOWNLOAD_UPDATES)
-        emit progresChanged(percent);*/
-}
-
-void CUpdateManager::savePackageData(const string &hash, const wstring &version, const wstring &fileName)
-{
-    /*m_savedPackageData->fileName = fileName;
-    m_savedPackageData->hash = hash;
-    m_savedPackageData->version = version;
-    GET_REGISTRY_USER(reg_user);
-    reg_user.beginGroup("Updates");
-    reg_user.setValue("Updates/file", fileName);
-    reg_user.setValue("Updates/hash", hash);
-    reg_user.setValue("Updates/version", version);
-    reg_user.endGroup();*/
+    if (m_downloadMode == Mode::DOWNLOAD_UPDATES)
+        sendMessage(MSG_Progress, to_wstring(percent));
 }
 
 bool CUpdateManager::sendMessage(int cmd, const wstring &param1, const wstring &param2, const wstring &param3)
@@ -366,73 +307,35 @@ bool CUpdateManager::sendMessage(int cmd, const wstring &param1, const wstring &
     return m_socket->sendMessage((void*)str.c_str(), sz);
 }
 
-void CUpdateManager::loadUpdates()
-{
-    if (m_lock)
-        return;
-    if (!m_savedPackageData->fileName.empty()
-            && m_savedPackageData->fileName.find(currentArch()) != wstring::npos
-            && m_savedPackageData->version == m_newVersion
-            && m_savedPackageData->hash == File::getFileHash(m_savedPackageData->fileName))
-    {
-        m_packageData->fileName = m_savedPackageData->fileName;
-        unzipIfNeeded();
-
-    } else
-    if (!m_packageData->packageUrl.empty()) {
-        m_downloadMode = Mode::DOWNLOAD_UPDATES;
-        if (m_pimpl)
-            m_pimpl->downloadFile(m_packageData->packageUrl, generateTmpFileName(L".zip"));
-    }
-}
-
-void CUpdateManager::installUpdates()
-{
-    /*GET_REGISTRY_USER(reg_user);
-    reg_user.beginGroup("Updates");
-    const string ignored_ver = reg_user.value("Updates/ignored_ver").toString();
-    reg_user.endGroup();
-    if (ignored_ver != getVersion())
-        m_dialogSchedule->addToSchedule("showStartInstallMessage");*/
-}
-
-wstring CUpdateManager::getVersion() const
-{
-    return m_newVersion;
-}
-
-void CUpdateManager::onLoadUpdateFinished(const wstring &filePath)
-{
-    /*m_packageData->fileName = filePath;
-    savePackageData(File::getFileHash(m_packageData->fileName), m_newVersion, m_packageData->fileName);*/
-    unzipIfNeeded();
-}
-
-void CUpdateManager::unzipIfNeeded()
+void CUpdateManager::unzipIfNeeded(const wstring &filePath, const wstring &newVersion)
 {
     if (m_lock)
         return;
     m_lock = true;
     const wstring updPath = File::tempPath() + UPDATE_PATH;
     auto unzip = [=]()->void {
-        if (!unzipArchive(m_packageData->fileName, updPath,
-                            File::appPath(), m_newVersion)) {
+        if (!unzipArchive(filePath, updPath,
+                            File::appPath(), newVersion)) {
             m_lock = false;
+            if (!sendMessage(MSG_OtherError, L"An error occured while unzip updates!")) {
+
+            }
             return;
         }
         m_lock = false;
-        /*QMetaObject::invokeMethod(this->m_dialogSchedule,
-                                  "addToSchedule",
-                                  Qt::QueuedConnection,
-                                  Q_ARG(QString, QString("showStartInstallMessage")));*/
+        if (!sendMessage(MSG_ShowStartInstallMessage)) {
+
+        }
     };
 
     if (!File::dirExists(updPath) || File::dirIsEmpty(updPath)) {
         m_future_unzip = std::async(std::launch::async, unzip);
     } else {
-        if (isSuccessUnpacked(updPath + SUCCES_UNPACKED, m_newVersion)) {
+        if (isSuccessUnpacked(updPath + SUCCES_UNPACKED, newVersion)) {
             m_lock = false;
-            //m_dialogSchedule->addToSchedule("showStartInstallMessage");
+            if (!sendMessage(MSG_ShowStartInstallMessage)) {
+
+            }
         } else {
             File::removeDirRecursively(updPath);
             m_future_unzip = std::async(std::launch::async, unzip);
@@ -440,288 +343,88 @@ void CUpdateManager::unzipIfNeeded()
     }
 }
 
-void CUpdateManager::handleAppClose()
-{
-    if ( m_restartForUpdate ) {
-        /*GET_REGISTRY_SYSTEM(reg_system)
-        wstring filePath = (File::appPath() + DAEMON_NAME).toStdWString();
-        wstring args = L"/LANG=" + reg_system.value("locale", "en").toString().toStdWString();
-        args += L" " + m_packageData->packageArgs;
-        if (!runProcess(filePath.c_str(), (wchar_t*)args.c_str())) {
-            criticalMsg(QString("Unable to start process: %1").arg(File::appPath() + DAEMON_NAME));
-        }*/
-    } else
-        if (m_pimpl)
-            m_pimpl->stop();
-}
-
-void CUpdateManager::scheduleRestartForUpdate()
-{
-    m_restartForUpdate = true;
-}
-
-void CUpdateManager::setNewUpdateSetting(const string& _rate)
-{
-    /*GET_REGISTRY_USER(reg_user);
-    reg_user.setValue("autoUpdateMode", _rate);
-    int mode = (_rate == "silent") ?
-                    UpdateMode::SILENT : (_rate == "ask") ?
-                        UpdateMode::ASK : UpdateMode::DISABLE;
-    if (mode == UpdateMode::DISABLE)
-        destroyStartupTimer(m_pCheckOnStartupTimer);*/
-}
-
-void CUpdateManager::cancelLoading()
-{
-    if (m_lock)
-        return;
-    //AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(m_newVersion));
-    m_downloadMode = Mode::CHECK_UPDATES;
-    if (m_pimpl)
-        m_pimpl->stop();
-}
-
-void CUpdateManager::skipVersion()
-{
-    /*GET_REGISTRY_USER(reg_user);
-    reg_user.beginGroup("Updates");
-    reg_user.setValue("Updates/ignored_ver", m_newVersion);
-    reg_user.endGroup();*/
-}
-
-int CUpdateManager::getUpdateMode()
-{
-    /*GET_REGISTRY_USER(reg_user);
-    const QString mode = reg_user.value("autoUpdateMode", "ask").toString();
-    return (mode == "silent") ?
-                UpdateMode::SILENT : (mode == "ask") ?
-                    UpdateMode::ASK : UpdateMode::DISABLE;*/
-    return 0;
-}
-
-void CUpdateManager::onLoadCheckFinished(const wstring &filePath)
-{
-    /*QFile jsonFile(filePath);
-    if ( jsonFile.open(QIODevice::ReadOnly) ) {
-        QByteArray ReplyText = jsonFile.readAll();
-        jsonFile.close();
-
-        QJsonDocument doc = QJsonDocument::fromJson(ReplyText);
-        QJsonObject root = doc.object();
-
-        bool updateExist = false;
-        QString version = root.value("version").toString();
-
-        GET_REGISTRY_USER(reg_user);
-        reg_user.beginGroup("Updates");
-        const string ignored_ver = reg_user.value("Updates/ignored_ver").toString();
-        reg_user.endGroup();
-
-        const QStringList curr_ver = QString::fromLatin1(VER_FILEVERSION_STR).split('.');
-        const QStringList ver = version.split('.');
-        for (int i = 0; i < std::min(ver.size(), curr_ver.size()); i++) {
-            if (ver.at(i).toInt() > curr_ver.at(i).toInt()) {
-                updateExist = (version != ignored_ver);
-                break;
-            }
-        }
-
-        if ( updateExist ) {
-        // parse package
-            QJsonObject package = root.value("package").toObject();
-# ifdef _WIN64
-            QJsonValue win = package.value("win_64");
-# else
-            QJsonValue win = package.value("win_32");
-# endif
-            QJsonObject win_params = win.toObject();
-            QJsonObject archive = win_params.value("archive").toObject();
-            m_packageData->packageUrl = archive.value("url").toString().toStdWString();
-            //m_packageData->packageUrl = win_params.value("url").toString().toStdWString();
-            m_packageData->packageArgs = win_params.value("installArguments").toString().toStdWString();
-
-            // parse release notes
-            QJsonObject release_notes = root.value("releaseNotes").toObject();
-            const QString lang = CLangater::getCurrentLangCode() == "ru-RU" ? "ru-RU" : "en-EN";
-            QJsonValue changelog = release_notes.value(lang);
-
-            m_newVersion = version;
-            if (m_newVersion == m_savedPackageData->version
-                    && m_savedPackageData->fileName.indexOf(currentArch()) != -1)
-                clearTempFiles(m_savedPackageData->fileName);
-            else
-                clearTempFiles();
-            onCheckFinished(false, true, m_newVersion, changelog.toString());
-        } else {
-            clearTempFiles();
-            onCheckFinished(false, false, "", "");
-        }
-    } else {
-        onCheckFinished(true, false, "", "Error receiving updates...");
-    }*/
-}
-
-void CUpdateManager::onCheckFinished(bool error, bool updateExist, const wstring &version, const string &changelog)
-{
-    /*Q_UNUSED(changelog);
-    if (!error && updateExist) {
-        AscAppManager::sendCommandTo(0, "updates:checking", QString("{\"version\":\"%1\"}").arg(version));
-        switch (getUpdateMode()) {
-        case UpdateMode::SILENT:
-            loadUpdates();
-            break;
-        case UpdateMode::ASK:
-            m_dialogSchedule->addToSchedule("showUpdateMessage");
-            break;
-        }
-
-    } else
-    if (!error && !updateExist) {
-        AscAppManager::sendCommandTo(0, "updates:checking", "{\"version\":\"no\"}");
-    } else
-    if (error) {
-        //qDebug() << "Error while loading check file...";
-    }*/
-}
-
-void CUpdateManager::showUpdateMessage(/*QWidget *parent*/) {
-    /*int result = WinDlg::showDialog(parent,
-                        tr("A new version of %1 is available!").arg(QString(WINDOW_NAME)),
-                        tr("%1 %2 is now available (you have %3). "
-                           "Would you like to download it now?").arg(QString(WINDOW_NAME),
-                                                                    getVersion(),
-                                                                    QString(VER_FILEVERSION_STR)),
-                        WinDlg::DlgBtns::mbSkipRemindDownload);
-
-    switch (result) {
-    case WinDlg::DLG_RESULT_DOWNLOAD:
-        loadUpdates();
-        break;
-    case WinDlg::DLG_RESULT_SKIP: {
-        skipVersion();
-        AscAppManager::sendCommandTo(0, "updates:checking", "{\"version\":\"no\"}");
-        break;
-    }
-    default:
-        const char *str = "Test message...";
-        m_socket->sendMessage((void*)str, 15);
-        break;
-    }*/
-}
-
-void CUpdateManager::showStartInstallMessage(/*QWidget *parent*/)
-{
-    /*AscAppManager::sendCommandTo(0, "updates:download", "{\"progress\":\"done\"}");
-    int result = WinDlg::showDialog(parent,
-                                    tr("A new version of %1 is available!").arg(QString(WINDOW_NAME)),
-                                    tr("%1 %2 is now downloaded (you have %3). "
-                                       "Would you like to install it now?").arg(QString(WINDOW_NAME),
-                                                                                getVersion(),
-                                                                                QString(VER_FILEVERSION_STR)),
-                                    WinDlg::DlgBtns::mbSkipRemindSaveandinstall);
-    switch (result) {
-    case WinDlg::DLG_RESULT_INSTALL: {
-        scheduleRestartForUpdate();
-        AscAppManager::closeAppWindows();
-        break;
-    }
-    case WinDlg::DLG_RESULT_SKIP: {
-        skipVersion();
-        AscAppManager::sendCommandTo(0, "updates:checking", "{\"version\":\"no\"}");
-        break;
-    }
-    default:
-        break;
-    }*/
-}
-
-/*
-void restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
+void CUpdateManager::restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)
 {
     // Restore from backup
-    if (!replaceFolderContents(tmpPath, appPath))
-        showMessage(L"An error occurred while restore files from backup!");
+    if (!File::replaceFolderContents(tmpPath, appPath))
+        Utils::ShowMessage(L"An error occurred while restore files from backup!");
     else
-        removeDirRecursively(tmpPath);
+        File::removeDirRecursively(tmpPath);
 
     // Restore executable name
-    if (!replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
-        showMessage(L"An error occurred while restore daemon file name!");
+    if (!File::replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
+        Utils::ShowMessage(L"An error occurred while restore daemon file name!");
 
-    removeDirRecursively(updPath);
+    File::removeDirRecursively(updPath);
 }
 
-int wmain(int argc, wchar_t *argv[])
+void CUpdateManager::startReplacingFiles()
 {
-    wstring appFilePath = normailze(wstring(argv[0]));
-    wstring appPath = parentPath(appFilePath);
-    wstring updPath = tempPath() + UPDATE_PATH;
-    wstring tmpPath = tempPath() + BACKUP_PATH;
-    if (!dirExists(updPath)) {
-        showMessage(L"An error occurred while searching dir: " + updPath);
-        return 1;
+    wstring appPath = File::appPath();
+    wstring appFilePath = File::appPath() + DAEMON_NAME;
+    wstring updPath = File::tempPath() + UPDATE_PATH;
+    wstring tmpPath = File::tempPath() + BACKUP_PATH;
+    if (!File::dirExists(updPath)) {
+        Utils::ShowMessage(L"An error occurred while searching dir: " + updPath);
+        return;
     }
-    if (dirExists(tmpPath) && !PathIsDirectoryEmpty(tmpPath.c_str())
-            && !removeDirRecursively(tmpPath)) {
-        showMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
-        return 1;
+    if (File::dirExists(tmpPath) && !File::dirIsEmpty(tmpPath)
+            && !File::removeDirRecursively(tmpPath)) {
+        Utils::ShowMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
+        return;
     }
-    if (!dirExists(tmpPath) && !makePath(tmpPath)) {
-        showMessage(L"An error occurred while creating dir: " + tmpPath);
-        return 1;
+    if (!File::dirExists(tmpPath) && !File::makePath(tmpPath)) {
+        Utils::ShowMessage(L"An error occurred while creating dir: " + tmpPath);
+        return;
     }
 
     // Remove old update-daemon
-    if (fileExists(appPath + TEMP_DAEMON_NAME)
-            && !removeFile(appPath + TEMP_DAEMON_NAME)) {
-        showMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
-        return 1;
+    if (File::fileExists(appPath + TEMP_DAEMON_NAME)
+            && !File::removeFile(appPath + TEMP_DAEMON_NAME)) {
+        Utils::ShowMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
+        return;
     }
 
     list<wstring> repList;
-    if (!readFile(updPath + REPLACEMENT_LIST, repList))
-        return 1;
+    if (!File::readFile(updPath + REPLACEMENT_LIST, repList))
+        return;
 
     // Rename current executable
     wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
-    if (!replaceFile(appFilePath, appFileRenamedPath)) {
-        showMessage(L"An error occurred while renaming the daemon file!");
-        return 1;
+    if (!File::replaceFile(appFilePath, appFileRenamedPath)) {
+        Utils::ShowMessage(L"An error occurred while renaming the daemon file!");
+        return;
     }
 
 //    // Replace unused files to Backup
-//    if (!replaceListOfFiles(delList, appPath, tmpPath)) {
-//        showMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
+//    if (!File::replaceListOfFiles(delList, appPath, tmpPath)) {
+//        Utils::ShowMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
 //        restoreFromBackup(appPath, updPath, tmpPath);
 //        return 1;
 //    }
 
     // Move update files to app path
-    if (!replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
-        showMessage(L"An error occurred while copy files! Restoring from the backup will start.");
+    if (!File::replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
+        Utils::ShowMessage(L"An error occurred while copy files! Restoring from the backup will start.");
 
         // Remove new update-daemon.exe if exist
-        if (fileExists(appFilePath))
-            removeFile(appFilePath);
+        if (File::fileExists(appFilePath))
+            File::removeFile(appFilePath);
 
         restoreFromBackup(appPath, updPath, tmpPath);
-        return 1;
+        return;
     }
 
     // Remove Update and Temp dirs
-    removeDirRecursively(updPath);
-    removeDirRecursively(tmpPath);
+    File::removeDirRecursively(updPath);
+    File::removeDirRecursively(tmpPath);
 
     // Restore executable name if there was no new version
     if (std::find(repList.begin(), repList.end(), DAEMON_NAME) == repList.end())
-        if (!replaceFile(appFileRenamedPath, appFilePath))
-            showMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
+        if (!File::replaceFile(appFileRenamedPath, appFilePath))
+            Utils::ShowMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
 
     // Restart program
-    if (!runProcess(appPath + APP_LAUNCH_NAME, L""))
-        showMessage(L"An error occurred while restarting the program!");
-
-    return 0;
+    if (!File::runProcess(appPath + APP_LAUNCH_NAME, L""))
+        Utils::ShowMessage(L"An error occurred while restarting the program!");
 }
-
-*/

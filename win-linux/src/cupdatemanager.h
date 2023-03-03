@@ -104,22 +104,17 @@ private:
 #endif
     QTimer      *m_pCheckOnStartupTimer = nullptr;
     wstring     m_checkUrl;
-    int         m_downloadMode;
     QString     m_newVersion,
                 m_appPath;
     future<void> m_future_unzip,
                  m_future_clear;
 
-    class CUpdateManagerPrivate;
-    CUpdateManagerPrivate *m_pimpl = nullptr;
+    //class CUpdateManagerPrivate;
+    //CUpdateManagerPrivate *m_pimpl = nullptr;
     class DialogSchedule;
     DialogSchedule *m_dialogSchedule = nullptr;
 
     CSocket *m_socket = nullptr;
-
-    enum Mode {
-        CHECK_UPDATES=0, DOWNLOAD_CHANGELOG=1, DOWNLOAD_UPDATES=2
-    };
 
 public slots:
     void checkUpdates();
