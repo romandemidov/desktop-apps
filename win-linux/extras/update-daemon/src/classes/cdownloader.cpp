@@ -8,7 +8,8 @@ class CDownloader::DownloadProgress : public IBindStatusCallback
 {
 public:
     DownloadProgress(CDownloader *owner) :
-        m_owner(owner)
+        m_owner(owner),
+        prev_percent(-1)
     {
 
     }
@@ -47,13 +48,17 @@ public:
     {
         if (ulProgressMax != 0 && m_owner->m_progress_callback) {
             int percent = static_cast<int>((100.0 * ulProgress) / ulProgressMax);
-            m_owner->m_progress_callback(percent);
+            if (percent != prev_percent) {
+                m_owner->m_progress_callback(percent);
+                prev_percent = percent;
+            }
         }
 
         if (!m_owner->m_run)
             return E_ABORT;
         return S_OK;
     }
+    int prev_percent;
 
 private:
     CDownloader *m_owner;
@@ -112,6 +117,7 @@ void CDownloader::start()
     m_future = std::async(std::launch::async, [=]() {
         DeleteUrlCacheEntry(m_url.c_str());
         DownloadProgress progress(this);
+        progress.prev_percent = -1;
         HRESULT hr = URLDownloadToFile(NULL, m_url.c_str(), m_filePath.c_str(), 0,
                                        static_cast<IBindStatusCallback*>(&progress));
         int error = (hr == S_OK) ? 0 :

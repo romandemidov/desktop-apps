@@ -41,6 +41,12 @@ using std::wstring;
 using std::to_wstring;
 using std::list;
 
+#define DEFAULT_LOG_FILE File::tempPath() + L"/svclog.txt"
+#define DEFAULT_ERROR_MESSAGE L"An error occurred: " + \
+    wstring(TEXT(__FUNCTION__)) + L" Line: " + to_wstring(__LINE__)
+#define ADVANCED_ERROR_MESSAGE DEFAULT_ERROR_MESSAGE + \
+    L" " + Utils::GetLastErrorAsString()
+
 namespace Utils
 {
 wstring GetLastErrorAsString();
@@ -78,7 +84,7 @@ bool unzipArchive(const wstring &zipFilePath, const wstring &folderPath);
 
 namespace Logger
 {
-void WriteLog(const char *filePath, const char *log, int line);
+void WriteLog(const wstring &filePath, const wstring &log);
 }
 
 #endif // UTILS_H

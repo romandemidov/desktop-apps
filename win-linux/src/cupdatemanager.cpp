@@ -333,21 +333,20 @@ void CUpdateManager::init()
                 break;
 
             case MSG_DownloadingError: {
-                auto wgt = QApplication::activeWindow();
+                /*auto wgt = QApplication::activeWindow();
                 if (wgt && wgt->objectName() == "MainWindow" && !wgt->isMinimized())
-                    CMessage::warning(wgt, tr("Server connection error!"));
+                    CMessage::warning(wgt, tr("Server connection error!"));*/
                 break;
             }
 
             case MSG_OtherError:
-                //QMetaObject::invokeMethod(this, "criticalMsg", Qt::QueuedConnection, Q_ARG(int, std::stoi(params[1])));
-                criticalMsg(QString::fromStdWString(params[1]));
+                QMetaObject::invokeMethod(this, "onError", Qt::QueuedConnection, Q_ARG(QString, QString::fromStdWString(params[1])));
                 break;
 
             default:
                 break;
             }
-            qDebug() << QString::fromStdWString(params[0]) << QString::fromStdWString(params[1]) << QString::fromStdWString(params[2]) << QString::fromStdWString(params[3]);
+            //qDebug() << QString::fromStdWString(params[0]) << QString::fromStdWString(params[1]) << QString::fromStdWString(params[2]) << QString::fromStdWString(params[3]);
         }
     });
 }
@@ -441,6 +440,12 @@ void CUpdateManager::updateNeededCheking()
 void CUpdateManager::onProgressSlot(const int percent)
 {
     emit progresChanged(percent);
+}
+
+void CUpdateManager::onError(const QString &error)
+{
+    m_lock = false;
+    criticalMsg(error);
 }
 
 void CUpdateManager::savePackageData(const QByteArray &hash, const QString &version, const QString &fileName)

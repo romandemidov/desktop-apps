@@ -89,24 +89,25 @@ auto isSuccessUnpacked(const wstring &successFilePath, const wstring &version)->
     return false;
 }
 
-auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstring &appPath, const wstring &version)->bool
+auto unzipArchive(const wstring &zipFilePath, const wstring &updPath,
+                  const wstring &appPath, const wstring &version, wstring &error)->bool
 {
     if (!File::dirExists(updPath) && !File::makePath(updPath)) {
-        Utils::ShowMessage(L"An error occurred while creating dir: " + updPath);
+        error = L"An error occurred while creating dir: " + updPath;
         return false;
     }
 
     // Extract files
     if (!File::unzipArchive(zipFilePath, updPath)) {
-        Utils::ShowMessage(L"An error occurred while unpacking zip file!");
+        error = L"An error occurred while unpacking zip file!";
         return false;
     }
 
-    auto fillSubpathVector = [](const wstring &path, vector<wstring> &vec)->bool {
+    auto fillSubpathVector = [&error](const wstring &path, vector<wstring> &vec)->bool {
         list<wstring> filesList;
-        wstring error;
-        if (!File::GetFilesList(path, &filesList, error)) {
-            Utils::ShowMessage(L"An error occurred while get files list!");
+        wstring _error;
+        if (!File::GetFilesList(path, &filesList, _error)) {
+            error = L"An error occurred while get files list: " + _error;
             return false;
         }
         for (auto &filePath : filesList) {
@@ -117,7 +118,7 @@ auto unzipArchive(const wstring &zipFilePath, const wstring &updPath, const wstr
     };
 
     vector<wstring> updVec, appVec;
-    if (!fillSubpathVector(appPath, appVec) || fillSubpathVector(updPath, updVec))
+    if (!fillSubpathVector(appPath, appVec) || !fillSubpathVector(updPath, updVec))
         return false;
 
 //    // Create a list of files to delete
@@ -207,12 +208,8 @@ CUpdateManager::CUpdateManager(CObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
-    //if (m_future_clear.valid())
-      //  m_future_clear.wait();
     if (m_future_unzip.valid())
         m_future_unzip.wait();
-    //delete m_packageData, m_packageData = nullptr;
-    //delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_pimpl, m_pimpl = nullptr;
     delete m_socket, m_socket = nullptr;
 }
@@ -234,7 +231,7 @@ void CUpdateManager::onCompleteSlot(const int error, const wstring &filePath)
     if (error == 1) {
         // Pause or Stop
     } else {
-        sendMessage(MSG_DownloadingError);
+        sendMessage(MSG_OtherError, L"Server connection error!");
     }
 }
 
@@ -246,6 +243,7 @@ void CUpdateManager::init()
         std::wstringstream wss(str);
         while (std::getline(wss, tmp, L'|'))
             params.push_back(std::move(tmp));
+
         if (params.size() == 4) {
             switch (std::stoi(params[0])) {
             case MSG_CheckUpdates: {
@@ -286,12 +284,6 @@ void CUpdateManager::init()
         SvcReportEvent(errorDescription);*/
         //Logger::WriteLog("E:/log.txt", error, 0);
     });
-
-    /*UINT_PTR timer1 = 0L;
-    timer1 = setTimer(1000, [=]() {
-        sendMessage(9, L"gttttttttttttttttttrrrrrryrrrh", L"", L"ledggsfddddddddddffffffffffffffffffffffffffh");
-
-    });*/
 }
 
 void CUpdateManager::onProgressSlot(const int percent)
@@ -314,17 +306,17 @@ void CUpdateManager::unzipIfNeeded(const wstring &filePath, const wstring &newVe
     m_lock = true;
     const wstring updPath = File::tempPath() + UPDATE_PATH;
     auto unzip = [=]()->void {
-        if (!unzipArchive(filePath, updPath,
-                            File::appPath(), newVersion)) {
+        wstring error(L"unzipArchive() error");
+        if (!unzipArchive(filePath, updPath, File::appPath(), newVersion , error)) {
             m_lock = false;
-            if (!sendMessage(MSG_OtherError, L"An error occured while unzip updates!")) {
-
+            if (!sendMessage(MSG_OtherError, error)) {
+                Logger::WriteLog(DEFAULT_LOG_FILE, DEFAULT_ERROR_MESSAGE);
             }
             return;
         }
         m_lock = false;
         if (!sendMessage(MSG_ShowStartInstallMessage)) {
-
+            Logger::WriteLog(DEFAULT_LOG_FILE, DEFAULT_ERROR_MESSAGE);
         }
     };
 
@@ -334,10 +326,12 @@ void CUpdateManager::unzipIfNeeded(const wstring &filePath, const wstring &newVe
         if (isSuccessUnpacked(updPath + SUCCES_UNPACKED, newVersion)) {
             m_lock = false;
             if (!sendMessage(MSG_ShowStartInstallMessage)) {
-
+                Logger::WriteLog(DEFAULT_LOG_FILE, DEFAULT_ERROR_MESSAGE);
             }
         } else {
-            File::removeDirRecursively(updPath);
+            if (!File::removeDirRecursively(updPath)) {
+                Logger::WriteLog(DEFAULT_LOG_FILE, DEFAULT_ERROR_MESSAGE);
+            }
             m_future_unzip = std::async(std::launch::async, unzip);
         }
     }
@@ -347,13 +341,13 @@ void CUpdateManager::restoreFromBackup(const wstring &appPath, const wstring &up
 {
     // Restore from backup
     if (!File::replaceFolderContents(tmpPath, appPath))
-        Utils::ShowMessage(L"An error occurred while restore files from backup!");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while restore files from backup!");
     else
         File::removeDirRecursively(tmpPath);
 
     // Restore executable name
     if (!File::replaceFile(appPath + TEMP_DAEMON_NAME, appPath + DAEMON_NAME))
-        Utils::ShowMessage(L"An error occurred while restore daemon file name!");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while restore daemon file name!");
 
     File::removeDirRecursively(updPath);
 }
@@ -365,23 +359,23 @@ void CUpdateManager::startReplacingFiles()
     wstring updPath = File::tempPath() + UPDATE_PATH;
     wstring tmpPath = File::tempPath() + BACKUP_PATH;
     if (!File::dirExists(updPath)) {
-        Utils::ShowMessage(L"An error occurred while searching dir: " + updPath);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while searching dir: " + updPath);
         return;
     }
     if (File::dirExists(tmpPath) && !File::dirIsEmpty(tmpPath)
             && !File::removeDirRecursively(tmpPath)) {
-        Utils::ShowMessage(L"An error occurred while deleting Backup dir: " + tmpPath);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while deleting Backup dir: " + tmpPath);
         return;
     }
     if (!File::dirExists(tmpPath) && !File::makePath(tmpPath)) {
-        Utils::ShowMessage(L"An error occurred while creating dir: " + tmpPath);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while creating dir: " + tmpPath);
         return;
     }
 
     // Remove old update-daemon
     if (File::fileExists(appPath + TEMP_DAEMON_NAME)
             && !File::removeFile(appPath + TEMP_DAEMON_NAME)) {
-        Utils::ShowMessage(L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"Unable to remove temp file: " + appPath + TEMP_DAEMON_NAME);
         return;
     }
 
@@ -392,20 +386,20 @@ void CUpdateManager::startReplacingFiles()
     // Rename current executable
     wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
     if (!File::replaceFile(appFilePath, appFileRenamedPath)) {
-        Utils::ShowMessage(L"An error occurred while renaming the daemon file!");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while renaming the daemon file!");
         return;
     }
 
 //    // Replace unused files to Backup
 //    if (!File::replaceListOfFiles(delList, appPath, tmpPath)) {
-//        Utils::ShowMessage(L"An error occurred while replace unused files! Restoring from the backup will start.");
+//        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while replace unused files! Restoring from the backup will start.");
 //        restoreFromBackup(appPath, updPath, tmpPath);
 //        return 1;
 //    }
 
     // Move update files to app path
     if (!File::replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
-        Utils::ShowMessage(L"An error occurred while copy files! Restoring from the backup will start.");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while copy files! Restoring from the backup will start.");
 
         // Remove new update-daemon.exe if exist
         if (File::fileExists(appFilePath))
@@ -422,9 +416,9 @@ void CUpdateManager::startReplacingFiles()
     // Restore executable name if there was no new version
     if (std::find(repList.begin(), repList.end(), DAEMON_NAME) == repList.end())
         if (!File::replaceFile(appFileRenamedPath, appFilePath))
-            Utils::ShowMessage(L"An error occurred while restore daemon file name: " + appFileRenamedPath);
+            Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while restore daemon file name: " + appFileRenamedPath);
 
     // Restart program
     if (!File::runProcess(appPath + APP_LAUNCH_NAME, L""))
-        Utils::ShowMessage(L"An error occurred while restarting the program!");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while restarting the program!");
 }

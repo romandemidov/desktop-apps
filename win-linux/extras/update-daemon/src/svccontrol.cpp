@@ -11,7 +11,7 @@ BOOL GetServiceHandle(SC_HANDLE &schSCManager, SC_HANDLE &schService, DWORD dwDe
         SC_MANAGER_ALL_ACCESS);  // full access rights
 
     if (!schSCManager) {
-        Utils::ShowMessage(L"OpenSCManager failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return FALSE;
     }
 
@@ -23,7 +23,7 @@ BOOL GetServiceHandle(SC_HANDLE &schSCManager, SC_HANDLE &schService, DWORD dwDe
 
     if (!schService) {
         CloseServiceHandle(schSCManager);
-        Utils::ShowMessage(L"OpenService failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return FALSE;
     }
     return TRUE;
@@ -125,7 +125,7 @@ VOID SvcControl::SvcInstall()
 {
     TCHAR szUnquotedPath[MAX_PATH];
     if (!GetModuleFileName(NULL, szUnquotedPath, MAX_PATH)) {
-        Utils::ShowMessage(L"Cannot install service:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return;
     }
 
@@ -143,7 +143,7 @@ VOID SvcControl::SvcInstall()
         SC_MANAGER_ALL_ACCESS);  // full access rights
 
     if (schSCManager == NULL) {
-        Utils::ShowMessage(L"OpenSCManager failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return;
     }
 
@@ -164,7 +164,7 @@ VOID SvcControl::SvcInstall()
 
     if (schService == NULL) {
         CloseServiceHandle(schSCManager);
-        Utils::ShowMessage(L"CreateService failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return;
     }
     CloseServiceHandle(schService);
@@ -187,7 +187,7 @@ VOID __stdcall SvcControl::DoStartSvc()
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded))                // size needed if buffer is too small
     {
-        Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto cleanup;
     }
 
@@ -195,7 +195,7 @@ VOID __stdcall SvcControl::DoStartSvc()
     // to stop the service here, but for simplicity this example just returns.
     if (ssStatus.dwCurrentState != SERVICE_STOPPED && ssStatus.dwCurrentState != SERVICE_STOP_PENDING)
     {
-        Utils::ShowMessage(L"Cannot start the service because it is already running");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"Cannot start the service because it is already running");
         goto cleanup;
     }
 
@@ -230,7 +230,7 @@ VOID __stdcall SvcControl::DoStartSvc()
                 sizeof(SERVICE_STATUS_PROCESS), // size of structure
                 &dwBytesNeeded ) )              // size needed if buffer is too small
         {
-            Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto cleanup;
         }
 
@@ -252,7 +252,7 @@ VOID __stdcall SvcControl::DoStartSvc()
             0,           // number of arguments
             NULL) )      // no arguments
     {
-        Utils::ShowMessage(L"StartService failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto cleanup;
     } else
         printf("Service start pending...\n");
@@ -265,7 +265,7 @@ VOID __stdcall SvcControl::DoStartSvc()
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded ) )              // if buffer too small
     {
-        Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto cleanup;
     }
 
@@ -296,7 +296,7 @@ VOID __stdcall SvcControl::DoStartSvc()
             sizeof(SERVICE_STATUS_PROCESS), // size of structure
             &dwBytesNeeded ) )              // if buffer too small
         {
-            Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             break;
         }
 
@@ -314,9 +314,9 @@ VOID __stdcall SvcControl::DoStartSvc()
 
     // Determine whether the service is running.
     if (ssStatus.dwCurrentState == SERVICE_RUNNING) {
-        printf("Service started successfully.\n");
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"Service started successfully.");
     } else {
-        Utils::ShowMessage(wstring(L"Service not started.") +
+        Logger::WriteLog(DEFAULT_LOG_FILE, wstring(L"Service not started.") +
                     L"\nCurrent State: " + to_wstring(ssStatus.dwCurrentState) +
                     L"\nExit Code: " + to_wstring(ssStatus.dwWin32ExitCode) +
                     L"\nCheck Point: " + to_wstring(ssStatus.dwCheckPoint) +
@@ -354,7 +354,7 @@ VOID __stdcall SvcControl::DoUpdateSvcDacl(LPTSTR pTrusteeName) // Updates the s
             psd = (PSECURITY_DESCRIPTOR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
             if (psd == NULL) {
                 // Note: HeapAlloc does not support GetLastError.
-                Utils::ShowMessage(L"HeapAlloc failed\n");
+                Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
                 goto dacl_cleanup;
             }
 
@@ -364,12 +364,12 @@ VOID __stdcall SvcControl::DoUpdateSvcDacl(LPTSTR pTrusteeName) // Updates the s
                                             dwSize,
                                             &dwBytesNeeded))
             {
-                Utils::ShowMessage(L"QueryServiceObjectSecurity failed:", true);
+                Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
                 goto dacl_cleanup;
             }
 
         } else {
-            Utils::ShowMessage(L"QueryServiceObjectSecurity failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto dacl_cleanup;
         }
     }
@@ -380,7 +380,7 @@ VOID __stdcall SvcControl::DoUpdateSvcDacl(LPTSTR pTrusteeName) // Updates the s
                                    &pacl,
                                    &bDaclDefaulted))
     {
-        Utils::ShowMessage(L"GetSecurityDescriptorDacl failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto dacl_cleanup;
     }
 
@@ -393,7 +393,7 @@ VOID __stdcall SvcControl::DoUpdateSvcDacl(LPTSTR pTrusteeName) // Updates the s
                                 NO_INHERITANCE);
 
     if (SetEntriesInAcl(1, &ea, pacl, &pNewAcl) != ERROR_SUCCESS) {
-        Utils::ShowMessage(L"SetEntriesInAcl failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto dacl_cleanup;
     }
 
@@ -401,20 +401,20 @@ VOID __stdcall SvcControl::DoUpdateSvcDacl(LPTSTR pTrusteeName) // Updates the s
     SECURITY_DESCRIPTOR sd;
     if (!InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION))
     {
-        Utils::ShowMessage(L"InitializeSecurityDescriptor failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto dacl_cleanup;
     }
 
     // Set the new DACL in the security descriptor.
     if (!SetSecurityDescriptorDacl(&sd, TRUE, pNewAcl, FALSE)) {
-        Utils::ShowMessage(L"SetSecurityDescriptorDacl failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto dacl_cleanup;
     }
 
     // Set the new DACL for the service object.
     if (!SetServiceObjectSecurity(schService, DACL_SECURITY_INFORMATION, &sd))
     {
-        Utils::ShowMessage(L"SetServiceObjectSecurity failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto dacl_cleanup;
     } else
         printf("Service DACL updated successfully\n");
@@ -450,12 +450,12 @@ VOID __stdcall SvcControl::DoStopSvc()
             sizeof(SERVICE_STATUS_PROCESS),
             &dwBytesNeeded))
     {
-        Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto stop_cleanup;
     }
 
     if (ssp.dwCurrentState == SERVICE_STOPPED) {
-        Utils::ShowMessage(L"Service is already stopped.");
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto stop_cleanup;
     }
 
@@ -485,7 +485,7 @@ VOID __stdcall SvcControl::DoStopSvc()
                 sizeof(SERVICE_STATUS_PROCESS),
                 &dwBytesNeeded ) )
         {
-            Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto stop_cleanup;
         }
 
@@ -509,7 +509,7 @@ VOID __stdcall SvcControl::DoStopSvc()
             SERVICE_CONTROL_STOP,
             (LPSERVICE_STATUS)&ssp))
     {
-        Utils::ShowMessage(L"ControlService failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto stop_cleanup;
     }
 
@@ -524,7 +524,7 @@ VOID __stdcall SvcControl::DoStopSvc()
                 sizeof(SERVICE_STATUS_PROCESS),
                 &dwBytesNeeded))
         {
-            Utils::ShowMessage(L"QueryServiceStatusEx failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto stop_cleanup;
         }
 
@@ -563,7 +563,7 @@ VOID __stdcall SvcControl::DoQuerySvc() // Retrieves and displays the current se
             cbBufSize = dwBytesNeeded;
             lpsc = (LPQUERY_SERVICE_CONFIG)LocalAlloc(LMEM_FIXED, cbBufSize);
         } else {
-            Utils::ShowMessage(L"QueryServiceConfig failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto cleanup;
         }
     }
@@ -574,7 +574,7 @@ VOID __stdcall SvcControl::DoQuerySvc() // Retrieves and displays the current se
             cbBufSize,
             &dwBytesNeeded))
     {
-        Utils::ShowMessage(L"QueryServiceConfig failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto cleanup;
     }
 
@@ -589,7 +589,7 @@ VOID __stdcall SvcControl::DoQuerySvc() // Retrieves and displays the current se
             cbBufSize = dwBytesNeeded;
             lpsd = (LPSERVICE_DESCRIPTION)LocalAlloc(LMEM_FIXED, cbBufSize);
         } else {
-            Utils::ShowMessage(L"QueryServiceConfig2 failed:", true);
+            Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
             goto cleanup;
         }
     }
@@ -601,7 +601,7 @@ VOID __stdcall SvcControl::DoQuerySvc() // Retrieves and displays the current se
             cbBufSize,
             &dwBytesNeeded))
     {
-        Utils::ShowMessage(L"QueryServiceConfig2 failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         goto cleanup;
     }
 
@@ -650,7 +650,7 @@ VOID __stdcall SvcControl::DoDisableSvc()
         NULL,              // password: no change
         NULL) )            // display name: no change
     {
-        Utils::ShowMessage(L"ChangeServiceConfig failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
     }
 
     CloseServiceHandle(schService);
@@ -677,7 +677,7 @@ VOID __stdcall SvcControl::DoEnableSvc()
             NULL,                  // password: no change
             NULL) )                // display name: no change
     {
-        Utils::ShowMessage(L"ChangeServiceConfig failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
     }
 
     CloseServiceHandle(schService);
@@ -699,7 +699,7 @@ VOID __stdcall SvcControl::DoUpdateSvcDesc(LPTSTR szDesc) // Updates the service
             SERVICE_CONFIG_DESCRIPTION, // change: description
             &sd))                       // new description
     {
-        Utils::ShowMessage(L"ChangeServiceConfig2 failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
     }
 
     CloseServiceHandle(schService);
@@ -714,7 +714,7 @@ VOID __stdcall SvcControl::DoDeleteSvc() // Deletes a service from the SCM datab
 
     // Delete the service.
     if (!DeleteService(schService))
-        Utils::ShowMessage(L"DeleteService failed:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
 
     CloseServiceHandle(schService);
     CloseServiceHandle(schSCManager);

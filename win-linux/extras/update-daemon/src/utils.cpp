@@ -122,23 +122,23 @@ bool moveSingleFile(const wstring &source,
         if (useTmp) {
             // Create a backup
             if (!File::dirExists(File::parentPath(temp)) && !File::makePath(File::parentPath(temp))) {
-                Utils::ShowMessage(L"Can't create path: " + File::parentPath(temp));
+                Logger::WriteLog(DEFAULT_LOG_FILE, L"Can't create path: " + File::parentPath(temp));
                 return false;
             }
             if (!File::replaceFile(dest, temp)) {
-                Utils::ShowMessage(L"Can't move file from " + dest + L" to " + temp + L". ", true);
+                Logger::WriteLog(DEFAULT_LOG_FILE, L"Can't move file from " + dest + L" to " + temp + L". " + Utils::GetLastErrorAsString());
                 return false;
             }
         }
     } else {
         if (!File::dirExists(File::parentPath(dest)) && !File::makePath(File::parentPath(dest))) {
-            Utils::ShowMessage(L"Can't create path: " + File::parentPath(dest));
+            Logger::WriteLog(DEFAULT_LOG_FILE, L"Can't create path: " + File::parentPath(dest));
             return false;
         }
     }
 
     if (!File::replaceFile(source, dest)) {
-        Utils::ShowMessage(L"Can't move file from " + source + L" to " + dest + L". ", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"Can't move file from " + source + L" to " + dest + L". " + Utils::GetLastErrorAsString());
         return false;
     }
     return true;
@@ -148,7 +148,7 @@ bool File::readFile(const wstring &filePath, list<wstring> &linesList)
 {
     std::wifstream file(filePath.c_str(), std::ios_base::in);
     if (!file.is_open()) {
-        Utils::ShowMessage(L"An error occurred while opening " + filePath);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while opening: " + filePath);
         return false;
     }
     wstring line;
@@ -163,7 +163,7 @@ bool File::writeToFile(const wstring &filePath, list<wstring> &linesList)
 {
     std::wofstream file(filePath.c_str(), std::ios_base::out);
     if (!file.is_open()) {
-        Utils::ShowMessage(L"An error occurred while writing " + filePath);
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while writing: " + filePath);
         return false;
     }
     for (auto &line : linesList)
@@ -515,12 +515,14 @@ bool File::unzipArchive(const wstring &zipFilePath, const wstring &folderPath)
 //    }
 }
 
-void Logger::WriteLog(const char *filePath, const char *log, int line)
-{
-    FILE *stream;
-    errno_t err = fopen_s(&stream, filePath, "a+");
-    if (err == 0) {
-        fprintf(stream, "Log: %s Line: %d\n", log, line);
-        fclose(stream);
+void Logger::WriteLog(const wstring &filePath, const wstring &log)
+{   
+#ifdef DEBUG_LOG
+    std::wofstream file(filePath.c_str(), std::ios::app);
+    if (!file.is_open()) {
+        return;
     }
+    file << log << std::endl;
+    file.close();
+#endif
 }

@@ -51,9 +51,9 @@ private:
     void init();
     void unzipIfNeeded(const wstring &filePath, const wstring &newVersion);
     bool sendMessage(int cmd,
-                     const wstring &param1 = wstring(),
-                     const wstring &param2 = wstring(),
-                     const wstring &param3 = wstring());
+                     const wstring &param1 = L"null",
+                     const wstring &param2 = L"null",
+                     const wstring &param3 = L"null");
 
     bool         m_lock = false;
     int          m_downloadMode;

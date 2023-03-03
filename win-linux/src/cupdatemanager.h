@@ -72,19 +72,18 @@ private:
     void init();
     void clearTempFiles(const QString &except = QString());
     void updateNeededCheking();
-    void onLoadCheckFinished(const QString &filePath);
     void onCheckFinished(bool error, bool updateExist, const QString &version, const QString &changelog);
 #ifdef Q_OS_WIN
-    void onLoadUpdateFinished(const QString &filePath);
+
     void unzipIfNeeded();
     void savePackageData(const QByteArray &hash = QByteArray(),
                          const QString &version = QString(),
                          const QString &fileName = QString());
 
     bool sendMessage(int cmd,
-                     const wstring &param1 = wstring(),
-                     const wstring &param2 = wstring(),
-                     const wstring &param3 = wstring());
+                     const wstring &param1 = L"null",
+                     const wstring &param2 = L"null",
+                     const wstring &param3 = L"null");
 
     struct PackageData;
     struct SavedPackageData;
@@ -125,10 +124,13 @@ signals:
 #endif
 
 private slots:
+    void onLoadCheckFinished(const QString &filePath);
     void showUpdateMessage(QWidget *parent);
 #ifdef Q_OS_WIN
+    void onLoadUpdateFinished(const QString &filePath);
     void showStartInstallMessage(QWidget *parent);
     void onProgressSlot(const int percent);
+    void onError(const QString &error);
 #endif
 };
 

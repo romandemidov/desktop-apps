@@ -104,7 +104,7 @@ VOID WINAPI SvcMain(DWORD argc, LPTSTR *argv)
 {
     gSvcStatusHandle = RegisterServiceCtrlHandler(SERVICE_NAME, SvcCtrlHandler);
     if (gSvcStatusHandle == NULL) {
-        Utils::ShowMessage(L"RegisterServiceCtrlHandler returned error:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return;
     }
 
@@ -126,7 +126,7 @@ VOID WINAPI SvcMain(DWORD argc, LPTSTR *argv)
                                 NULL); // no name
     if (gSvcStopEvent == NULL) {
         ReportSvcStatus(SERVICE_STOPPED, GetLastError(), 0);
-        Utils::ShowMessage(L"CreateEvent(g_ServiceStopEvent) returned error:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
         return;
     }
 
@@ -196,7 +196,7 @@ VOID ReportSvcStatus(DWORD dwCurrentState,
 
     // Report the status of the service to the SCM.
     if (SetServiceStatus(gSvcStatusHandle, &gSvcStatus) == FALSE) {
-        Utils::ShowMessage(L"SetServiceStatus returned error:", true);
+        Logger::WriteLog(DEFAULT_LOG_FILE, ADVANCED_ERROR_MESSAGE);
     }
 }
 
