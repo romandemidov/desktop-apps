@@ -50,7 +50,7 @@
 #define APP_LAUNCH_NAME  L"/DesktopEditors.exe"
 #define DAEMON_NAME      L"/update-daemon.exe"
 #define TEMP_DAEMON_NAME L"/~update-daemon.exe"
-//#define DELETE_LIST L"/.delete_list.lst"
+#define DELETE_LIST      L"/.delete_list.lst"
 #define REPLACEMENT_LIST L"/.replacement_list.lst"
 #define SUCCES_UNPACKED  L"/.success_unpacked"
 
@@ -121,21 +121,19 @@ auto unzipArchive(const wstring &zipFilePath, const wstring &updPath,
     if (!fillSubpathVector(appPath, appVec) || !fillSubpathVector(updPath, updVec))
         return false;
 
-//    // Create a list of files to delete
-//    {
-//        const QString delListFilePath = updPath + DELETE_LIST;
-//        QFile delListFile(delListFilePath);
-//        if (!delListFile.open(QFile::WriteOnly)) {
-//            criticalMsg(QObject::tr("Can't create file: ") + delListFilePath);
-//            return false;
-//        }
-//        QTextStream out(&delListFile);
-//        foreach (auto &appFile, appVec) {
-//            if (!updVec.contains(appFile) && appFile != DAEMON_NAME)
-//                out << appFile << "\n";
-//        }
-//        delListFile.close();
-//    }
+#ifdef ALLOW_DELETE_UNUSED_FILES
+    // Create a list of files to delete
+    {
+        list<wstring> delList;
+        for (auto &appFile : appVec) {
+            auto it_appFile = std::find(updVec.begin(), updVec.end(), appFile);
+            if (it_appFile != updVec.end() && appFile != DAEMON_NAME)
+                delList.push_back(appFile);
+        }
+        if (!File::writeToFile(updPath + DELETE_LIST, delList))
+            return false;
+    }
+#endif
 
     // Create a list of files to replacement
     {
@@ -411,6 +409,12 @@ void CUpdateManager::startReplacingFiles()
     if (!File::readFile(updPath + REPLACEMENT_LIST, repList))
         return;
 
+#ifdef ALLOW_DELETE_UNUSED_FILES
+    list<wstring> delList;
+    if (!File::readFile(updPath + DELETE_LIST, delList))
+        return;
+#endif
+
     // Rename current executable
     wstring appFileRenamedPath = appPath + TEMP_DAEMON_NAME;
     if (!File::replaceFile(appFilePath, appFileRenamedPath)) {
@@ -418,12 +422,14 @@ void CUpdateManager::startReplacingFiles()
         return;
     }
 
-//    // Replace unused files to Backup
-//    if (!File::replaceListOfFiles(delList, appPath, tmpPath)) {
-//        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while replace unused files! Restoring from the backup will start.");
-//        restoreFromBackup(appPath, updPath, tmpPath);
-//        return 1;
-//    }
+#ifdef ALLOW_DELETE_UNUSED_FILES
+    // Replace unused files to Backup
+    if (!File::replaceListOfFiles(delList, appPath, tmpPath)) {
+        Logger::WriteLog(DEFAULT_LOG_FILE, L"An error occurred while replace unused files! Restoring from the backup will start.");
+        restoreFromBackup(appPath, updPath, tmpPath);
+        return;
+    }
+#endif
 
     // Move update files to app path
     if (!File::replaceListOfFiles(repList, updPath, appPath, tmpPath)) {
