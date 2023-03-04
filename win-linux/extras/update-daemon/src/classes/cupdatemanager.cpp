@@ -208,6 +208,8 @@ CUpdateManager::CUpdateManager(CObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
+    if (m_future_clear.valid())
+        m_future_clear.wait();
     if (m_future_unzip.valid())
         m_future_unzip.wait();
     delete m_pimpl, m_pimpl = nullptr;
@@ -267,9 +269,15 @@ void CUpdateManager::init()
             case MSG_UnzipIfNeeded:
                 unzipIfNeeded(params[1], params[2]);
                 break;
+
             case MSG_StartReplacingFiles:
                 startReplacingFiles();
                 break;
+
+            case MSG_ClearTempFiles:
+                clearTempFiles(params[1], params[2]);
+                break;
+
             default:
                 break;
             }
@@ -335,6 +343,26 @@ void CUpdateManager::unzipIfNeeded(const wstring &filePath, const wstring &newVe
             m_future_unzip = std::async(std::launch::async, unzip);
         }
     }
+}
+
+void CUpdateManager::clearTempFiles(const wstring &prefix, const wstring &except)
+{
+    m_future_clear = std::async(std::launch::async, [=]() {
+        list<wstring> filesList;
+        wstring _error;
+        if (!File::GetFilesList(File::tempPath(), &filesList, _error)) {
+            Logger::WriteLog(DEFAULT_LOG_FILE, DEFAULT_ERROR_MESSAGE);
+            return;
+        }
+        for (auto &filePath : filesList) {
+            if (PathMatchSpec(filePath.c_str(), L"*.json") || PathMatchSpec(filePath.c_str(), L"*.zip")) {
+                wstring lcFilePath(filePath);
+                std::transform(lcFilePath.begin(), lcFilePath.end(), lcFilePath.begin(), ::tolower);
+                if (lcFilePath.find(prefix) != wstring::npos && filePath != except)
+                    File::removeFile(filePath);
+            }
+        }
+    });
 }
 
 void CUpdateManager::restoreFromBackup(const wstring &appPath, const wstring &updPath, const wstring &tmpPath)

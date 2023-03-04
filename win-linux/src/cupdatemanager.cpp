@@ -266,10 +266,6 @@ CUpdateManager::CUpdateManager(QObject *parent):
 
 CUpdateManager::~CUpdateManager()
 {
-    if (m_future_clear.valid())
-        m_future_clear.wait();
-    if (m_future_unzip.valid())
-        m_future_unzip.wait();
     delete m_packageData, m_packageData = nullptr;
     delete m_savedPackageData, m_savedPackageData = nullptr;
     delete m_dialogSchedule, m_dialogSchedule = nullptr;
@@ -356,16 +352,7 @@ void CUpdateManager::clearTempFiles(const QString &except)
     static bool lock = false;
     if (!lock) { // for one-time cleaning
         lock = true;
-        m_future_clear = std::async(std::launch::async, [=]() {
-            QStringList filter{"*.json", "*.zip"};
-            QDirIterator it(QDir::tempPath(), filter, QDir::Files | QDir::NoSymLinks |
-                            QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
-            while (it.hasNext()) {
-                const QString tmp = it.next();
-                if (tmp.toLower().indexOf(FILE_PREFIX) != -1 && tmp != except)
-                    QDir().remove(tmp);
-            }
-        });
+        sendMessage(MSG_ClearTempFiles, TEXT(FILE_PREFIX), except.toStdWString());
     }
 #ifdef _WIN32
     if (except.isEmpty())

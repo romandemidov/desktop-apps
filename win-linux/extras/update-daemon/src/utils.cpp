@@ -338,9 +338,9 @@ string File::getFileHash(const wstring &fileName)
     HANDLE hFile = NULL;
     BYTE rgbFile[BUFSIZE];
     DWORD cbRead = 0;
-    BYTE rgbHash[MD5LEN];
+    //BYTE rgbHash[MD5LEN];
     DWORD cbHash = 0;
-    CHAR rgbDigits[] = "0123456789abcdef";
+    //CHAR rgbDigits[] = "0123456789abcdef";
 
     hFile = CreateFile(fileName.c_str(),
         GENERIC_READ,

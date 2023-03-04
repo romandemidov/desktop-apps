@@ -36,7 +36,6 @@
 #include <QObject>
 #include <QTimer>
 #include <ctime>
-#include <future>
 #include "csocket.h"
 
 using std::wstring;
@@ -105,8 +104,6 @@ private:
     wstring     m_checkUrl;
     QString     m_newVersion,
                 m_appPath;
-    future<void> m_future_unzip,
-                 m_future_clear;
 
     //class CUpdateManagerPrivate;
     //CUpdateManagerPrivate *m_pimpl = nullptr;

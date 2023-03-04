@@ -50,6 +50,7 @@ public:
 private:
     void init();
     void unzipIfNeeded(const wstring &filePath, const wstring &newVersion);
+    void clearTempFiles(const wstring &prefix, const wstring &except = wstring());
     bool sendMessage(int cmd,
                      const wstring &param1 = L"null",
                      const wstring &param2 = L"null",
@@ -57,7 +58,8 @@ private:
 
     bool         m_lock = false;
     int          m_downloadMode;
-    future<void> m_future_unzip;
+    future<void> m_future_unzip,
+                 m_future_clear;
 
     CSocket *m_socket = nullptr;
     class CUpdateManagerPrivate;

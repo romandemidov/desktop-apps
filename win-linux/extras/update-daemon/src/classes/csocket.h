@@ -15,6 +15,7 @@ enum MsgCommands {
     MSG_UnzipIfNeeded,
     MSG_ShowStartInstallMessage,
     MSG_StartReplacingFiles,
+    MSG_ClearTempFiles,
     MSG_Progress,
     MSG_StopDownload,
     MSG_DownloadingError,
