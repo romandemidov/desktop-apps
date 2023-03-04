@@ -54,9 +54,11 @@ int __cdecl _tmain (int argc, TCHAR *argv[])
         SvcControl::SvcInstall();
         if (argv[2])
             SvcControl::DoUpdateSvcDesc(argv[2]);
+        SvcControl::DoStartSvc();
         return 0;
     } else
     if (lstrcmpi(argv[1], _T("--delete")) == 0) {
+        SvcControl::DoStopSvc();
         SvcControl::DoDeleteSvc();
         return 0;
     } else
