@@ -172,14 +172,6 @@ bool CEditorWindow::holdView(const std::wstring& portal) const
     return qobject_cast<CTabPanel *>(m_pMainView)->data()->url().find(portal) != std::wstring::npos;
 }
 
-void CEditorWindow::setReporterMode(bool apply)
-{
-    if ( apply ) {
-    }
-
-    d_ptr->isReporterMode = apply;
-}
-
 void CEditorWindow::undock(bool maximized)
 {
     if (isCustomWindowStyle()) {
@@ -259,7 +251,7 @@ QWidget * CEditorWindow::createMainPanel(QWidget * parent, const QString& title)
                 mainPanel->setProperty("window", "pretty");
             _canExtendTitle = true;
             int pos = (d_ptr->usedOldEditorVersion) ? 3 : 2;  // For old editors only
-            auto *pIconSpacer = new QSpacerItem(9, 5, QSizePolicy::Fixed, QSizePolicy::Fixed);
+            auto *pIconSpacer = new QSpacerItem(ICON_SPACER_WIDTH, 5, QSizePolicy::Fixed, QSizePolicy::Fixed);
             auto *pTopLayout = static_cast<QHBoxLayout*>(m_boxTitleBtns->layout());
             pTopLayout->insertWidget(pos, d_ptr->iconUser());
             pTopLayout->insertSpacerItem(pos + 1, pIconSpacer);
@@ -338,11 +330,11 @@ void CEditorWindow::recalculatePlaces()
 void CEditorWindow::updateTitleCaption()
 {
     if (m_labelTitle) {
-        int _width = calcTitleCaptionWidth();
-        if (_width >= 0) {
-            m_labelTitle->setMaximumWidth(_width);
+//        int _width = calcTitleCaptionWidth();
+//        if (_width >= 0) {
+//            m_labelTitle->setMaximumWidth(_width);
             m_labelTitle->updateText();
-        }
+//        }
     }
 }
 
@@ -435,14 +427,14 @@ void CEditorWindow::onCloseEvent()
 
 void CEditorWindow::onMinimizeEvent()
 {
-    if ( !d_ptr->isReporterMode ) {
+    if ( !qobject_cast<CTabPanel *>(m_pMainView)->reporterMode() ) {
         CWindowPlatform::onMinimizeEvent();
     }
 }
 
 void CEditorWindow::onMaximizeEvent()
 {
-    if ( !d_ptr->isReporterMode ) {
+    if ( !qobject_cast<CTabPanel *>(m_pMainView)->reporterMode() ) {
         CWindowPlatform::onMaximizeEvent();
     }
 }
