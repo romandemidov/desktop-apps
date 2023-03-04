@@ -46,7 +46,8 @@ ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
 RC_FILE = $$PWD/version.rc
 
 CONFIG += embed_manifest_exe
-QMAKE_LFLAGS += /MANIFESTUAC:$$quote(\"level=\'requireAdministrator\' uiAccess=\'false\'\")
+# Uncomment to testing service control
+#QMAKE_LFLAGS += /MANIFESTUAC:$$quote(\"level=\'requireAdministrator\' uiAccess=\'false\'\")
 
 contains(QMAKE_TARGET.arch, x86_64):{
     QMAKE_LFLAGS_WINDOWS = /SUBSYSTEM:WINDOWS,5.02

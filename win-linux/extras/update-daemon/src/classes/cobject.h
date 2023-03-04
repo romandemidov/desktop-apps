@@ -16,14 +16,14 @@ public:
     ~CObject();
 
     bool closeTimer(UINT_PTR timer);
-    virtual int processEvents(HWND, UINT, WPARAM, LPARAM);
+//    virtual int processEvents(HWND, UINT, WPARAM, LPARAM);
 
     /* callback */
     UINT_PTR setTimer(UINT timeout, FnVoidVoid callback);
-    void onDestroy(FnVoidVoid callback);   
+//    void onDestroy(FnVoidVoid callback);
 
 private:
-    FnVoidVoid m_destroy_callback = nullptr;
+//    FnVoidVoid m_destroy_callback = nullptr;
     static void timerProc(HWND, UINT, UINT_PTR idTimer, DWORD);
     static TimersMap m_timers;
 };
