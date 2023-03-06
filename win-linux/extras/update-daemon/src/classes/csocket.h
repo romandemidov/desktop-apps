@@ -34,11 +34,6 @@ public:
     void onError(FnVoidCharPtr callback);
 
 private:
-    void postError(const char*);
-    FnVoidData m_received_callback;
-    FnVoidCharPtr m_error_callback;
-    int m_sender_port;
-    std::future<void> m_future;
     class CSocketPrv;
     CSocketPrv *pimpl = nullptr;
 };

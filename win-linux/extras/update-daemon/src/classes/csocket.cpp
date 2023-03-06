@@ -37,10 +37,17 @@ public:
     bool connectToSocket(u_short port);
     void startReadMessages();
     void closeSocket(SOCKET &socket);
+    void postError(const char*);
 
     CSocket *owner;
-    SOCKET sender_fd,
-           receiver_fd;
+    SOCKET sender_fd = -1,
+           receiver_fd = -1;
+
+    FnVoidData m_received_callback = nullptr;
+    FnVoidCharPtr m_error_callback = nullptr;
+    int m_sender_port;
+    std::future<void> m_future;
+
     static bool run;
 
 private:
@@ -50,9 +57,7 @@ private:
 bool CSocket::CSocketPrv::run = true;
 
 CSocket::CSocketPrv::CSocketPrv(CSocket *owner) :
-    owner(owner),
-    sender_fd(-1),
-    receiver_fd(-1)
+    owner(owner)
 {}
 
 CSocket::CSocketPrv::~CSocketPrv()
@@ -64,12 +69,12 @@ bool CSocket::CSocketPrv::createSocket(u_short port)
     int iResult = 0;
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
-        owner->postError("Create socket: WSAStartup failed!");
+        postError("Create socket: WSAStartup failed!");
         return false;
     }
     SOCKET tmpd = INVALID_SOCKET;
     if ((tmpd = socket(AF_TYPE, SOCK_DGRAM, 0)) == INVALID_SOCKET) {
-        owner->postError("Create socket: socket not valid!");
+        postError("Create socket: socket not valid!");
         return false;
     }
 
@@ -88,7 +93,7 @@ bool CSocket::CSocketPrv::createSocket(u_short port)
         return true;
     }
     closesocket(tmpd);
-    owner->postError("Could not create socket!");
+    postError("Could not create socket!");
     return false;
 }
 
@@ -98,12 +103,12 @@ bool CSocket::CSocketPrv::connectToSocket(u_short port)
     int iResult = 0;
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
-        owner->postError("Connect to socket: WSAStartup failed!");
+        postError("Connect to socket: WSAStartup failed!");
         return false;
     }
     SOCKET tmpd = INVALID_SOCKET;
     if ((tmpd = socket(AF_TYPE, SOCK_DGRAM, 0)) == INVALID_SOCKET) {
-        owner->postError("Connect to socket: socket not valid!");
+        postError("Connect to socket: socket not valid!");
         return false;
     }
 
@@ -127,7 +132,7 @@ bool CSocket::CSocketPrv::connectToSocket(u_short port)
         }
     }
     closesocket(tmpd);
-    owner->postError("Could not connect to socket!");
+    postError("Could not connect to socket!");
     return false;
 }
 
@@ -156,14 +161,14 @@ void CSocket::CSocketPrv::startReadMessages()
         if (ret_data != BUFFSIZE) {
             if (ret_data < 0) {
                 // FAILURE
-                owner->postError("Start read messages: error while accessing socket!");
+                postError("Start read messages: error while accessing socket!");
             } else {
                 // Connection closed.
             }
         } else {
             // SUCCESS
-            if (owner->m_received_callback)
-                owner->m_received_callback(rcvBuf, strlen(rcvBuf));            
+            if (m_received_callback)
+                m_received_callback(rcvBuf, strlen(rcvBuf));
         }
     }
     // Dropped out of daemon loop.
@@ -178,14 +183,20 @@ void CSocket::CSocketPrv::closeSocket(SOCKET &socket)
     }
 }
 
+void CSocket::CSocketPrv::postError(const char *error)
+{
+    if (m_error_callback)
+        m_error_callback(error);
+}
+
 CSocket::CSocket(int sender_port, int receiver_port) :
-    m_sender_port(sender_port),
     pimpl(new CSocketPrv(this))
 {
-    m_future = std::async(std::launch::async, [=]() {
+    pimpl->m_sender_port = sender_port;
+    pimpl->m_future = std::async(std::launch::async, [=]() {
         bool socket_created = false;
         while (pimpl->run && !(socket_created = pimpl->createSocket(receiver_port))) {
-            postError("Unable to create socket, retrying after 4 seconds.");
+            pimpl->postError("Unable to create socket, retrying after 4 seconds.");
             Sleep(RETRIES_DELAY_MS);
         }
         if (socket_created)
@@ -198,8 +209,8 @@ CSocket::~CSocket()
     pimpl->run = false;
     pimpl->closeSocket(pimpl->sender_fd);
     pimpl->closeSocket(pimpl->receiver_fd);
-    if (m_future.valid())
-        m_future.wait();
+    if (pimpl->m_future.valid())
+        pimpl->m_future.wait();
     WSACleanup();
     delete pimpl;
 }
@@ -209,7 +220,7 @@ bool CSocket::sendMessage(void *data, size_t size)
     if (!data || size > BUFFSIZE - 1)
         return false;
 
-    if (!pimpl->connectToSocket(m_sender_port))
+    if (!pimpl->connectToSocket(pimpl->m_sender_port))
         return false;
 
     char client_arg[BUFFSIZE] = {0};
@@ -217,9 +228,9 @@ bool CSocket::sendMessage(void *data, size_t size)
     int ret_data = send(pimpl->sender_fd, client_arg, BUFFSIZE, 0); // Send the string
     if (ret_data != BUFFSIZE) {
         if (ret_data < 0) {
-            postError("Send message error: could not send device address to daemon!");
+            pimpl->postError("Send message error: could not send device address to daemon!");
         } else {
-            postError("Send message error: could not send device address to daemon completely!");
+            pimpl->postError("Send message error: could not send device address to daemon completely!");
         }
         pimpl->closeSocket(pimpl->sender_fd);
         return false;
@@ -230,16 +241,10 @@ bool CSocket::sendMessage(void *data, size_t size)
 
 void CSocket::onMessageReceived(FnVoidData callback)
 {
-    m_received_callback = callback;
+    pimpl->m_received_callback = callback;
 }
 
 void CSocket::onError(FnVoidCharPtr callback)
 {
-    m_error_callback = callback;
-}
-
-void CSocket::postError(const char *error)
-{
-    if (m_error_callback)
-        m_error_callback(error);
+    pimpl->m_error_callback = callback;
 }
