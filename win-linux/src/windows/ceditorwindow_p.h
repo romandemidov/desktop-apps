@@ -232,7 +232,7 @@ public:
             _layout->addWidget(window->m_boxTitleBtns,0,0,Qt::AlignTop);
             if (iconuser)
                 iconuser->hide();
-            window->m_labelTitle->setText(APP_TITLE);
+//            window->m_labelTitle->setText(APP_TITLE);
             changeTheme(GetCurrentTheme().id());
         }
     }
@@ -868,7 +868,7 @@ public:
     {
         if ( m_panel->data()->features().empty() ) return true;
         else if ( m_panel->data()->hasFeature(L"uitype\":\"fillform") ) return true;
-        else return !viewerMode() && (m_panel->data()->isLocal() || m_panel->data()->hasFeature(L"titlebuttons\":"));
+        else return /*!viewerMode() &&*/ (m_panel->data()->isLocal() || m_panel->data()->hasFeature(L"titlebuttons\":"));
     }
 
     auto viewerMode() const -> bool {
