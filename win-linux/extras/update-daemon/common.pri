@@ -22,6 +22,7 @@ HEADERS += $$PWD/src/version.h \
            $$PWD/src/classes/capplication.h \
            $$PWD/src/classes/csocket.h \
            $$PWD/src/classes/cunzip.h \
+           $$PWD/src/classes/cunzip_p.h \
            $$PWD/src/classes/csvcmanager.h \
            $$PWD/src/classes/cdownloader.h
 
