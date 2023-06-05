@@ -32,6 +32,7 @@ SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/classes/capplication.cpp \
            $$PWD/src/classes/csocket.cpp \
            $$PWD/src/classes/cunzip.cpp \
+           $$PWD/src/classes/cunzip_p.cpp \
            $$PWD/src/classes/csvcmanager.cpp \
            $$PWD/src/classes/cdownloader.cpp
 
