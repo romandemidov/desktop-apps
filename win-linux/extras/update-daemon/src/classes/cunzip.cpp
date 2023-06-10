@@ -72,7 +72,7 @@ int unzipArchive(const wstring &zipFilePath, const wstring &folderPath, std::ato
             return UNZIP_ERROR;
         }
         zr = UnzipItem(hz, i, ze.name);
-        if (zr != ZR_OK && zr != ZR_FLATE) {
+        if (zr != ZR_OK && ze.unc_size != 0) {
             CloseZip(hz);
             return UNZIP_ERROR;
         }
