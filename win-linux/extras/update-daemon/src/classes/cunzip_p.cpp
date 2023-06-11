@@ -223,11 +223,6 @@ inflate_blocks_statef* inflate_blocks_new(
 	check_func c,              // check function
 	uInt w);                   // window size
 
-//int inflate_blocks(
-//	inflate_blocks_statef*,
-//	z_streamp,
-//	int);                      // initial return code
-
 void inflate_blocks_reset(
 	inflate_blocks_statef*,
 	z_streamp,
@@ -237,15 +232,6 @@ int inflate_blocks_free(
 	inflate_blocks_statef*,
 	z_streamp);
 
-//void inflate_set_dictionary(
-//	inflate_blocks_statef* s,
-//	const Byte* d,  // dictionary
-//	uInt  n);       // dictionary length
-
-//int inflate_blocks_sync_point(
-//	inflate_blocks_statef* s);
-
-
 struct inflate_codes_state;
 typedef struct inflate_codes_state inflate_codes_statef;
 
@@ -253,11 +239,6 @@ inflate_codes_statef* inflate_codes_new(
 	uInt, uInt,
 	const inflate_huft*, const inflate_huft*,
 	z_streamp);
-
-//int inflate_codes(
-//	inflate_blocks_statef*,
-//	z_streamp,
-//	int);
 
 void inflate_codes_free(
 	inflate_codes_statef*,
@@ -1108,7 +1089,7 @@ int huft_build(
 #define C0 *p++ = 0;
 #define C2 C0 C0 C0 C0
 #define C4 C2 C2 C2 C2
-	C4; p;                          // clear c[]--assume BMAX+1 is 16
+    C4;                             // clear c[]--assume BMAX+1 is 16
 	p = b;  i = n;
 
 	do {
@@ -1836,7 +1817,7 @@ int inflate(z_streamp z, int f)
 			z->state->sub.check.need += (uLong)IM_NEXTBYTE << 8;
 		z->state->mode = IM_DICT1;
 	case IM_DICT1:
-		IM_NEEDBYTE; r;
+        IM_NEEDBYTE
 		z->state->sub.check.need += (uLong)IM_NEXTBYTE;
 		z->adler = z->state->sub.check.need;
 		z->state->mode = IM_DICT0;
