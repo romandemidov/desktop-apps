@@ -309,9 +309,37 @@ void CMainWindow::captureMouse(int tabindex)
 }
 
 #ifdef __linux__
+NSEditorApi::CAscLocalDragDropData* CMainWindow::convertMimeData(const QMimeData *pMimeData)
+{
+    NSEditorApi::CAscLocalDragDropData* pData = NULL;
+
+    if (pMimeData)
+    {
+        pData = new NSEditorApi::CAscLocalDragDropData();
+
+        if (pMimeData->hasUrls())
+        {
+            QList<QUrl> list = pMimeData->urls();
+            for (int i = 0; i < list.size(); i++)
+            {
+                pData->add_File(list[i].toString().toStdWString());
+            }
+        }
+
+        // uls list in text
+        if (pMimeData->hasText() && !pMimeData->hasUrls())
+            pData->put_Text(pMimeData->text().toStdWString());
+
+        if (pMimeData->hasHtml())
+            pData->put_Html(pMimeData->html().toStdWString());
+    }
+
+    return pData;
+}
+
 void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
-    QList<QUrl> urls = event->mimeData()->urls();
+    /*QList<QUrl> urls = event->mimeData()->urls();
     if (urls.length() != 1)
         return;
 
@@ -326,12 +354,31 @@ void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
     QFileInfo oInfo(urls[0].toString());
 
     if (_exts.contains(oInfo.suffix()))
-        event->acceptProposedAction();
+        event->acceptProposedAction();*/
+
+    if (m_pTabs && m_pTabs->isActiveWidget())
+    {
+        int tabIndex = m_pTabs->currentIndex();
+        int viewIndex = m_pTabs->viewByIndex(tabIndex);
+
+        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
+        pEvent->m_nType = ASC_MENU_EVENT_TYPE_CEF_DRAG_ENTER;
+
+        NSEditorApi::CAscLocalDragDropData* pData = convertMimeData(event->mimeData());
+        pData->put_X(event->pos().x());
+        pData->put_Y(event->pos().y());
+        pData->put_Id(viewIndex);
+
+        pEvent->m_pData = pData;
+        AscAppManager::getInstance().Apply(pEvent);
+    }
+
+    event->acceptProposedAction();
 }
 
 void CMainWindow::dropEvent(QDropEvent *event)
 {
-    QList<QUrl> urls = event->mimeData()->urls();
+    /*QList<QUrl> urls = event->mimeData()->urls();
     if (urls.length() != 1)
         return;
 
@@ -358,6 +405,66 @@ void CMainWindow::dropEvent(QDropEvent *event)
     {
         doOpenLocalFile(opts);
     }
+    event->acceptProposedAction();*/
+
+    QList<QUrl> urls = event->mimeData()->urls();
+    if (urls.length() == 1)
+    {
+        QSet<QString> _exts;
+        _exts << "docx" << "doc" << "odt" << "rtf" << "txt" << "doct" << "dotx" << "ott";
+        _exts << "html" << "mht" << "epub";
+        _exts << "pptx" << "ppt" << "odp" << "ppsx" << "pptt" << "potx" << "otp";
+        _exts << "xlsx" << "xls" << "ods" << "csv" << "xlst" << "xltx" << "ots";
+        _exts << "pdf" << "djvu" << "xps";
+        _exts << "plugin";
+
+        QFileInfo oInfo(urls[0].toString());
+
+        if (_exts.contains(oInfo.suffix()))
+        {
+            QString _path = urls[0].path();
+
+            Utils::keepLastPath(LOCAL_PATH_OPEN, _path);
+            COpenOptions opts = {"", etLocalFile, _path};
+            opts.wurl = _path.toStdWString();
+
+            std::wstring::size_type nPosPluginExt = opts.wurl.rfind(L".plugin");
+            std::wstring::size_type nUrlLen = opts.wurl.length();
+            if ((nPosPluginExt != std::wstring::npos) && ((nPosPluginExt + 7) == nUrlLen))
+            {
+                // register plugin
+                NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
+                pEvent->m_nType = ASC_MENU_EVENT_TYPE_DOCUMENTEDITORS_ADD_PLUGIN;
+                NSEditorApi::CAscAddPlugin* pData = new NSEditorApi::CAscAddPlugin();
+                pData->put_Path(opts.wurl);
+                pEvent->m_pData = pData;
+
+                AscAppManager::getInstance().Apply(pEvent);
+            }
+            else
+            {
+                doOpenLocalFile(opts);
+            }
+        }
+    }
+
+    if (m_pTabs && m_pTabs->isActiveWidget())
+    {
+        int tabIndex = m_pTabs->currentIndex();
+        int viewIndex = m_pTabs->viewByIndex(tabIndex);
+
+        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
+        pEvent->m_nType = ASC_MENU_EVENT_TYPE_CEF_DROP;
+
+        NSEditorApi::CAscLocalDragDropData* pData = convertMimeData(event->mimeData());
+        pData->put_X(event->pos().x());
+        pData->put_Y(event->pos().y());
+        pData->put_Id(viewIndex);
+
+        pEvent->m_pData = pData;
+        AscAppManager::getInstance().Apply(pEvent);
+    }
+
     event->acceptProposedAction();
 }
 #endif
