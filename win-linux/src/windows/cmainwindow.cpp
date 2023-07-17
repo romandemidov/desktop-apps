@@ -309,34 +309,6 @@ void CMainWindow::captureMouse(int tabindex)
 }
 
 #ifdef __linux__
-NSEditorApi::CAscLocalDragDropData* CMainWindow::convertMimeData(const QMimeData *pMimeData)
-{
-    NSEditorApi::CAscLocalDragDropData* pData = NULL;
-
-    if (pMimeData)
-    {
-        pData = new NSEditorApi::CAscLocalDragDropData();
-
-        if (pMimeData->hasUrls())
-        {
-            QList<QUrl> list = pMimeData->urls();
-            for (int i = 0; i < list.size(); i++)
-            {
-                pData->add_File(list[i].toString().toStdWString());
-            }
-        }
-
-        // uls list in text
-        if (pMimeData->hasText() && !pMimeData->hasUrls())
-            pData->put_Text(pMimeData->text().toStdWString());
-
-        if (pMimeData->hasHtml())
-            pData->put_Html(pMimeData->html().toStdWString());
-    }
-
-    return pData;
-}
-
 void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
     /*QList<QUrl> urls = event->mimeData()->urls();
@@ -354,24 +326,7 @@ void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
     QFileInfo oInfo(urls[0].toString());
 
     if (_exts.contains(oInfo.suffix()))
-        event->acceptProposedAction();*/
-
-    if (m_pTabs && m_pTabs->isActiveWidget())
-    {
-        int tabIndex = m_pTabs->currentIndex();
-        int viewIndex = m_pTabs->viewByIndex(tabIndex);
-
-        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
-        pEvent->m_nType = ASC_MENU_EVENT_TYPE_CEF_DRAG_ENTER;
-
-        NSEditorApi::CAscLocalDragDropData* pData = convertMimeData(event->mimeData());
-        pData->put_X(event->pos().x());
-        pData->put_Y(event->pos().y());
-        pData->put_Id(viewIndex);
-
-        pEvent->m_pData = pData;
-        AscAppManager::getInstance().Apply(pEvent);
-    }
+		event->acceptProposedAction();*/
 
     event->acceptProposedAction();
 }
@@ -445,27 +400,10 @@ void CMainWindow::dropEvent(QDropEvent *event)
             {
                 doOpenLocalFile(opts);
             }
-        }
-    }
+		}
+	}
 
-    if (m_pTabs && m_pTabs->isActiveWidget())
-    {
-        int tabIndex = m_pTabs->currentIndex();
-        int viewIndex = m_pTabs->viewByIndex(tabIndex);
-
-        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
-        pEvent->m_nType = ASC_MENU_EVENT_TYPE_CEF_DROP;
-
-        NSEditorApi::CAscLocalDragDropData* pData = convertMimeData(event->mimeData());
-        pData->put_X(event->pos().x());
-        pData->put_Y(event->pos().y());
-        pData->put_Id(viewIndex);
-
-        pEvent->m_pData = pData;
-        AscAppManager::getInstance().Apply(pEvent);
-    }
-
-    event->acceptProposedAction();
+	event->acceptProposedAction();
 }
 #endif
 

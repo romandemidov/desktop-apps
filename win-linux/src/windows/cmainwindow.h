@@ -78,8 +78,7 @@ private:
     void captureMouse(int);
 #ifdef __linux__
     virtual void dragEnterEvent(QDragEnterEvent *event) final;
-    virtual void dropEvent(QDropEvent *event) final;
-    virtual NSEditorApi::CAscLocalDragDropData* convertMimeData(const QMimeData *pMimeData) final;
+	virtual void dropEvent(QDropEvent *event) final;
 #endif
 
 
