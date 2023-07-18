@@ -311,57 +311,11 @@ void CMainWindow::captureMouse(int tabindex)
 #ifdef __linux__
 void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
-    /*QList<QUrl> urls = event->mimeData()->urls();
-    if (urls.length() != 1)
-        return;
-
-    QSet<QString> _exts;
-    _exts << "docx" << "doc" << "odt" << "rtf" << "txt" << "doct" << "dotx" << "ott";
-    _exts << "html" << "mht" << "epub";
-    _exts << "pptx" << "ppt" << "odp" << "ppsx" << "pptt" << "potx" << "otp";
-    _exts << "xlsx" << "xls" << "ods" << "csv" << "xlst" << "xltx" << "ots";
-    _exts << "pdf" << "djvu" << "xps";
-    _exts << "plugin";
-
-    QFileInfo oInfo(urls[0].toString());
-
-    if (_exts.contains(oInfo.suffix()))
-		event->acceptProposedAction();*/
-
     event->acceptProposedAction();
 }
 
 void CMainWindow::dropEvent(QDropEvent *event)
 {
-    /*QList<QUrl> urls = event->mimeData()->urls();
-    if (urls.length() != 1)
-        return;
-
-    QString _path = urls[0].path();
-
-    Utils::keepLastPath(LOCAL_PATH_OPEN, _path);
-    COpenOptions opts = {"", etLocalFile, _path};
-    opts.wurl = _path.toStdWString();
-
-    std::wstring::size_type nPosPluginExt = opts.wurl.rfind(L".plugin");
-    std::wstring::size_type nUrlLen = opts.wurl.length();
-    if ((nPosPluginExt != std::wstring::npos) && ((nPosPluginExt + 7) == nUrlLen))
-    {
-        // register plugin
-        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
-        pEvent->m_nType = ASC_MENU_EVENT_TYPE_DOCUMENTEDITORS_ADD_PLUGIN;
-        NSEditorApi::CAscAddPlugin* pData = new NSEditorApi::CAscAddPlugin();
-        pData->put_Path(opts.wurl);
-        pEvent->m_pData = pData;
-
-        AscAppManager::getInstance().Apply(pEvent);
-    }
-    else
-    {
-        doOpenLocalFile(opts);
-    }
-    event->acceptProposedAction();*/
-
     QList<QUrl> urls = event->mimeData()->urls();
     if (urls.length() == 1)
     {
@@ -371,7 +325,6 @@ void CMainWindow::dropEvent(QDropEvent *event)
         _exts << "pptx" << "ppt" << "odp" << "ppsx" << "pptt" << "potx" << "otp";
         _exts << "xlsx" << "xls" << "ods" << "csv" << "xlst" << "xltx" << "ots";
         _exts << "pdf" << "djvu" << "xps";
-        _exts << "plugin";
 
         QFileInfo oInfo(urls[0].toString());
 
@@ -383,27 +336,11 @@ void CMainWindow::dropEvent(QDropEvent *event)
             COpenOptions opts = {"", etLocalFile, _path};
             opts.wurl = _path.toStdWString();
 
-            std::wstring::size_type nPosPluginExt = opts.wurl.rfind(L".plugin");
-            std::wstring::size_type nUrlLen = opts.wurl.length();
-            if ((nPosPluginExt != std::wstring::npos) && ((nPosPluginExt + 7) == nUrlLen))
-            {
-                // register plugin
-                NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
-                pEvent->m_nType = ASC_MENU_EVENT_TYPE_DOCUMENTEDITORS_ADD_PLUGIN;
-                NSEditorApi::CAscAddPlugin* pData = new NSEditorApi::CAscAddPlugin();
-                pData->put_Path(opts.wurl);
-                pEvent->m_pData = pData;
+            doOpenLocalFile(opts);
+        }
+    }
 
-                AscAppManager::getInstance().Apply(pEvent);
-            }
-            else
-            {
-                doOpenLocalFile(opts);
-            }
-		}
-	}
-
-	event->acceptProposedAction();
+    event->acceptProposedAction();
 }
 #endif
 
