@@ -506,6 +506,18 @@ void CSvcManager::startReplacingFiles()
     }
 #endif
 
+    // Removing help if it was not in the old version
+    {
+        tstring folders[] = {TEXT("/common"), TEXT("/documenteditor"), TEXT("/spreadsheeteditor"), TEXT("/presentationeditor")};
+        tstring prefix(TEXT("/editors/web-apps/apps"));
+        tstring suffix(TEXT("/main/resources/help"));
+        for (int i = 0; i < sizeof(folders) / sizeof(folders[0]); i++) {
+            tstring path = prefix + folders[i] + suffix;
+            if ((!NS_File::dirExists(tmpPath + path) || NS_File::dirIsEmpty(tmpPath + path)) && NS_File::dirExists(appPath + path))
+                NS_File::removeDirRecursively(appPath + path);
+        }
+    }
+
     // Remove Backup dir
     NS_File::removeDirRecursively(tmpPath);
 
