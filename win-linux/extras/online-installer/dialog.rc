@@ -1,0 +1,112 @@
+#pragma code_page(65001)
+#include "src/resource.h"
+
+IDI_MAINICON   ICON    DISCARDABLE APP_ICON_PATH
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./res/manifest/online-installer.exe.manifest"
+
+#include <windows.h>
+#define RC_COMPILE_FLAG
+# include "src/version.h"
+#undef RC_COMPILE_FLAG
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     VER_FILEVERSION
+PRODUCTVERSION  VER_PRODUCTVERSION
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK VER_LANG_AND_CHARSET_STR
+        BEGIN
+            VALUE "CompanyName",        VER_COMPANYNAME_STR
+            VALUE "FileDescription",    VER_FILEDESCRIPTION_STR
+            VALUE "FileVersion",        VER_FILEVERSION_STR
+            VALUE "InternalName",       VER_INTERNALNAME_STR
+            VALUE "LegalCopyright",     VER_LEGALCOPYRIGHT_STR
+            VALUE "LegalTrademarks1",   VER_LEGALTRADEMARKS1_STR
+            VALUE "LegalTrademarks2",   VER_LEGALTRADEMARKS2_STR
+            VALUE "OriginalFilename",   VER_ORIGINALFILENAME_STR
+            VALUE "ProductName",        VER_PRODUCTNAME_STR
+            VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
+        END
+    END
+
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", VER_LANG_ID, VER_CHARSET_ID
+    END
+END
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian (Russia) (unknown sub-lang: 0x2) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUM)
+LANGUAGE LANG_RUSSIAN, 0x2
+
+#endif    // Russian (Russia) (unknown sub-lang: 0x2) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG DIALOGEX 0, 0, 320, 100
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_STATICEDGE
+CAPTION VER_PRODUCTNAME_STR
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Progress", IDC_PROGRESS, "msctls_progress32", WS_BORDER, 10, 52, 300, 6
+    CONTROL         "Icon", IDC_ICON, "Static", SS_ICON | SS_CENTER | WS_CHILD | WS_VISIBLE, 10, 5, 32, 32
+    LTEXT           LABEL_TITLE_TEXT, IDC_LABEL_TITLE, 70, 12, 230, 14, SS_LEFT | WS_CHILD | WS_VISIBLE
+    LTEXT           LABEL_MESSAGE_TEXT, IDC_LABEL_MESSAGE, 70, 26, 230, 24, SS_LEFT | WS_CHILD | WS_VISIBLE
+    PUSHBUTTON      BUTTON_CANCEL_TEXT, IDC_BUTTON_CANCEL, 230, 74, 80, 18
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
