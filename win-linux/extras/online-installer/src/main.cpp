@@ -127,13 +127,19 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
     });
     data->dnl->onComplete([=](int error) {
         if (error == 0) {
+            if (hDlg && IsWindow(hDlg))
+                ShowWindow(hDlg, SW_HIDE);
             if (!NS_File::runProcess(path, _T(""))) {
+                if (hDlg && IsWindow(hDlg))
+                    ShowWindow(hDlg, SW_SHOW);
                 if (hLabelMsg && IsWindow(hLabelMsg))
                     SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR5));
             } else {
                 if (hDlg && IsWindow(hDlg))
                     PostMessage(hDlg, WM_CLOSE, 0, 0);
             }
+            if (NS_File::fileExists(path))
+                NS_File::removeFile(path);
         } else
         if (error == -1) {
             if (hLabelMsg && IsWindow(hLabelMsg))

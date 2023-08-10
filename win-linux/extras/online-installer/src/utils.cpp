@@ -79,6 +79,7 @@ namespace NS_File
         shExInfo.nShow = SW_HIDE;
         shExInfo.hInstApp = NULL;
         if (ShellExecuteEx(&shExInfo)) {
+            WaitForSingleObject(shExInfo.hProcess, INFINITE);
             CloseHandle(shExInfo.hProcess);
             return true;
         }
