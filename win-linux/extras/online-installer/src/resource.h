@@ -1,3 +1,5 @@
+#include "src/version.h"
+
 //#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
 
 #define IDI_MAINICON          101
@@ -9,6 +11,9 @@
 #define IDC_PROGRESS          1004
 #define IDC_BUTTON_CANCEL     1005
 
+#define IDT_TRANSLATIONS      10001
+
+#define CAPTION_TEXT              VER_PRODUCTNAME_STR
 #define MESSAGE_TEXT_ERR1         "The application cannot continue because this architecture is not supported.\0"
 #define LABEL_TITLE_TEXT          "Preparing for installation\0"
 #define LABEL_MESSAGE_TEXT        "Downloading a package\0"

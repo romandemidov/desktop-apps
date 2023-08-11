@@ -1,7 +1,9 @@
 #include <Windows.h>
 #include <CommCtrl.h>
+#include <locale>
 #include "resource.h"
 #include "utils.h"
+#include "translator.h"
 #include "cdownloader.h"
 #include "../../src/defines.h"
 #include "../../src/prop/defines_p.h"
@@ -18,6 +20,7 @@
 #ifndef URL_INSTALL_X86_XP
 # define URL_INSTALL_X86_XP ""
 #endif
+#define _TR(str) Translator::tr(str).c_str()
 
 
 HANDLE hIcon = NULL;
@@ -36,6 +39,7 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
+    std::locale::global(std::locale(""));
     int num_args = 0;
     if (LPTSTR *args = CommandLineToArgvW(lpCmdLine, &num_args)) {
         for (int i = 0; i < num_args; i++) {
@@ -46,6 +50,8 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
         }
         LocalFree(args);
     }
+
+    Translator lang(GetUserDefaultLangID(), IDT_TRANSLATIONS);
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);
@@ -60,7 +66,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
         url = (ver == WinVer::WinXP) ? _T(URL_INSTALL_X86_XP) : _T(URL_INSTALL_X86);
         fileName += (ver == WinVer::WinXP) ? _T("_x86_xp.exe") : _T("_x86.exe");
     } else {
-        NS_Utils::ShowMessage(_T(MESSAGE_TEXT_ERR1));
+        NS_Utils::ShowMessage(_TR(MESSAGE_TEXT_ERR1));
         return 0;
     }
 
@@ -87,20 +93,33 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
 
 void startDownloadAndInstall(HWND hDlg, UserData *data)
 {
+    SetWindowText(hDlg, _TR(CAPTION_TEXT));
+
+    HWND hLabelTitle = GetDlgItem(hDlg, IDC_LABEL_TITLE);
+    if (hLabelTitle)
+        SetWindowText(hLabelTitle, _TR(LABEL_TITLE_TEXT));
+
     HWND hLabelMsg = GetDlgItem(hDlg, IDC_LABEL_MESSAGE);
+    if (hLabelMsg)
+        SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT));
+
+    HWND hBtnCancel = GetDlgItem(hDlg, IDC_BUTTON_CANCEL);
+    if (hBtnCancel)
+        SetWindowText(hBtnCancel, _TR(BUTTON_CANCEL_TEXT));
+
     if (!data) {
         if (hLabelMsg)
-            SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR1));
+            SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR1));
         return;
     }
     if (data->url->empty()) {
         if (hLabelMsg)
-            SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR6));
+            SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR6));
         return;
     }
     if (data->file_name->empty()) {
         if (hLabelMsg)
-            SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR7));
+            SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR7));
         return;
     }
 
@@ -133,7 +152,7 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
                 if (hDlg && IsWindow(hDlg))
                     ShowWindow(hDlg, SW_SHOW);
                 if (hLabelMsg && IsWindow(hLabelMsg))
-                    SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR5));
+                    SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR5));
             } else {
                 if (hDlg && IsWindow(hDlg))
                     PostMessage(hDlg, WM_CLOSE, 0, 0);
@@ -143,14 +162,14 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
         } else
         if (error == -1) {
             if (hLabelMsg && IsWindow(hLabelMsg))
-                SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR2));
+                SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR2));
         } else
         if (error == -2) {
             if (hLabelMsg && IsWindow(hLabelMsg))
-                SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR3));
+                SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR3));
         } else {
             if (hLabelMsg && IsWindow(hLabelMsg))
-                SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR4));
+                SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR4));
         }
     });
     data->dnl->downloadFile(*data->url, path);

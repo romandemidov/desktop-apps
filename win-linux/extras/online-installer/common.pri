@@ -18,10 +18,12 @@ INCLUDEPATH += $$PWD/../../src/prop
 HEADERS += $$PWD/src/version.h \
            $$PWD/src/resource.h \
            $$PWD/src/cdownloader.h \
+           $$PWD/src/translator.h \
            $$PWD/src/utils.h
 
 SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/cdownloader.cpp \
+           $$PWD/src/translator.cpp \
            $$PWD/src/utils.cpp
 
 ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
