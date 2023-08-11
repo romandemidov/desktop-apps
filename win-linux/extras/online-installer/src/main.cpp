@@ -51,7 +51,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
         LocalFree(args);
     }
 
-    Translator lang(GetUserDefaultLangID(), IDT_TRANSLATIONS);
+    Translator lang(GetUserDefaultUILanguage(), IDT_TRANSLATIONS);
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);
