@@ -3,6 +3,8 @@
 #include "resource.h"
 #include "utils.h"
 #include "cdownloader.h"
+#include "../../src/defines.h"
+#include "../../src/prop/defines_p.h"
 
 #ifndef URL_INSTALL_X64
 # define URL_INSTALL_X64 ""
@@ -24,6 +26,7 @@ struct UserData
 {
     CDownloader *dnl = nullptr;
     wstring *url = nullptr;
+    wstring *file_name = nullptr;
 };
 
 void startDownloadAndInstall(HWND hDlg, UserData *data);
@@ -47,13 +50,15 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
     SYSTEM_INFO info;
     GetSystemInfo(&info);
 
-    wstring url;
+    wstring url, fileName(_T(REG_APP_NAME));
     WinVer ver = NS_File::getWinVersion();
     if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64) {
         url = (ver == WinVer::WinXP) ? _T(URL_INSTALL_X64_XP) : _T(URL_INSTALL_X64);
+        fileName += (ver == WinVer::WinXP) ? _T("_x64_xp.exe") : _T("_x64.exe");
     } else
     if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
         url = (ver == WinVer::WinXP) ? _T(URL_INSTALL_X86_XP) : _T(URL_INSTALL_X86);
+        fileName += (ver == WinVer::WinXP) ? _T("_x86_xp.exe") : _T("_x86.exe");
     } else {
         NS_Utils::ShowMessage(_T(MESSAGE_TEXT_ERR1));
         return 0;
@@ -63,6 +68,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
     UserData data;
     data.dnl = &dnl;
     data.url = &url;
+    data.file_name = &fileName;
 
     InitCommonControls();
     HWND hDlg = CreateDialogParam(hInst, MAKEINTRESOURCE(IDD_DIALOG), NULL, DialogProc, (LPARAM)&data);
@@ -92,14 +98,7 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
             SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR6));
         return;
     }
-    size_t pos = data->url->find_last_of(_T("/"));
-    if (pos == wstring::npos) {
-        if (hLabelMsg)
-            SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR7));
-        return;
-    }
-    wstring fileName = data->url->substr(pos + 1);
-    if (fileName.empty()) {
+    if (data->file_name->empty()) {
         if (hLabelMsg)
             SetWindowText(hLabelMsg, _T(LABEL_MESSAGE_TEXT_ERR7));
         return;
@@ -116,11 +115,11 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
                 free(buff);
             }
         }
-        msgText += _T(" ") + fileName;
+        msgText += _T(" ") + (*data->file_name);
         SetWindowText(hLabelMsg, msgText.c_str());
     }
 
-    wstring path = NS_File::appPath() + _T("/") + fileName;
+    wstring path = NS_File::appPath() + _T("/") + (*data->file_name);
     HWND hProgress = GetDlgItem(hDlg, IDC_PROGRESS);
     data->dnl->onProgress([=](int percent) {
         if (hProgress && IsWindow(hProgress))
