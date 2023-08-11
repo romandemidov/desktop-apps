@@ -32,6 +32,7 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nCmdShow)
 {
+    UNREFERENCED_PARAMETER(hPrevInstance);
     int num_args = 0;
     if (LPTSTR *args = CommandLineToArgvW(lpCmdLine, &num_args)) {
         for (int i = 0; i < num_args; i++) {
@@ -54,7 +55,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
     if (info.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL) {
         url = (ver == WinVer::WinXP) ? _T(URL_INSTALL_X86_XP) : _T(URL_INSTALL_X86);
     } else {
-        NS_Utils::ShowMessage(_T("The application cannot continue because this architecture is not supported."));
+        NS_Utils::ShowMessage(_T(MESSAGE_TEXT_ERR1));
         return 0;
     }
 
@@ -161,7 +162,7 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_INITDIALOG: {
-        HWND hwndIcon = GetDlgItem(hDlg, IDC_ICON);
+        HWND hwndIcon = GetDlgItem(hDlg, IDC_MAIN_ICON);
         hIcon = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MAINICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR | LR_LOADTRANSPARENT);
         if (hIcon && hwndIcon)
             PostMessage(hwndIcon, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
