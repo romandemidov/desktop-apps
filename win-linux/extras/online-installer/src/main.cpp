@@ -99,6 +99,10 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
     if (hLabelMsg)
         SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT));   
 
+    HWND hCheckSilent = GetDlgItem(hDlg, IDC_SILENT_CHECK);
+    if (hCheckSilent)
+        SetWindowText(hCheckSilent, _TR(SILENT_CHECK_TEXT));
+
     if (!data) {
         if (hLabelMsg)
             SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR1));
@@ -140,7 +144,13 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
         if (error == 0) {
             if (hDlg && IsWindow(hDlg))
                 ShowWindow(hDlg, SW_HIDE);
-            if (!NS_File::runProcess(path, _T(""))) {
+            wstring args;
+            if (hCheckSilent && IsWindow(hCheckSilent)) {
+                LRESULT isChecked = SendMessageW(hCheckSilent, BM_GETCHECK, 0, 0);
+                if (isChecked == BST_CHECKED)
+                    args = _T("/SILENT");
+            }
+            if (!NS_File::runProcess(path, args)) {
                 if (hDlg && IsWindow(hDlg))
                     ShowWindow(hDlg, SW_SHOW);
                 if (hLabelMsg && IsWindow(hLabelMsg))

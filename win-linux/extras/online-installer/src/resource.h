@@ -10,6 +10,7 @@
 #define IDC_LABEL_MESSAGE     1003
 #define IDC_PROGRESS          1004
 #define IDC_BUTTON_CANCEL     1005
+#define IDC_SILENT_CHECK      1006
 
 #define IDT_TRANSLATIONS      10001
 
@@ -25,3 +26,4 @@
 #define LABEL_MESSAGE_TEXT_ERR6   "An error occurred during initialization: Url not set.\0"
 #define LABEL_MESSAGE_TEXT_ERR7   "An error occurred during initialization: File name not specified.\0"
 #define BUTTON_CANCEL_TEXT        "Cancel\0"
+#define SILENT_CHECK_TEXT         "Silent Installation\0"

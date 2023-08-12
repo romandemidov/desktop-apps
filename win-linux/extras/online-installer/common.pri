@@ -37,8 +37,8 @@ RC_FILE = $$PWD/dialog.rc
 #           $$PWD/version.rc
 
 # Uncomment to run as admin
-#CONFIG += embed_manifest_exe
-#QMAKE_LFLAGS += /MANIFESTUAC:$$quote(\"level=\'requireAdministrator\' uiAccess=\'false\'\")
+CONFIG += embed_manifest_exe
+QMAKE_LFLAGS += /MANIFESTUAC:$$quote(\"level=\'requireAdministrator\' uiAccess=\'false\'\")
 
 contains(QMAKE_TARGET.arch, x86_64):{
     QMAKE_LFLAGS_WINDOWS = /SUBSYSTEM:WINDOWS,5.02

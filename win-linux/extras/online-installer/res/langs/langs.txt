@@ -66,3 +66,7 @@ BUTTON_CANCEL_TEXT
 en =Cancel
 ru =Отмена
 
+SILENT_CHECK_TEXT
+en =Silent Installation
+ru =Тихая установка
+
