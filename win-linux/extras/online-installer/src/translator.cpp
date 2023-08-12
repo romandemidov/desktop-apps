@@ -3,10 +3,6 @@
 #include "utils.h"
 #include <Windows.h>
 #include <cwctype>
-//#include <iostream>
-
-//using std::wcout;
-//using std::endl;
 
 
 bool isSeparator(wchar_t c)
@@ -106,7 +102,6 @@ void Translator::parseTranslations()
 
         switch (token) {
         case TOKEN_BEGIN_DOCUMENT:
-            //wcout << "BEGIN_DOCUMENT: " << ch << endl;
             if (!isSeparator(ch)) {
                 if (isValidStringIdCharacter(ch)) {
                     token = TOKEN_BEGIN_STRING_ID;
@@ -120,7 +115,6 @@ void Translator::parseTranslations()
             break;
 
         case TOKEN_BEGIN_STRING_ID: {
-            //wcout << "BEGIN_STRING_ID: " << ch << endl;
             size_t end;
             for (end = pos; end < len; end++) {
                 wchar_t c = translations.at(end);
@@ -133,9 +127,7 @@ void Translator::parseTranslations()
                 return;
             }
             stringId = translations.substr(pos, end - pos);
-            //wcout << "BEGIN_STRING_ID: " << stringId << endl;
             translMap[stringId] = LocaleMap();
-
             token = TOKEN_END_STRING_ID;
             incr = end - pos;
             break;
@@ -169,7 +161,6 @@ void Translator::parseTranslations()
 
         case TOKEN_BEGIN_LOCALE: {
             currentLocale = translations.substr(pos, 2);
-            //wcout << "BEGIN_LOCALE: " << loc << endl;
             if (pos + 2 == len) {
                 error_substr = translations.substr(0, pos + 2);
                 return;
@@ -180,7 +171,6 @@ void Translator::parseTranslations()
         }
 
         case TOKEN_END_LOCALE:
-            //wcout << "END_LOCALE: " << ch << endl;
             if (!isSeparator(ch)) {
                 if (ch == L'=') {
                     token = TOKEN_BEGIN_VALUE;
@@ -212,10 +202,9 @@ void Translator::parseTranslations()
                 val[p] = L'\n';
                 p = val.find(L"\\n", p + 1);
             }
-
             if (!currentLocale.empty() && translMap.find(stringId) != translMap.end())
                 translMap[stringId][currentLocale] = val;
-            //wcout << "BEGIN_VALUE: " << val << endl;
+
             token = TOKEN_END_VALUE;
             break;
         }
