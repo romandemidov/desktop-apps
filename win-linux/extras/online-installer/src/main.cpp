@@ -81,31 +81,23 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
     ShowWindow(hDlg, nCmdShow);
 
     BOOL ret;
-    MSG msg = {};
+    MSG msg = {0};
     while ((ret = GetMessage(&msg, hDlg, 0, 0)) != 0) {
         if (ret == -1)
-            return 0;
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+            break;
+        if (IsDialogMessage(hDlg, &msg)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
     return (int)msg.wParam;
 }
 
 void startDownloadAndInstall(HWND hDlg, UserData *data)
 {
-    SetWindowText(hDlg, _TR(CAPTION_TEXT));
-
-    HWND hLabelTitle = GetDlgItem(hDlg, IDC_LABEL_TITLE);
-    if (hLabelTitle)
-        SetWindowText(hLabelTitle, _TR(LABEL_TITLE_TEXT));
-
     HWND hLabelMsg = GetDlgItem(hDlg, IDC_LABEL_MESSAGE);
     if (hLabelMsg)
-        SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT));
-
-    HWND hBtnCancel = GetDlgItem(hDlg, IDC_BUTTON_CANCEL);
-    if (hBtnCancel)
-        SetWindowText(hBtnCancel, _TR(BUTTON_CANCEL_TEXT));
+        SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT));   
 
     if (!data) {
         if (hLabelMsg)
@@ -180,13 +172,22 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_INITDIALOG: {
+        SetWindowText(hDlg, _TR(CAPTION_TEXT));
         HWND hwndIcon = GetDlgItem(hDlg, IDC_MAIN_ICON);
         hIcon = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MAINICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR | LR_LOADTRANSPARENT);
         if (hIcon && hwndIcon)
             PostMessage(hwndIcon, STM_SETIMAGE, IMAGE_ICON, (LPARAM)hIcon);
 
+        HWND hLabelTitle = GetDlgItem(hDlg, IDC_LABEL_TITLE);
+        if (hLabelTitle)
+            SetWindowText(hLabelTitle, _TR(LABEL_TITLE_TEXT));
+
+        HWND hBtnCancel = GetDlgItem(hDlg, IDC_BUTTON_CANCEL);
+        if (hBtnCancel)
+            SetWindowText(hBtnCancel, _TR(BUTTON_CANCEL_TEXT));
+
         startDownloadAndInstall(hDlg, (UserData*)lParam);
-        break;
+        return TRUE;
     }
 
     case WM_COMMAND:
