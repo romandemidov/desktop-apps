@@ -49,9 +49,14 @@ Translator::Translator(unsigned short langId, int resourceId)
     HMODULE hInst = GetModuleHandle(NULL);
     if (HRSRC hRes = FindResource(hInst, MAKEINTRESOURCE(resourceId), RT_RCDATA)) {
         if (HGLOBAL hResData = LoadResource(hInst, hRes)) {
-            if (LPVOID pData = LockResource(hResData))
-                translations = StrToWStr((const char*)pData);
-            else
+            if (LPVOID pData = LockResource(hResData)) {
+                DWORD dataSize = SizeofResource(hInst, hRes);
+                if (dataSize > 0) {
+                    string text((const char*)pData, dataSize);
+                    translations = StrToWStr(text.c_str());
+                } else
+                    NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
+            } else
                 NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
             FreeResource(hResData);
         } else
