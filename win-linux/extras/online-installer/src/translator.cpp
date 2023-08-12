@@ -106,6 +106,11 @@ void Translator::parseTranslations()
                 if (isValidStringIdCharacter(ch)) {
                     token = TOKEN_BEGIN_STRING_ID;
                     continue;
+                } else
+                if (ch == L'/' && (pos + 1) < len && translations.at(pos + 1) == L'/') {
+                    // string is comment
+                    size_t end = translations.find_first_of(L'\n', pos);
+                    incr = (end == wstring::npos) ? len - pos : end - pos + 1;
                 } else {
                     // TOKEN_ERROR
                     error_substr = translations.substr(0, pos + 1);
@@ -220,5 +225,3 @@ void Translator::parseTranslations()
     if (token == TOKEN_END_DOCUMENT)
         is_translations_valid = true;
 }
-
-

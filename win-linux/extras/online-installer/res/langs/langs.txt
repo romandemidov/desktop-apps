@@ -1,3 +1,22 @@
+//                File format for text translations
+// This file is used to store translations of text using a given format. 
+// Each translation consists of a label and a corresponding translations 
+// in different languages. Below is the file structure:
+//
+// LABEL
+// language_code1 =Translation1
+// language_code2 =Translation2
+// ...
+// 
+//    LABEL: The label serves as a translation identifier and written as 
+// one word. Valid characters for the label are numbers, letters, and "_".
+//    language_code1, language_code2, and so on are the ISO 639-1:2002 
+// language codes that will be translated into (for example: en, ru).
+//    Translations: Immediately after the symbol "=" is the translation of 
+// the text into the specified language. The end of the translation string 
+// is a newline. Translations may include special characters and spaces.
+//    Note: comments are allowed only at the beginning of the file.
+
 
 CAPTION_TEXT
 en =ONLYOFFICE Online Installer
