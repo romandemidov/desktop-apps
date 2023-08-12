@@ -63,9 +63,11 @@ Translator::Translator(unsigned short langId, int resourceId)
     } else
         NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
 
-    if (!translations.empty())
+    if (!translations.empty()) {
         parseTranslations();
-    else
+        if (!is_translations_valid)
+            NS_Logger::WriteLog(_T("Cannot parse translations, error in string: ") + error_substr + L" <---");
+    } else
         NS_Logger::WriteLog(_T("Error: translations is empty."));
 }
 
@@ -111,7 +113,7 @@ void Translator::parseTranslations()
                     continue;
                 } else {
                     // TOKEN_ERROR
-                    error_substr = translations.substr(0, pos);
+                    error_substr = translations.substr(0, pos + 1);
                     return;
                 }
             }
@@ -125,9 +127,9 @@ void Translator::parseTranslations()
                 if (!isValidStringIdCharacter(c))
                     break;
             }
-            if ((end + 1) < len && !isSeparator(translations.at(end + 1))) {
+            if (end < len && !isSeparator(translations.at(end))) {
                 // TOKEN_ERROR
-                error_substr = translations.substr(0, pos + 1);
+                error_substr = translations.substr(0, end + 1);
                 return;
             }
             stringId = translations.substr(pos, end - pos);
@@ -135,7 +137,7 @@ void Translator::parseTranslations()
             translMap[stringId] = LocaleMap();
 
             token = TOKEN_END_STRING_ID;
-            incr = end - pos + 1;
+            incr = end - pos;
             break;
         }
 
@@ -157,7 +159,7 @@ void Translator::parseTranslations()
                         continue;
                     } else {
                         // TOKEN_ERROR
-                        error_substr = translations.substr(0, pos);
+                        error_substr = translations.substr(0, end + 1);
                         return;
                     }
                 }
@@ -168,8 +170,12 @@ void Translator::parseTranslations()
         case TOKEN_BEGIN_LOCALE: {
             currentLocale = translations.substr(pos, 2);
             //wcout << "BEGIN_LOCALE: " << loc << endl;
+            if (pos + 2 == len) {
+                error_substr = translations.substr(0, pos + 2);
+                return;
+            }
             token = TOKEN_END_LOCALE;
-            incr = 3;
+            incr = 2;
             break;
         }
 
@@ -180,7 +186,7 @@ void Translator::parseTranslations()
                     token = TOKEN_BEGIN_VALUE;
                 } else {
                     // TOKEN_ERROR
-                    error_substr = translations.substr(0, pos);
+                    error_substr = translations.substr(0, pos + 1);
                     return;
                 }
             }
@@ -194,7 +200,7 @@ void Translator::parseTranslations()
                 incr = len - pos;
             } else {
                 val = translations.substr(pos, end - pos);
-                incr = end - pos + 1;
+                incr = end - pos;
             }
 
             if (!val.empty() && val.back() == L'\r')
@@ -224,8 +230,6 @@ void Translator::parseTranslations()
 
     if (token == TOKEN_END_DOCUMENT)
         is_translations_valid = true;
-    else
-        NS_Logger::WriteLog(_T("Cannot parse translations, error in string: ") + error_substr + L" <---");
 }
 
 
