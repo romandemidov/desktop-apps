@@ -39,6 +39,11 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
+    HANDLE hMutex = CreateMutex(NULL, FALSE, _T(VER_PRODUCTNAME_STR));
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        NS_Utils::ShowMessage(_TR("The application is already running."));
+        return 0;
+    }
     std::locale::global(std::locale(""));
     int num_args = 0;
     if (LPTSTR *args = CommandLineToArgvW(lpCmdLine, &num_args)) {
@@ -90,6 +95,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
             DispatchMessage(&msg);
         }
     }
+    CloseHandle(hMutex);
     return (int)msg.wParam;
 }
 
