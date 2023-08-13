@@ -26,6 +26,10 @@ SOURCES += $$PWD/src/main.cpp \
            $$PWD/src/translator.cpp \
            $$PWD/src/utils.cpp
 
+OTHER_FILES += $$PWD/res/dialog.rc \
+               $$PWD/res/langs/langs.txt \
+               $$PWD/res/manifest/online-installer.exe.manifest
+
 ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
 !isEmpty(ENV_PRODUCT_VERSION) {
     FULL_PRODUCT_VERSION = $${ENV_PRODUCT_VERSION}.$$(BUILD_NUMBER)
@@ -33,7 +37,7 @@ ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
                VER_PRODUCT_VERSION_COMMAS=$$replace(FULL_PRODUCT_VERSION, \., ",")
 }
 
-RC_FILE = $$PWD/dialog.rc
+RC_FILE = $$PWD/res/dialog.rc
 #           $$PWD/version.rc
 
 # Uncomment to run as admin

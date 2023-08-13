@@ -1,13 +1,13 @@
 #pragma code_page(65001)
-#include "src/resource.h"
+#include "../src/resource.h"
 
 IDI_MAINICON   ICON    DISCARDABLE APP_ICON_PATH
-IDT_TRANSLATIONS   RCDATA "./res/langs/langs.txt"
-CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./res/manifest/online-installer.exe.manifest"
+IDT_TRANSLATIONS   RCDATA "./langs/langs.txt"
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./manifest/online-installer.exe.manifest"
 
 #include <windows.h>
 #define RC_COMPILE_FLAG
-# include "src/version.h"
+# include "../src/version.h"
 #undef RC_COMPILE_FLAG
 
 VS_VERSION_INFO VERSIONINFO

@@ -1,4 +1,4 @@
-#include "src/version.h"
+#include "version.h"
 
 //#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
 
