@@ -26,6 +26,10 @@ MESSAGE_TEXT_ERR1
 en =The application cannot continue because this architecture is not supported.
 ru =Приложение не может продолжить работу, так как эта архитектура не поддерживается.
 
+MESSAGE_TEXT_ERR2
+en =The application is already running.
+ru =Приложение уже запущено.
+
 LABEL_TITLE_TEXT 
 en =Preparing for installation
 ru =Подготовка к установке

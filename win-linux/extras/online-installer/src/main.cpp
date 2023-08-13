@@ -39,12 +39,13 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In_ LPTSTR lpCmdLine, _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
+    std::locale::global(std::locale(""));
+    Translator lang(GetUserDefaultUILanguage(), IDT_TRANSLATIONS);
     HANDLE hMutex = CreateMutex(NULL, FALSE, _T(VER_PRODUCTNAME_STR));
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        NS_Utils::ShowMessage(_TR("The application is already running."));
+        NS_Utils::ShowMessage(_TR(MESSAGE_TEXT_ERR2));
         return 0;
     }
-    std::locale::global(std::locale(""));
     int num_args = 0;
     if (LPTSTR *args = CommandLineToArgvW(lpCmdLine, &num_args)) {
         for (int i = 0; i < num_args; i++) {
@@ -54,9 +55,7 @@ int WINAPI _tWinMain(_In_ HINSTANCE hInst, _In_opt_ HINSTANCE hPrevInstance, _In
             }
         }
         LocalFree(args);
-    }
-
-    Translator lang(GetUserDefaultUILanguage(), IDT_TRANSLATIONS);
+    }   
 
     SYSTEM_INFO info;
     GetSystemInfo(&info);
@@ -106,8 +105,11 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
         SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT));   
 
     HWND hCheckSilent = GetDlgItem(hDlg, IDC_SILENT_CHECK);
-    if (hCheckSilent)
-        SetWindowText(hCheckSilent, _TR(SILENT_CHECK_TEXT));
+    if (hCheckSilent) {
+        wstring text(_T("  "));
+        text.append(_TR(SILENT_CHECK_TEXT));
+        SetWindowText(hCheckSilent, text.c_str());
+    }
 
     if (!data) {
         if (hLabelMsg)
@@ -143,40 +145,40 @@ void startDownloadAndInstall(HWND hDlg, UserData *data)
     wstring path = NS_File::appPath() + _T("/") + (*data->file_name);
     HWND hProgress = GetDlgItem(hDlg, IDC_PROGRESS);
     data->dnl->onProgress([=](int percent) {
-        if (hProgress && IsWindow(hProgress))
+        if (IsWindow(hProgress))
             PostMessage(hProgress, PBM_SETPOS, percent, 0);
     });
     data->dnl->onComplete([=](int error) {
         if (error == 0) {
-            if (hDlg && IsWindow(hDlg))
+            if (IsWindow(hDlg))
                 ShowWindow(hDlg, SW_HIDE);
             wstring args;
-            if (hCheckSilent && IsWindow(hCheckSilent)) {
-                LRESULT isChecked = SendMessageW(hCheckSilent, BM_GETCHECK, 0, 0);
+            if (IsWindow(hCheckSilent)) {
+                LRESULT isChecked = SendMessage(hCheckSilent, BM_GETCHECK, 0, 0);
                 if (isChecked == BST_CHECKED)
                     args = _T("/SILENT");
             }
             if (!NS_File::runProcess(path, args)) {
-                if (hDlg && IsWindow(hDlg))
+                if (IsWindow(hDlg))
                     ShowWindow(hDlg, SW_SHOW);
-                if (hLabelMsg && IsWindow(hLabelMsg))
+                if (IsWindow(hLabelMsg))
                     SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR5));
             } else {
-                if (hDlg && IsWindow(hDlg))
+                if (IsWindow(hDlg))
                     PostMessage(hDlg, WM_CLOSE, 0, 0);
             }
             if (NS_File::fileExists(path))
                 NS_File::removeFile(path);
         } else
         if (error == -1) {
-            if (hLabelMsg && IsWindow(hLabelMsg))
+            if (IsWindow(hLabelMsg))
                 SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR2));
         } else
         if (error == -2) {
-            if (hLabelMsg && IsWindow(hLabelMsg))
+            if (IsWindow(hLabelMsg))
                 SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR3));
         } else {
-            if (hLabelMsg && IsWindow(hLabelMsg))
+            if (IsWindow(hLabelMsg))
                 SetWindowText(hLabelMsg, _TR(LABEL_MESSAGE_TEXT_ERR4));
         }
     });
@@ -188,7 +190,10 @@ INT_PTR CALLBACK DialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_INITDIALOG: {
-        SetWindowText(hDlg, _TR(CAPTION_TEXT));
+        wstring text(_T("    "));
+        text.append(_TR(CAPTION_TEXT));
+        SetWindowText(hDlg, text.c_str());
+
         HWND hwndIcon = GetDlgItem(hDlg, IDC_MAIN_ICON);
         hIcon = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_MAINICON), IMAGE_ICON, 64, 64, LR_DEFAULTCOLOR | LR_LOADTRANSPARENT);
         if (hIcon && hwndIcon)

@@ -16,6 +16,7 @@
 
 #define CAPTION_TEXT              VER_PRODUCTNAME_STR
 #define MESSAGE_TEXT_ERR1         "The application cannot continue because this architecture is not supported.\0"
+#define MESSAGE_TEXT_ERR2         "The application is already running.\0"
 #define LABEL_TITLE_TEXT          "Preparing for installation\0"
 #define LABEL_MESSAGE_TEXT        "Downloading a package\0"
 #define LABEL_MESSAGE_TEXT_ERR1   "An error occurred during initialization.\nPlease try restarting the app later.\0"

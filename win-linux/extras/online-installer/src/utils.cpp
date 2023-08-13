@@ -31,13 +31,16 @@
 */
 
 #include "utils.h"
-#include "version.h"
+#include "resource.h"
+#include "translator.h"
 #include <Windows.h>
 #include <fstream>
 #include <regex>
 #include <Softpub.h>
 #include <TlHelp32.h>
 #include <sstream>
+
+#define _TR(str) Translator::tr(str).c_str()
 
 
 namespace NS_Utils
@@ -60,7 +63,9 @@ namespace NS_Utils
     {
         if (showError)
             str += _T(" ") + GetLastErrorAsString();
-        MessageBox(NULL, str.c_str(), _T(VER_PRODUCTNAME_STR), MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
+        wstring caption(_T("    "));
+        caption.append(_TR(CAPTION_TEXT));
+        MessageBox(NULL, str.c_str(), caption.c_str(), MB_ICONERROR | MB_SERVICE_NOTIFICATION_NT3X | MB_SETFOREGROUND);
     }
 }
 
