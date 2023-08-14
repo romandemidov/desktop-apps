@@ -1,7 +1,5 @@
 #include "version.h"
 
-//#define CREATEPROCESS_MANIFEST_RESOURCE_ID 1
-
 #define IDI_MAINICON          101
 #define IDD_DIALOG            102
 

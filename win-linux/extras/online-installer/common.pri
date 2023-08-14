@@ -38,7 +38,6 @@ ENV_PRODUCT_VERSION = $$(PRODUCT_VERSION)
 }
 
 RC_FILE = $$PWD/res/dialog.rc
-#           $$PWD/version.rc
 
 # Uncomment to run as admin
 CONFIG += embed_manifest_exe
