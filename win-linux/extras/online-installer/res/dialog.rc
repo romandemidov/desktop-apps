@@ -1,11 +1,11 @@
 #pragma code_page(65001)
+#include <winres.h>
 #include "../src/resource.h"
 
 IDI_MAINICON   ICON    DISCARDABLE APP_ICON_PATH
 IDT_TRANSLATIONS   RCDATA "./langs/langs.txt"
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./manifest/online-installer.exe.manifest"
 
-#include <windows.h>
 #define RC_COMPILE_FLAG
 # include "../src/version.h"
 #undef RC_COMPILE_FLAG
@@ -42,7 +42,6 @@ END
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
