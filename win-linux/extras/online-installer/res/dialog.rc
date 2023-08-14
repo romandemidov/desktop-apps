@@ -1,14 +1,12 @@
 #pragma code_page(65001)
 #include <winres.h>
+#include "../src/version.h"
 #include "../src/resource.h"
 
 IDI_MAINICON   ICON    DISCARDABLE APP_ICON_PATH
 IDT_TRANSLATIONS   RCDATA "./langs/langs.txt"
 CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "./manifest/online-installer.exe.manifest"
 
-#define RC_COMPILE_FLAG
-# include "../src/version.h"
-#undef RC_COMPILE_FLAG
 
 VS_VERSION_INFO VERSIONINFO
 FILEVERSION     VER_FILEVERSION
@@ -36,15 +34,6 @@ BEGIN
         VALUE "Translation", VER_LANG_ID, VER_CHARSET_ID
     END
 END
-
-#define APSTUDIO_READONLY_SYMBOLS
-/////////////////////////////////////////////////////////////////////////////
-//
-// Generated from the TEXTINCLUDE 2 resource.
-//
-
-/////////////////////////////////////////////////////////////////////////////
-#undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
 // Russian (Russia) (unknown sub-lang: 0x2) resources
