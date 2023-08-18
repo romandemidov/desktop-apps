@@ -81,7 +81,10 @@
                             <div class="ver-version" l10n>${_opts.appname} ${_lang.strVersion} ${_opts.version}</div>
                             <div id='id-features-available' l10n>${_lang.aboutProFeaturesAvailable}</div>
                             ${_opts.edition}<p></p>
-                            <a class="ver-checkupdate link" draggable='false' data-state='check' href="#" l10n>${_lang.checkUpdates}</a><p />
+                            <div>
+                                <div id='idx-ver-update-loader' class="lds-ring hidden"><div></div><div></div><div></div><div></div></div>
+                                <a class="ver-checkupdate link" draggable='false' data-state='check' href="#" l10n>${_lang.checkUpdates}</a><p />
+                            </div>
                             <a class="ver-changelog link" draggable='false' target="popup" href=${_opts.changelog} l10n>${_lang.aboutChangelog}</a><p />
                             <div class="ver-copyright">${_opts.rights}</div>
                             <a class="ver-site link" target="popup" href="${_opts.link}">${_opts.site}</a>
@@ -187,6 +190,10 @@
                     $label.text(utils.Lang.updateDownloadProgress.replace('$1', opts.progress));
                     $label.data('state', 'abort');
                 }
+            } else
+            if (/updates:prepare/.test(cmd)) {
+                this.view.$panel.find('.ver-checkupdate').text('Prepare, please wait...');
+                this.view.$panel.find('#idx-ver-update-loader').removeClass('hidden');
             } else
             if (/updates:link/.test(cmd)) {
                 const $label = this.view.$panel.find('.ver-checkupdate');
