@@ -56,13 +56,11 @@ public:
     QSize iconSize() const;
     int insertTab(int index, const QString &text);
     int insertTab(int index, const QIcon &icon, const QString &text);
-//    void moveTab(int from, int to);
     void removeTab(int index);
     void setElideMode(Qt::TextElideMode mode);
     void setIconSize(const QSize &size);
     void setTabIconLabel(int index, QWidget *widget);
     void setTabButton(int index, QWidget *widget);
-//    void setTabData(int index, const QVariant &data);
     void setTabIcon(int index, const QIcon &icon);
     void setTabText(int index, const QString &text);
     void setTabToolTip(int index, const QString &text);
@@ -78,7 +76,6 @@ public:
     int tabIndexAt(const QPoint &pos) const;
     QWidget* tabIconLabel(int index) const;
     QWidget* tabButton(int index) const;
-//    QVariant tabData(int index) const;
     QIcon tabIcon(int index) const;
     QRect tabRect(int index) const;
     QString tabText(int index) const;

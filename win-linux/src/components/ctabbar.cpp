@@ -624,25 +624,6 @@ int CTabBar::insertTab(int index, const QIcon &icon, const QString &text)
     return actual_index;
 }
 
-//void CTabBar::moveTab(int from, int to)
-//{
-//    while (d->animationInProgress)
-//        qApp->processEvents();
-
-//    if (from == to || !d->indexIsValid(from) || !d->indexIsValid(to))
-//        return;
-
-//    int posX = d->_tabRect(from).x();
-//    d->tabList[from]->move(d->_tabRect(to).x(), 0);
-//    d->tabList[to]->move(posX, 0);
-//    int from_index = d->tabIndex(from);
-//    d->tabIndex(from) = d->tabIndex(to);
-//    d->tabIndex(to) = from_index;
-//    std::swap(d->tabList[from], d->tabList[to]);
-//    d->scrollTo(to);
-//    emit tabMoved(from, to);
-//}
-
 void CTabBar::removeTab(int index)
 {
     while (d->animationInProgress)
@@ -756,11 +737,6 @@ void CTabBar::setTabButton(int index, QWidget *widget)
     }
 }
 
-//void CTabBar::setTabData(int index, const QVariant &data)
-//{
-//    if (d->indexIsValid(index))
-//        d->tabList[index]->setProperty("TabData", data);
-//}
 
 void CTabBar::setTabIcon(int index, const QIcon &icon)
 {
@@ -875,11 +851,6 @@ QWidget *CTabBar::tabButton(int index) const
 {
     return d->indexIsValid(index) ? d->tabList[index]->close_btn : nullptr;
 }
-
-//QVariant CTabBar::tabData(int index) const
-//{
-//    return d->indexIsValid(index) ? d->tabList[index]->property("TabData") : QVariant();
-//}
 
 QIcon CTabBar::tabIcon(int index) const
 {
