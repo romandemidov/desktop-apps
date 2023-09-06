@@ -652,6 +652,24 @@ int CMainWindow::trySaveDocument(int index)
     return modal_res;
 }
 
+void CMainWindow::onPortalLogin(int viewid, const std::wstring &json)
+{
+    if ( !(json.find(L"uiTheme") == std::wstring::npos) ) {
+        QJsonParseError jerror;
+        QJsonDocument jdoc = QJsonDocument::fromJson(QString::fromStdWString(json).toLatin1(), &jerror);
+        if( jerror.error == QJsonParseError::NoError ) {
+            QJsonObject objRoot = jdoc.object();
+            QString _ui_theme = objRoot["uiTheme"].toString();
+            if ( !_ui_theme.isEmpty() ) {
+                int index = m_pTabs->tabIndexByView(viewid);
+                m_pTabs->tabBar()->setTabProperty(index, "theme", _ui_theme);
+                m_pTabs->tabBar()->setTabProperty(index, "background", "#2222ff");  // for test
+                m_pTabs->updateTabIcon(index);
+            }
+        }
+    }
+}
+
 void CMainWindow::onPortalLogout(std::wstring wjson)
 {
     if ( m_pTabs->count() ) {

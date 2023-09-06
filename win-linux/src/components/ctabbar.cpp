@@ -176,7 +176,7 @@ void Tab::paintEvent(QPaintEvent *ev)
 {
     QFrame::paintEvent(ev);
     if (!tabcolor.isEmpty() && tabcolor != "none" && property("selected").toBool()) {
-        if (tabBar && tabBar->property("active").toBool() && !tabBar->ignoreActiveTabColor()) {
+        if (tabBar && tabBar->property("active").toBool()) {
             QStylePainter p(this);
             p.fillRect(rect(), QBrush(QColor(tabcolor)));
         }
@@ -238,7 +238,6 @@ public:
     Tab* movedTab = nullptr;
     bool lock = false;
     bool isUIThemeDark = false;
-    bool ignore_tabcolor = false;
     int animationInProgress = 0;
     int movedTabPosX = 0;
     int movedTabPressPosX = 0;
@@ -737,6 +736,11 @@ void CTabBar::setTabButton(int index, QWidget *widget)
     }
 }
 
+void CTabBar::setTabProperty(int index, const char *name, const QVariant &data)
+{
+    if (d->indexIsValid(index))
+        d->tabList[index]->setProperty(name, data);
+}
 
 void CTabBar::setTabIcon(int index, const QIcon &icon)
 {
@@ -779,13 +783,13 @@ void CTabBar::setActiveTabColor(int index, const QString& color)
     }
 }
 
-void CTabBar::setUseTabCustomPalette(int index, bool use)
+void CTabBar::setActiveElementsColor(int index, ElementsPalette palette)
 {
     if (d->indexIsValid(index)) {
-        if (d->tabList[index]->property("custom").toBool() != use) {
-            d->tabList[index]->setProperty("custom", use);
-            polish();
-        }
+        d->tabList[index]->setProperty("darkelements", palette == ElementsPalette::DarkElements);
+        if (CAnimatedIcon * icon = (CAnimatedIcon*)tabIconLabel(index))
+            icon->setSvgElement(palette == ElementsPalette::DarkElements ? "dark" : "light");
+        polish();
     }
 }
 
@@ -797,27 +801,11 @@ void CTabBar::setTabLoading(int index, bool start)
     }
 }
 
-void CTabBar::setTabIconTheme(int index, TabTheme theme)
-{
-    if (CAnimatedIcon * icon = (CAnimatedIcon*)tabIconLabel(index))
-        icon->setSvgElement(theme == TabTheme::LightTab ? "dark" : "light");
-}
-
 void CTabBar::tabStartLoading(int index, const QString& theme)
 {
     CAnimatedIcon * icon = (CAnimatedIcon*)tabIconLabel(index);
     if (icon && !icon->isStarted() )
         icon->startSvg(":/tabbar/icons/loader.svg", theme);
-}
-
-void CTabBar::setIgnoreActiveTabColor(bool ignore)
-{
-    d->ignore_tabcolor = ignore;
-}
-
-bool CTabBar::ignoreActiveTabColor()
-{
-    return d->ignore_tabcolor;
 }
 
 void CTabBar::polish()

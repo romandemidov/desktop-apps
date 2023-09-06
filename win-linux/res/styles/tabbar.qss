@@ -42,9 +42,17 @@ CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image
 
 /* light */
 #mainPanel[uitheme=theme-light] Tab {border-right-color: #dfdfdf;}
+#mainPanel[uitheme=theme-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabText {color: #444;}
+#mainPanel[uitheme=theme-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton {image:url(:/tabbar/icons/close_normal.svg);}
+#mainPanel[uitheme=theme-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:hover {image: url(:/tabbar/icons/close_hover.svg);}
+#mainPanel[uitheme=theme-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:pressed {image: url(:/tabbar/icons/close_pressed.svg);}
 
 /* classic light */
 #mainPanel[uitheme=theme-classic-light] Tab {border-right-color: #cbcbcb;}
+#mainPanel[uitheme=theme-classic-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabText {color: #444;}
+#mainPanel[uitheme=theme-classic-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton {image:url(:/tabbar/icons/close_normal.svg);}
+#mainPanel[uitheme=theme-classic-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:hover {image: url(:/tabbar/icons/close_hover.svg);}
+#mainPanel[uitheme=theme-classic-light] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:pressed {image: url(:/tabbar/icons/close_pressed.svg);}
 
 /* dark */
 #mainPanel[uitheme=theme-dark] CTabBar {background: #404040;}
@@ -55,8 +63,7 @@ CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image
 #mainPanel[uitheme=theme-dark] Tab #tabText {color: #dfdfdf;}
 #mainPanel[uitheme=theme-dark] Tab[selected=true] {background: #2a2a2a; border-color: #2a2a2a;}
 #mainPanel[uitheme=theme-dark] CTabBar[active=false] Tab[selected=true] {background: #404040; border-color: #505050;}
-#mainPanel[uitheme=theme-dark] CTabBar[active=false] Tab[selected=true][custom=true] #tabText {color: #dfdfdf;}
-#mainPanel[uitheme=theme-dark] CTabBar[active=false] Tab[selected=true][custom=true] #tabButton {image: none;}
+#mainPanel[uitheme=theme-dark] CTabBar[active=true]  Tab[selected=true][darkelements=true] #tabText {color: #444;}
 #mainPanel[uitheme=theme-dark] Tab[selected=false][hovered=true],
 #mainPanel[uitheme=theme-dark] CTabBar[active=false] Tab[selected=true][hovered=true] {background: #555;}
 #mainPanel[uitheme=theme-dark] Tab[selected=false][hovered=true] #tabButton,
@@ -66,7 +73,10 @@ CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image
 #mainPanel[uitheme=theme-dark] Tab[selected=false][hovered=true] #tabButton:pressed,
 #mainPanel[uitheme=theme-dark] CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image: url(:/tabbar/icons/close_active_pressed.svg);}
 #mainPanel[uitheme=theme-dark] Tab[selected=true] #tabButton:pressed {background: #555;}
-#mainPanel[uitheme=theme-dark] Tab[selected=true][custom=true] #tabButton:pressed {background: transparent;}
+#mainPanel[uitheme=theme-dark] Tab[selected=true][darkelements=true] #tabButton:pressed {background: transparent;}
+#mainPanel[uitheme=theme-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton {image:url(:/tabbar/icons/close_normal.svg);}
+#mainPanel[uitheme=theme-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:hover {image: url(:/tabbar/icons/close_hover.svg);}
+#mainPanel[uitheme=theme-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:pressed {image: url(:/tabbar/icons/close_pressed.svg);}
 
 /* contrast-dark */
 #mainPanel[uitheme=theme-contrast-dark] CTabBar {background: #2a2a2a;}
@@ -77,8 +87,7 @@ CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image
 #mainPanel[uitheme=theme-contrast-dark] Tab #tabText {color: #fff;}
 #mainPanel[uitheme=theme-contrast-dark] Tab[selected=true] {background: #1e1e1e; border-color: #1e1e1e;}
 #mainPanel[uitheme=theme-contrast-dark] CTabBar[active=false] Tab[selected=true] {background: #2a2a2a; border-color: #414141;}
-#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=false] Tab[selected=true][custom=true] #tabText {color: #fff;}
-#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=false] Tab[selected=true][custom=true] #tabButton {image: none;}
+#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=true]  Tab[selected=true][darkelements=true] #tabText {color: #444;}
 #mainPanel[uitheme=theme-contrast-dark] Tab[selected=false][hovered=true],
 #mainPanel[uitheme=theme-contrast-dark] CTabBar[active=false] Tab[selected=true][hovered=true] {background: #424242;}
 #mainPanel[uitheme=theme-contrast-dark] Tab[selected=false][hovered=true] #tabButton,
@@ -88,18 +97,10 @@ CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image
 #mainPanel[uitheme=theme-contrast-dark] Tab[selected=false][hovered=true] #tabButton:pressed,
 #mainPanel[uitheme=theme-contrast-dark] CTabBar[active=false] Tab[selected=true][hovered=true] #tabButton:pressed {image: url(:/tabbar/icons/close_active_pressed.svg);}
 #mainPanel[uitheme=theme-contrast-dark] Tab[selected=true] #tabButton:pressed {background: #cc0000;}
-#mainPanel[uitheme=theme-contrast-dark] Tab[selected=true][custom=true] #tabButton:pressed {background: transparent;}
+#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton {image:url(:/tabbar/icons/close_normal.svg);}
+#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:hover {image: url(:/tabbar/icons/close_hover.svg);}
+#mainPanel[uitheme=theme-contrast-dark] CTabBar[active=true] Tab[selected=true][darkelements=true] #tabButton:pressed {image: url(:/tabbar/icons/close_pressed.svg);}
 
-/* portal */
-Tab[selected=true][custom=true],
-#mainPanel[uitheme=theme-dark] Tab[selected=true][custom=true],
-#mainPanel[uitheme=theme-contrast-dark] Tab[selected=true][custom=true] {background: #fff;}
-Tab[selected=true][custom=true] #tabText,
-#mainPanel[uitheme=theme-dark] Tab[selected=true][custom=true] #tabText,
-#mainPanel[uitheme=theme-contrast-dark] Tab[selected=true][custom=true] #tabText {color: #444;}
-Tab[selected=true][custom=true] #tabButton {image:url(:/tabbar/icons/close_normal.svg);}
-Tab[selected=true][custom=true] #tabButton:hover {image: url(:/tabbar/icons/close_hover.svg);}
-Tab[selected=true][custom=true] #tabButton:pressed {image: url(:/tabbar/icons/close_pressed.svg);}
 
 /* dark, contrast-dark */
 #mainPanel[uitheme=theme-dark] CTabBar #tabScroll>#leftButton,

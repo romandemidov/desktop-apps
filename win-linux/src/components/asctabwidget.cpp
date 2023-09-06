@@ -381,7 +381,7 @@ int CAscTabWidget::addPortal(const QString& url, const QString& name, const QStr
     tab_index = insertWidget(tab_index, panelwidget);
     m_pBar->insertTab(tab_index, portal);
     m_pBar->setTabToolTip(tab_index, _url);
-    m_pBar->setTabIconTheme(tab_index, CTabBar::LightTab);
+//    m_pBar->setTabIconTheme(tab_index, CTabBar::LightTab);
     m_pBar->tabStartLoading(tab_index);
 //    updateTabIcon(tabIndexByView(id));
 
@@ -420,7 +420,7 @@ int CAscTabWidget::addOAuthPortal(const QString& portal, const QString& type, co
     tab_index = insertWidget(tab_index, panelwidget);
     m_pBar->insertTab(tab_index, _portal);
     m_pBar->setTabToolTip(tab_index, portal);
-    m_pBar->setTabIconTheme(tab_index, CTabBar::LightTab);
+//    m_pBar->setTabIconTheme(tab_index, CTabBar::LightTab);
     m_pBar->tabStartLoading(tab_index);
 
     return tab_index;
@@ -475,7 +475,7 @@ void CAscTabWidget::updateTabIcon(int index)
             bool is_active = isActiveWidget() && index == currentIndex();
             int tab_type = etUndefined;
             QString active_tab_color = "none";
-//            CTabBar::TabTheme tab_theme = is_active ? CTabBar::DarkTab : CTabBar::LightTab;
+            CTabBar::ElementsPalette el_palette = is_active ? CTabBar::LightElements : CTabBar::DarkElements;
 
             auto _is_editor_supports_theme = [&](int index) {
                 CAscTabData& data = *(panel(index)->data());
@@ -491,7 +491,7 @@ void CAscTabWidget::updateTabIcon(int index)
             }
 
             if ( !is_active ) {
-//                tab_theme = GetCurrentTheme().isDark() ? CTabBar::DarkTab : CTabBar::LightTab;
+                el_palette = GetCurrentTheme().isDark() ? CTabBar::LightElements : CTabBar::DarkElements;
             } else {
                 switch ( tab_type ) {
                 case etPresentation: active_tab_color = QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSlideActive)); break;
@@ -499,27 +499,33 @@ void CAscTabWidget::updateTabIcon(int index)
                 case etDocumentMasterForm:
                 case etDocument: active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabWordActive)); break;
                 case etNewPortal:
-                case etPortal:
-                    active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSimpleActiveBackground));
-//                    tab_theme = CTabBar::LightTab;
+                case etPortal: {
+                    QString custom_tab_color = tabBar()->tabProperty(index, "background").toString();
+                    if (tabBar()->tabProperty(index, "theme").toString() == "default-dark") {
+                        active_tab_color =  QString::fromStdWString(GetCurrentTheme().value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
+                        if (!custom_tab_color.isEmpty() && custom_tab_color != "none" && !GetCurrentTheme().isDark())
+                            active_tab_color = custom_tab_color;
+                    } else {
+                        active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSimpleActiveBackground));
+                        if (!custom_tab_color.isEmpty() && custom_tab_color != "none")
+                            active_tab_color = custom_tab_color;
+                    }
+                    el_palette = AscAppManager::themes().isColorDark(active_tab_color) ? CTabBar::LightElements : CTabBar::DarkElements;
                     break;
+                }
                 default:
                     tab_type = etUndefined;
                     active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
-//                    tab_theme = AscAppManager::themes().isColorDark(active_tab_color) ? CTabBar::DarkTab : CTabBar::LightTab;
+                    el_palette = AscAppManager::themes().isColorDark(active_tab_color) ? CTabBar::LightElements : CTabBar::DarkElements;
                     break;
                 }
             }
-            const char *icon_name = is_active ? m_mapTabIcons.at(tab_type).second : m_mapTabIcons.at(tab_type).first;
+            const char *icon_name = (el_palette == CTabBar::DarkElements) ? m_mapTabIcons.at(tab_type).second : m_mapTabIcons.at(tab_type).first;
             m_pBar->setTabIcon(index, QIcon(icon_name));
-//            m_pBar->setTabIconTheme(index, tab_theme);
             if ( index == currentIndex() ) {
+                m_pBar->setActiveTabColor(index, active_tab_color);
                 if (tab_type == etPortal || tab_type == etNewPortal || tab_type == etUndefined)
-                    m_pBar->setUseTabCustomPalette(index, true);
-                else {
-                    m_pBar->setUseTabCustomPalette(index, false);
-                    m_pBar->setActiveTabColor(index, active_tab_color);
-                }
+                    m_pBar->setActiveElementsColor(index, el_palette);
             }
         }
     }
@@ -536,15 +542,14 @@ void CAscTabWidget::reloadTabIcons()
     const char *icons[] = {":/tabbar/icons/newdoc.svg", ":/tabbar/icons/de.svg", ":/tabbar/icons/pe.svg",
                            ":/tabbar/icons/docxf.svg",  ":/tabbar/icons/se.svg", ":/tabbar/icons/portal_light.svg",
                            ":/tabbar/icons/portal.svg"};
-    int portal_icon = GetCurrentTheme().isDark() ? 5 : 6;
     m_mapTabIcons.insert({
         {etUndefined,          std::make_pair(icons[0], icons[0])},
         {etDocument,           std::make_pair(icons[1], icons[1])},
         {etPresentation,       std::make_pair(icons[2], icons[2])},
         {etDocumentMasterForm, std::make_pair(icons[3], icons[3])},
         {etSpreadsheet,        std::make_pair(icons[4], icons[4])},
-        {etPortal,             std::make_pair(icons[portal_icon], icons[6])},
-        {etNewPortal,          std::make_pair(icons[portal_icon], icons[6])}
+        {etPortal,             std::make_pair(icons[5], icons[6])},
+        {etNewPortal,          std::make_pair(icons[5], icons[6])}
     });
 }
 
@@ -1168,7 +1173,6 @@ void CAscTabWidget::applyUITheme(const std::wstring& theme)
 {
     reloadTabIcons();
     updateIcons();
-    m_pBar->setIgnoreActiveTabColor(GetCurrentTheme().isDark());
     m_pBar->polish();
     style()->polish(this);
 

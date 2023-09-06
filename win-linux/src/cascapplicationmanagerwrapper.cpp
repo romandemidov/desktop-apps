@@ -245,6 +245,10 @@ bool CAscApplicationManagerWrapper::processCommonEvent(NSEditorApi::CAscCefMenuE
         } else
         if ( cmd.compare(L"portal:login") == 0 ) {
             AscAppManager::sendCommandTo(SEND_TO_ALL_START_PAGE, L"portal:login", pData->get_Param());
+            if ( m_pMainWindow ) {
+                std::wstring param = L"{\"domain\":\"https://nct.onlyoffice.com\",\"provider\":\"onlyoffice\",\"uiTheme\":\"default-dark\"}";  // for test
+                m_pMainWindow->onPortalLogin(event->get_SenderId(), param);
+            }
             return true;
         } else
         if ( cmd.compare(L"portal:logout") == 0 ) {

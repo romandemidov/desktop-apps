@@ -43,9 +43,9 @@ public:
     CTabBar(QWidget *parent = nullptr);
     ~CTabBar();
 
-    enum TabTheme {
-        LightTab,
-        DarkTab
+    enum ElementsPalette {
+        LightElements,
+        DarkElements
     };
 
     int addTab(const QString &text);
@@ -61,17 +61,15 @@ public:
     void setIconSize(const QSize &size);
     void setTabIconLabel(int index, QWidget *widget);
     void setTabButton(int index, QWidget *widget);
+    void setTabProperty(int index, const char *name, const QVariant &data);
     void setTabIcon(int index, const QIcon &icon);
     void setTabText(int index, const QString &text);
     void setTabToolTip(int index, const QString &text);
     void setCurrentIndex(int index);
     void setActiveTabColor(int index, const QString&);
-    void setUseTabCustomPalette(int, bool);
+    void setActiveElementsColor(int, ElementsPalette);
     void setTabLoading(int, bool);
-    void setTabIconTheme(int, TabTheme);
     void tabStartLoading(int, const QString& theme = QString());
-    void setIgnoreActiveTabColor(bool ignore);
-    bool ignoreActiveTabColor();
     void polish();
     int tabIndexAt(const QPoint &pos) const;
     QWidget* tabIconLabel(int index) const;

@@ -135,6 +135,7 @@ public slots:
     void onLocalFileLocation(QString);
     void onFileLocation(int, QString);
     void onPortalOpen(QString);
+    void onPortalLogin(int viewid, const std::wstring& json);
     void onPortalLogout(std::wstring portal);
     void onPortalNew(QString);
     void onPortalCreate();
