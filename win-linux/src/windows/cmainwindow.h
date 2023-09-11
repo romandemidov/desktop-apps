@@ -78,7 +78,8 @@ private:
     void captureMouse(int);
 #ifdef __linux__
     virtual void dragEnterEvent(QDragEnterEvent *event) final;
-	virtual void dropEvent(QDropEvent *event) final;
+    virtual void dragLeaveEvent(QDragLeaveEvent *event) final;
+    virtual void dropEvent(QDropEvent *event) final;
 #endif
 
 

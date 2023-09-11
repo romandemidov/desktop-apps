@@ -314,6 +314,11 @@ void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
     event->acceptProposedAction();
 }
 
+void CMainWindow::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    event->setAccepted(true);
+}
+
 void CMainWindow::dropEvent(QDropEvent *event)
 {
     QList<QUrl> urls = event->mimeData()->urls();
