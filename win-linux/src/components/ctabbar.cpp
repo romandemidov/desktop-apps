@@ -69,8 +69,9 @@ public:
     CAnimatedIcon *icon_label = nullptr;
     QLabel *text_label = nullptr;
     QToolButton *close_btn = nullptr;
-    QString text;
-    QString tabcolor;
+    QString text,
+            textcolor,
+            tabcolor;
     int tab_width = -1;
     int index = -1;
 
@@ -88,6 +89,7 @@ private:
 
 Tab::Tab(QWidget *parent) :
     QFrame(parent),
+    textcolor("none"),
     tabcolor("none")
 {
     setAttribute(Qt::WA_Hover);
@@ -780,6 +782,16 @@ void CTabBar::setActiveTabColor(int index, const QString& color)
     if (d->tabList[index]->tabcolor != color) {
         d->tabList[index]->tabcolor = color;
         d->tabList[index]->polish();
+    }
+}
+
+void CTabBar::setActiveTextColor(int index, const QString &color)
+{
+    if (!d->indexIsValid(index) || color.isEmpty() || color == "none")
+        return;
+    if (d->tabList[index]->textcolor != color) {
+        d->tabList[index]->textcolor = color;
+        d->tabList[index]->text_label->setStyleSheet(QString("CTabBar[active=true] Tab[selected=true] #tabText {color: %1};").arg(color));
     }
 }
 

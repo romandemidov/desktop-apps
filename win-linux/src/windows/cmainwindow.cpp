@@ -666,6 +666,7 @@ void CMainWindow::onPortalLogin(int viewid, const std::wstring &json)
                     //m_pTabs->tabBar()->setTabProperty(index, "theme", _ui_theme);
                     QString dark_color = QString::fromStdWString(AscAppManager::themes().defaultDark().value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
                     m_pTabs->tabBar()->setTabProperty(index, "background-color", dark_color);  // for test
+                    m_pTabs->tabBar()->setTabProperty(index, "text-color", "#ff0000");  // for test
                     m_pTabs->updateTabIcon(index);
                 }
             }

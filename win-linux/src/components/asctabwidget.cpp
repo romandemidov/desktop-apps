@@ -510,6 +510,9 @@ void CAscTabWidget::updateTabIcon(int index)
                         if (!custom_tab_color.isEmpty() && custom_tab_color != "none")
                             active_tab_color = custom_tab_color;
                     }
+                    QString custom_txt_color = tabBar()->tabProperty(index, "text-color").toString();
+                    if (!custom_txt_color.isEmpty() && custom_txt_color != "none")
+                        m_pBar->setActiveTextColor(index, custom_txt_color);
                     el_palette = AscAppManager::themes().isColorDark(active_tab_color) ? CTabBar::LightElements : CTabBar::DarkElements;
                     break;
                 }

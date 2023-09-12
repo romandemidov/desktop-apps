@@ -67,6 +67,7 @@ public:
     void setTabToolTip(int index, const QString &text);
     void setCurrentIndex(int index);
     void setActiveTabColor(int index, const QString&);
+    void setActiveTextColor(int index, const QString&);
     void setActiveElementsPalette(int, ElementsPalette);
     void setTabLoading(int, bool);
     void tabStartLoading(int, const QString& theme = QString());
