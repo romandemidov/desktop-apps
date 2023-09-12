@@ -661,10 +661,13 @@ void CMainWindow::onPortalLogin(int viewid, const std::wstring &json)
             QJsonObject objRoot = jdoc.object();
             QString _ui_theme = objRoot["uiTheme"].toString();
             if ( !_ui_theme.isEmpty() ) {
-                int index = m_pTabs->tabIndexByView(viewid);
-                m_pTabs->tabBar()->setTabProperty(index, "theme", _ui_theme);
-                m_pTabs->tabBar()->setTabProperty(index, "background-color", "#2222ff");  // for test
-                m_pTabs->updateTabIcon(index);
+                if (_ui_theme == "default-dark") {
+                    int index = m_pTabs->tabIndexByView(viewid);
+                    //m_pTabs->tabBar()->setTabProperty(index, "theme", _ui_theme);
+                    QString dark_color = QString::fromStdWString(AscAppManager::themes().defaultDark().value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
+                    m_pTabs->tabBar()->setTabProperty(index, "background-color", dark_color);  // for test
+                    m_pTabs->updateTabIcon(index);
+                }
             }
         }
     }
