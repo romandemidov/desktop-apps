@@ -775,7 +775,7 @@ void CTabBar::setCurrentIndex(int index)
 
 void CTabBar::setActiveTabColor(int index, const QString& color)
 {
-    if (!d->indexIsValid(index) || color == "none")
+    if (!d->indexIsValid(index) || color.isEmpty() || color == "none")
         return;
     if (d->tabList[index]->tabcolor != color) {
         d->tabList[index]->tabcolor = color;
@@ -783,7 +783,7 @@ void CTabBar::setActiveTabColor(int index, const QString& color)
     }
 }
 
-void CTabBar::setActiveElementsColor(int index, ElementsPalette palette)
+void CTabBar::setActiveElementsPalette(int index, ElementsPalette palette)
 {
     if (d->indexIsValid(index)) {
         d->tabList[index]->setProperty("darkelements", palette == ElementsPalette::DarkElements);

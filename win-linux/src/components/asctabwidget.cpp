@@ -500,7 +500,7 @@ void CAscTabWidget::updateTabIcon(int index)
                 case etDocument: active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabWordActive)); break;
                 case etNewPortal:
                 case etPortal: {
-                    QString custom_tab_color = tabBar()->tabProperty(index, "background").toString();
+                    QString custom_tab_color = tabBar()->tabProperty(index, "background-color").toString();
                     if (tabBar()->tabProperty(index, "theme").toString() == "default-dark") {
                         active_tab_color =  QString::fromStdWString(GetCurrentTheme().value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
                         if (!custom_tab_color.isEmpty() && custom_tab_color != "none" && !GetCurrentTheme().isDark())
@@ -525,7 +525,7 @@ void CAscTabWidget::updateTabIcon(int index)
             if ( index == currentIndex() ) {
                 m_pBar->setActiveTabColor(index, active_tab_color);
                 if (tab_type == etPortal || tab_type == etNewPortal || tab_type == etUndefined)
-                    m_pBar->setActiveElementsColor(index, el_palette);
+                    m_pBar->setActiveElementsPalette(index, el_palette);
             }
         }
     }

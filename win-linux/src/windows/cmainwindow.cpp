@@ -663,7 +663,7 @@ void CMainWindow::onPortalLogin(int viewid, const std::wstring &json)
             if ( !_ui_theme.isEmpty() ) {
                 int index = m_pTabs->tabIndexByView(viewid);
                 m_pTabs->tabBar()->setTabProperty(index, "theme", _ui_theme);
-                m_pTabs->tabBar()->setTabProperty(index, "background", "#2222ff");  // for test
+                m_pTabs->tabBar()->setTabProperty(index, "background-color", "#2222ff");  // for test
                 m_pTabs->updateTabIcon(index);
             }
         }
