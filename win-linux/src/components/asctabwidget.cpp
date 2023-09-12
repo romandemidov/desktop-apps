@@ -204,7 +204,7 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
 CTabPanel * CAscTabWidget::panel(int index) const
 {
     QWidget * _w = widget(index);
-    return _w->children().count() ? static_cast<CTabPanel *>(_w->findChild<CTabPanel*>()) : nullptr;
+    return (_w && _w->children().count()) ? static_cast<CTabPanel *>(_w->findChild<CTabPanel*>()) : nullptr;
 }
 
 CTabBar *CAscTabWidget::tabBar() const
