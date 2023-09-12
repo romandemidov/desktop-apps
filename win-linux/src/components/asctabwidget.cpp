@@ -141,13 +141,17 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
 
     static int _dropedindex = -1;
     QObject::connect(this, &CAscTabWidget::currentChanged, this, [=](int index) {
+        if (m_pBar->currentIndex() != -1)
+            updateTabIcon(m_pBar->currentIndex());
         QTimer::singleShot(0, this, [=]() {
-            if (index != -1 && index != m_pBar->currentIndex()) {
-                m_pBar->blockSignals(true);
-                m_pBar->setCurrentIndex(index);
-                m_pBar->blockSignals(false);
+            if (index != -1) {
+                if (index != m_pBar->currentIndex()) {
+                    m_pBar->blockSignals(true);
+                    m_pBar->setCurrentIndex(index);
+                    m_pBar->blockSignals(false);
+                }
+                updateTabIcon(index);
             }
-            updateIcons();
         });
         setFocusedView();
         _dropedindex = -1;
@@ -653,7 +657,7 @@ int CAscTabWidget::openCloudDocument(COpenOptions& opts, bool select, bool force
 //        opts.type   = etUndefined;
         tabIndex    = addEditor(opts);
 
-        updateIcons();
+        updateTabIcon(tabIndex);
 
         if (select && !(tabIndex < 0))
             m_pBar->setCurrentIndex(tabIndex);
@@ -680,7 +684,7 @@ int CAscTabWidget::openLocalDocument(const COpenOptions& options, bool select, b
         tabIndex = addEditor(_opts);
 
         if (!(tabIndex < 0))
-            updateIcons();
+            updateTabIcon(tabIndex);
     }
 
     if (select && !(tabIndex < 0))
@@ -897,7 +901,7 @@ void CAscTabWidget::activate(bool a)
         this->setProperty("active", a);
         m_pBar->setProperty("active", a);
     }
-    updateIcons();
+    updateTabIcon(m_pBar->currentIndex());
     m_pBar->polish();
 }
 

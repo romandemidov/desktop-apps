@@ -784,7 +784,7 @@ void CMainWindow::createLocalFile(const QString& name, int format)
     int tabIndex = m_pTabs->addEditor(opts);
 
     if ( !(tabIndex < 0) ) {
-        m_pTabs->updateIcons();
+        m_pTabs->updateTabIcon(tabIndex);
         m_pTabs->setCurrentIndex(tabIndex);
 
         toggleButtonMain(false, true);
