@@ -787,11 +787,12 @@ void CTabBar::setActiveTabColor(int index, const QString& color)
 
 void CTabBar::setActiveTextColor(int index, const QString &color)
 {
-    if (!d->indexIsValid(index) || color.isEmpty() || color == "none")
+    if (!d->indexIsValid(index))
         return;
     if (d->tabList[index]->textcolor != color) {
         d->tabList[index]->textcolor = color;
-        d->tabList[index]->text_label->setStyleSheet(QString("CTabBar[active=true] Tab[selected=true] #tabText {color: %1};").arg(color));
+        QString css = (color.isEmpty() || color == "none") ? "" : QString("CTabBar[active=true] Tab[selected=true] #tabText {color: %1};").arg(color);
+        d->tabList[index]->text_label->setStyleSheet(css);
     }
 }
 

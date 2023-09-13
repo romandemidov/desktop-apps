@@ -478,7 +478,7 @@ void CAscTabWidget::updateTabIcon(int index)
         if (pEditor) {
             bool is_active = isActiveWidget() && index == currentIndex();
             int tab_type = etUndefined;
-            QString active_tab_color = "none";
+            QString active_tab_color = "none", active_txt_color = "none";
             CTabBar::ElementsPalette el_palette = is_active ? CTabBar::LightElements : CTabBar::DarkElements;
 
             auto _is_editor_supports_theme = [&](int index) {
@@ -504,19 +504,21 @@ void CAscTabWidget::updateTabIcon(int index)
                 case etDocument: active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabWordActive)); break;
                 case etNewPortal:
                 case etPortal: {
+                    QString custom_txt_color = tabBar()->tabProperty(index, "text-color").toString();
                     QString custom_tab_color = tabBar()->tabProperty(index, "background-color").toString();
                     if (tabBar()->tabProperty(index, "theme").toString() == "default-dark") {
                         active_tab_color =  QString::fromStdWString(GetCurrentTheme().value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
                         if (!custom_tab_color.isEmpty() && custom_tab_color != "none" && !GetCurrentTheme().isDark())
                             active_tab_color = custom_tab_color;
+                        if (!custom_txt_color.isEmpty() && custom_txt_color != "none" && !GetCurrentTheme().isDark())
+                            active_txt_color = custom_txt_color;
                     } else {
                         active_tab_color =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSimpleActiveBackground));
                         if (!custom_tab_color.isEmpty() && custom_tab_color != "none")
                             active_tab_color = custom_tab_color;
-                    }
-                    QString custom_txt_color = tabBar()->tabProperty(index, "text-color").toString();
-                    if (!custom_txt_color.isEmpty() && custom_txt_color != "none")
-                        m_pBar->setActiveTextColor(index, custom_txt_color);
+                        if (!custom_txt_color.isEmpty() && custom_txt_color != "none")
+                            active_txt_color = custom_txt_color;
+                    }                    
                     el_palette = AscAppManager::themes().isColorDark(active_tab_color) ? CTabBar::LightElements : CTabBar::DarkElements;
                     break;
                 }
@@ -531,8 +533,10 @@ void CAscTabWidget::updateTabIcon(int index)
             m_pBar->setTabIcon(index, QIcon(icon_name));
             if ( index == currentIndex() ) {
                 m_pBar->setActiveTabColor(index, active_tab_color);
-                if (tab_type == etPortal || tab_type == etNewPortal || tab_type == etUndefined)
+                if (tab_type == etPortal || tab_type == etNewPortal || tab_type == etUndefined) {
                     m_pBar->setActiveElementsPalette(index, el_palette);
+                    m_pBar->setActiveTextColor(index, active_txt_color);
+                }
             }
         }
     }
