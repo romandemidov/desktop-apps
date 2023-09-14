@@ -104,3 +104,24 @@ begin
 
   Result :=  msiproductupgrade(upgradecode, '14.32.31332.0');
 end;
+
+procedure CreateBatchFiles();
+var
+   i, count: Integer;
+   fileName: String;
+   names, lines, args: TArrayOfString;
+begin
+#ifdef _ONLYOFFICE
+   count := 4;
+#else
+   count := 3;
+#endif
+   names := ['new_word', 'new_cell', 'new_slide', 'new_form'];
+   args := ['--new:word', '--new:cell', '--new:slide', '--new:form'];
+   SetArrayLength(lines, 1);
+   for i := 0 to count - 1 do begin
+     fileName := ExpandConstant('{app}\' + names[i] + '.bat');
+     lines[0] := ExpandConstant('start {#iconsExe} ' + args[i]);
+     SaveStringsToFile(fileName, lines, False);
+   end;
+end;
