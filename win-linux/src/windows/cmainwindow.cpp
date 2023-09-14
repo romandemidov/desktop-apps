@@ -309,43 +309,66 @@ void CMainWindow::captureMouse(int tabindex)
 }
 
 #ifdef __linux__
+QSet<QString> CMainWindow::GetAvailableExtensions()
+{
+    QSet<QString> exts;
+    exts << "docx" << "doc" << "odt" << "rtf" << "txt" << "doct" << "dotx" << "ott";
+    exts << "html" << "mht" << "epub";
+    exts << "pptx" << "ppt" << "odp" << "ppsx" << "pptt" << "potx" << "otp";
+    exts << "xlsx" << "xls" << "ods" << "csv" << "xlst" << "xltx" << "ots";
+    exts << "pdf" << "djvu" << "xps";
+    exts << "plugin";
+    return exts;
+}
+
 void CMainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
-    event->acceptProposedAction();
+    QList<QUrl> urls = event->mimeData()->urls();
+    if (urls.length() != 1)
+        return;
+
+    QSet<QString> exts = GetAvailableExtensions();
+    QFileInfo oInfo(urls[0].toString());
+
+    if (exts.contains(oInfo.suffix()))
+        event->acceptProposedAction();
 }
 
 void CMainWindow::dragLeaveEvent(QDragLeaveEvent *event)
 {
-    event->setAccepted(true);
+	//event->setAccepted(true);
 }
 
 void CMainWindow::dropEvent(QDropEvent *event)
 {
     QList<QUrl> urls = event->mimeData()->urls();
-    if (urls.length() == 1)
+
+    if (urls.length() != 1)
+        return;
+
+    QString _path = urls[0].path();
+
+    Utils::keepLastPath(LOCAL_PATH_OPEN, _path);
+    COpenOptions opts = {"", etLocalFile, _path};
+    opts.wurl = _path.toStdWString();
+
+    std::wstring::size_type nPosPluginExt = opts.wurl.rfind(L".plugin");
+    std::wstring::size_type nUrlLen = opts.wurl.length();
+    if ((nPosPluginExt != std::wstring::npos) && ((nPosPluginExt + 7) == nUrlLen))
     {
-        QSet<QString> _exts;
-        _exts << "docx" << "doc" << "odt" << "rtf" << "txt" << "doct" << "dotx" << "ott";
-        _exts << "html" << "mht" << "epub";
-        _exts << "pptx" << "ppt" << "odp" << "ppsx" << "pptt" << "potx" << "otp";
-        _exts << "xlsx" << "xls" << "ods" << "csv" << "xlst" << "xltx" << "ots";
-        _exts << "pdf" << "djvu" << "xps";
+        // register plugin
+        NSEditorApi::CAscMenuEvent* pEvent = new NSEditorApi::CAscMenuEvent();
+        pEvent->m_nType = ASC_MENU_EVENT_TYPE_DOCUMENTEDITORS_ADD_PLUGIN;
+        NSEditorApi::CAscAddPlugin* pData = new NSEditorApi::CAscAddPlugin();
+        pData->put_Path(opts.wurl);
+        pEvent->m_pData = pData;
 
-        QFileInfo oInfo(urls[0].toString());
-
-        if (_exts.contains(oInfo.suffix()))
-        {
-            QString _path = urls[0].path();
-
-            Utils::keepLastPath(LOCAL_PATH_OPEN, _path);
-            COpenOptions opts = {"", etLocalFile, _path};
-            opts.wurl = _path.toStdWString();
-
-            doOpenLocalFile(opts);
-        }
+        AscAppManager::getInstance().Apply(pEvent);
     }
-
-    event->acceptProposedAction();
+    else
+    {
+        doOpenLocalFile(opts);
+    }
 }
 #endif
 

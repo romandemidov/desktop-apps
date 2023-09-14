@@ -80,6 +80,7 @@ private:
     virtual void dragEnterEvent(QDragEnterEvent *event) final;
     virtual void dragLeaveEvent(QDragLeaveEvent *event) final;
     virtual void dropEvent(QDropEvent *event) final;
+    QSet<QString> GetAvailableExtensions();
 #endif
 
 
