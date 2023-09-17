@@ -28,6 +28,9 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     image: url(:/minimize_unix_pressed_light.svg);
 }
+#mainPanel[window=pretty] QPushButton#toolButtonMinimize[unix=true][kde=true] {image: url(:/minimize_kde_normal_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMinimize[unix=true][kde=true]:hover {image: url(:/minimize_kde_hover_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMinimize[unix=true][kde=true]:pressed {image: url(:/minimize_kde_pressed_light.svg);}
 
 #mainPanel[window=pretty] QPushButton#toolButtonClose
 {
@@ -45,6 +48,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     image: url(:/close_unix_pressed_light.svg);
 }
+#mainPanel[window=pretty] QPushButton#toolButtonClose[unix=true][kde=true] {image: url(:/close_kde_normal_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonClose[unix=true][kde=true]:hover {image: url(:/close_kde_hover_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonClose[unix=true][kde=true]:pressed {image: url(:/close_kde_pressed_light.svg);}
+
 #mainPanel[window=pretty] QPushButton#toolButtonClose[unix=false]:hover
 {
     background-color: #d42b2b;
@@ -65,6 +72,9 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     image: url(:/restore_unix_pressed_light.svg);
 }
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[unix=true][kde=true] {image: url(:/restore_kde_normal_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[unix=true][kde=true]:hover {image: url(:/restore_kde_hover_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[unix=true][kde=true]:pressed {image: url(:/restore_kde_pressed_light.svg);}
 
 #mainPanel[window=pretty] QPushButton#toolButtonMaximize[class=min] {
     image: url(:/maximize_light.svg);
@@ -78,6 +88,9 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 #mainPanel[window=pretty] QPushButton#toolButtonMaximize[class=min][unix=true]:pressed {
     image: url(:/maximize_unix_pressed_light.svg);
 }
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true] {image: url(:/maximize_kde_normal_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:hover {image: url(:/maximize_kde_hover_light.svg);}
+#mainPanel[window=pretty] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:pressed {image: url(:/maximize_kde_pressed_light.svg);}
 
 #mainPanel[window=pretty] #labelTitle
 {

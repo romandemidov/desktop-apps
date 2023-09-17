@@ -74,6 +74,8 @@ QPushButton#toolButtonClose[unix=true]:pressed {
     background-color: transparent;
     image: url(:/close_unix_pressed.svg) center no-repeat;
 }
+QPushButton#toolButtonClose[unix=true][kde=true]:hover {image: url(:/close_kde_hover.svg) center no-repeat;}
+QPushButton#toolButtonClose[unix=true][kde=true]:pressed {image: url(:/close_kde_pressed.svg) center no-repeat;}
 
 QPushButton#toolButtonMaximize {
     image: url(:/restore.svg) center no-repeat;
@@ -92,6 +94,9 @@ QPushButton#toolButtonMaximize[unix=true]:pressed {
     background-color: transparent;
     image: url(:/restore_unix_pressed.svg) center no-repeat;
 }
+QPushButton#toolButtonMaximize[unix=true][kde=true] {image: url(:/restore_kde_normal.svg) center no-repeat;}
+QPushButton#toolButtonMaximize[unix=true][kde=true]:hover {image: url(:/restore_kde_hover.svg) center no-repeat;}
+QPushButton#toolButtonMaximize[unix=true][kde=true]:pressed {image: url(:/restore_kde_pressed.svg) center no-repeat;}
 
 QPushButton#toolButtonMaximize[class=min] {
     image: url(:/maximize.svg) center no-repeat;
@@ -110,6 +115,9 @@ QPushButton#toolButtonMaximize[class=min][unix=true]:pressed {
     background-color: transparent;
     image: url(:/maximize_unix_pressed.svg) center no-repeat;
 }
+QPushButton#toolButtonMaximize[class=min][unix=true][kde=true] {image: url(:/maximize_kde_normal.svg) center no-repeat;}
+QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:hover {image: url(:/maximize_kde_hover.svg) center no-repeat;}
+QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:pressed {image: url(:/maximize_kde_pressed.svg) center no-repeat;}
 
 QPushButton#toolButtonMinimize {
     image: url(:/minimize.svg) center no-repeat;
@@ -128,6 +136,9 @@ QPushButton#toolButtonMinimize[unix=true]:pressed {
     background-color: transparent;
     image: url(:/minimize_unix_pressed.svg) center no-repeat;
 }
+QPushButton#toolButtonMinimize[unix=true][kde=true] {image: url(:/minimize_kde_normal.svg) center no-repeat;}
+QPushButton#toolButtonMinimize[unix=true][kde=true]:hover {image: url(:/minimize_kde_hover.svg) center no-repeat;}
+QPushButton#toolButtonMinimize[unix=true][kde=true]:pressed {image: url(:/minimize_kde_pressed.svg) center no-repeat;}
 
 QPushButton#toolButtonClose {
     image: url(:/close.svg) center no-repeat;
@@ -136,6 +147,7 @@ QPushButton#toolButtonClose {
 QPushButton#toolButtonClose[unix=true] {
     image: url(:/close_unix_normal.svg) center no-repeat;
 }
+QPushButton#toolButtonClose[unix=true][kde=true] {image: url(:/close_kde_normal.svg) center no-repeat;}
 
 QPushButton#toolButtonClose[class=normal][unix=false]:hover,
     QPushButton#toolButtonClose[class=normal][unix=false]:pressed {
@@ -246,6 +258,9 @@ QPushButton#toolButtonDownload {max-width: 40px; width: 40px; max-height: 28px; 
     background-color: transparent;
     image: url(:/restore_unix_pressed_light.svg) center no-repeat;
 }
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[unix=true][kde=true] {image: url(:/restore_kde_normal_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[unix=true][kde=true]:hover {image: url(:/restore_kde_hover_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[unix=true][kde=true]:pressed {image: url(:/restore_kde_pressed_light.svg) center no-repeat;}
 
 #mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[class=min] {
     image: url(:/maximize_light.svg) center no-repeat;
@@ -264,6 +279,9 @@ QPushButton#toolButtonDownload {max-width: 40px; width: 40px; max-height: 28px; 
     background-color: transparent;
     image: url(:/maximize_unix_pressed_light.svg) center no-repeat;
 }
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true] {image: url(:/maximize_kde_normal_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:hover {image: url(:/maximize_kde_hover_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMaximize[class=min][unix=true][kde=true]:pressed {image: url(:/maximize_kde_pressed_light.svg) center no-repeat;}
 
 #mainPanel[uithemetype=dark] QPushButton#toolButtonMinimize {
     image: url(:/minimize_light.svg) center no-repeat;
@@ -282,6 +300,9 @@ QPushButton#toolButtonDownload {max-width: 40px; width: 40px; max-height: 28px; 
     background-color: transparent;
     image: url(:/minimize_unix_pressed_light.svg) center no-repeat;
 }
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMinimize[unix=true][kde=true] {image: url(:/minimize_kde_normal_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMinimize[unix=true][kde=true]:hover {image: url(:/minimize_kde_hover_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonMinimize[unix=true][kde=true]:pressed {image: url(:/minimize_kde_pressed_light.svg) center no-repeat;}
 
 #mainPanel[uithemetype=dark] QPushButton#toolButtonClose {
     image: url(:/close_light.svg) center no-repeat;
@@ -300,6 +321,9 @@ QPushButton#toolButtonDownload {max-width: 40px; width: 40px; max-height: 28px; 
     background-color: transparent;
     image: url(:/close_unix_pressed_light.svg) center no-repeat;
 }
+#mainPanel[uithemetype=dark] QPushButton#toolButtonClose[unix=true][kde=true] {image: url(:/close_kde_normal_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonClose[unix=true][kde=true]:hover {image: url(:/close_kde_hover_light.svg) center no-repeat;}
+#mainPanel[uithemetype=dark] QPushButton#toolButtonClose[unix=true][kde=true]:pressed {image: url(:/close_kde_pressed_light.svg) center no-repeat;}
 
 #mainPanel[uitheme=theme-dark] QPushButton#toolButtonMinimize:hover,
     #mainPanel[uitheme=theme-dark] QPushButton#toolButtonMaximize:hover,

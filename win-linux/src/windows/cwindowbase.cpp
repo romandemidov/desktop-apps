@@ -152,6 +152,8 @@ QPushButton* CWindowBase::createToolButton(QWidget * parent, const QString& name
 #ifdef __linux__
     btn->setMouseTracking(true);
     btn->setProperty("unix", true);
+    if (WindowHelper::getEnvInfo() == "KDE")
+        btn->setProperty("kde", true);
 #else
     btn->setProperty("unix", false);
 #endif
