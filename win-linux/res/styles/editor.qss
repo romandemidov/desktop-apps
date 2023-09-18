@@ -108,6 +108,11 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
     color: #e8e8e8;
 }
 
+/* 1.0x */
+#toolButtonMinimize[unix=true],
+#toolButtonClose[unix=true],
+#toolButtonMaximize[unix=true] {padding: 4px 0px 5px;}
+
 /* 1.25x */
 #mainPanel[zoom="1.25x"] #toolButtonMinimize,
 #mainPanel[zoom="1.25x"] #toolButtonClose,
@@ -115,6 +120,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 6px 0px 9px;
 }
+#mainPanel[zoom="1.25x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="1.25x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="1.25x"] #toolButtonMaximize[unix=true] {padding: 5px 0px 6px;}
+
 #mainPanel[zoom="1.25x"] #iconuser,
 #mainPanel[zoom="1.25x"] #labelTitle
 {
@@ -128,6 +137,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 8px 0px 11px;
 }
+#mainPanel[zoom="1.5x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="1.5x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="1.5x"] #toolButtonMaximize[unix=true] {padding: 6px 0px 7px;}
+
 #mainPanel[zoom="1.5x"] #iconuser,
 #mainPanel[zoom="1.5x"] #labelTitle
 {
@@ -141,6 +154,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 9px 0px 12px;
 }
+#mainPanel[zoom="1.75x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="1.75x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="1.75x"] #toolButtonMaximize[unix=true] {padding: 8px 0px 8px;}
+
 #mainPanel[zoom="1.75x"] #iconuser,
 #mainPanel[zoom="1.75x"] #labelTitle
 {
@@ -154,6 +171,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 10px 0px 14px;
 }
+#mainPanel[zoom="2x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="2x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="2x"] #toolButtonMaximize[unix=true] {padding: 9px 0px 9px;}
+
 #mainPanel[zoom="2x"] #iconuser,
 #mainPanel[zoom="2x"] #labelTitle
 {
@@ -167,6 +188,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 11px 0px 16px;
 }
+#mainPanel[zoom="2.25x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="2.25x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="2.25x"] #toolButtonMaximize[unix=true] {padding: 10px 0px 10px;}
+
 #mainPanel[zoom="2.25x"] #iconuser,
 #mainPanel[zoom="2.25x"] #labelTitle
 {
@@ -180,6 +205,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 13px 0px 18px;
 }
+#mainPanel[zoom="2.5x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="2.5x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="2.5x"] #toolButtonMaximize[unix=true] {padding: 11px 0px 11px;}
+
 #mainPanel[zoom="2.5x"] #iconuser,
 #mainPanel[zoom="2.5x"] #labelTitle
 {
@@ -193,6 +222,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 15px 0px 21px;
 }
+#mainPanel[zoom="3x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="3x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="3x"] #toolButtonMaximize[unix=true] {padding: 13px 0px 14px;}
+
 #mainPanel[zoom="3x"] #iconuser,
 #mainPanel[zoom="3x"] #labelTitle
 {
@@ -206,6 +239,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 18px 0px 25px;
 }
+#mainPanel[zoom="3.5x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="3.5x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="3.5x"] #toolButtonMaximize[unix=true] {padding: 15px 0px 16px;}
+
 #mainPanel[zoom="3.5x"] #iconuser,
 #mainPanel[zoom="3.5x"] #labelTitle
 {
@@ -219,6 +256,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 20px 0px 28px;
 }
+#mainPanel[zoom="4x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="4x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="4x"] #toolButtonMaximize[unix=true] {padding: 18px 0px 18px;}
+
 #mainPanel[zoom="4x"] #iconuser,
 #mainPanel[zoom="4x"] #labelTitle
 {
@@ -232,6 +273,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 23px 0px 32px;
 }
+#mainPanel[zoom="4.5x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="4.5x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="4.5x"] #toolButtonMaximize[unix=true] {padding: 20px 0px 20px;}
+
 #mainPanel[zoom="4.5x"] #iconuser,
 #mainPanel[zoom="4.5x"] #labelTitle
 {
@@ -245,6 +290,10 @@ QPushButton#toolButtonClose:pressed {background-color: #d75050;}
 {
     padding: 25px 0px 35px;
 }
+#mainPanel[zoom="5x"] #toolButtonMinimize[unix=true],
+#mainPanel[zoom="5x"] #toolButtonClose[unix=true],
+#mainPanel[zoom="5x"] #toolButtonMaximize[unix=true] {padding: 22px 0px 23px;}
+
 #mainPanel[zoom="5x"] #iconuser,
 #mainPanel[zoom="5x"] #labelTitle
 {
