@@ -140,7 +140,6 @@ namespace WindowHelper {
     };
 
 //    auto check_button_state(Qt::MouseButton b) -> bool;
-    auto initEnvInfo() -> void;
     auto getEnvInfo() -> QString;
     auto useGtkDialog() -> bool;
 #else
