@@ -806,7 +806,7 @@ std::wstring Utils::appUserName()
 
 namespace WindowHelper {
 #ifdef Q_OS_LINUX
-    CParentDisable::CParentDisable(QWidget* parent)
+    CParentDisable::CParentDisable(QWidget* &parent)
     {
         disable(parent);
     }
@@ -816,17 +816,19 @@ namespace WindowHelper {
         enable();
     }
 
-    void CParentDisable::disable(QWidget* parent)
+    void CParentDisable::disable(QWidget* &parent)
     {
         if (parent) {
             parent->setProperty("blocked", true);
-            QEventLoop loop;  // Fixed Cef rendering before reopening the dialog
-            QTimer::singleShot(60, &loop, SLOT(quit()));
-            loop.exec();
-            m_pChild = new QWidget(parent, Qt::FramelessWindowHint | Qt::SubWindow  | Qt::BypassWindowManagerHint);
+//            QEventLoop loop;  // Fixed Cef rendering before reopening the dialog
+//            QTimer::singleShot(60, &loop, SLOT(quit()));
+//            loop.exec();
+            m_pChild = new QWidget(parent, Qt::FramelessWindowHint | Qt::Tool /*| Qt::BypassWindowManagerHint*/);
             m_pChild->setAttribute(Qt::WA_TranslucentBackground);
-            m_pChild->setGeometry(0, 0, parent->width(), parent->height());
+            m_pChild->setWindowModality(Qt::ApplicationModal);
+            m_pChild->setGeometry(parent->geometry());
             m_pChild->show();
+            parent = m_pChild;
         }
     }
 
@@ -835,7 +837,7 @@ namespace WindowHelper {
         if ( m_pChild ) {
             if (m_pChild->parent())
                 m_pChild->parent()->setProperty("blocked", false);
-            m_pChild->deleteLater();
+            delete m_pChild, m_pChild = nullptr;
         }
     }
 
