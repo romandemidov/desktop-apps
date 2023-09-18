@@ -158,7 +158,7 @@ void CWindowPlatform::paintEvent(QPaintEvent *event)
 
     QPainter pnt(this);
     pnt.setRenderHint(QPainter::Antialiasing);
-    int d = 2 * (6 * m_dpiRatio);
+    int d = 2 * m_dpiRatio * (WindowHelper::getEnvInfo() == "KDE" ? 6 : 9);
     QPainterPath path;
     path.moveTo(width(), d/2);
     path.arcTo(width() - d, 0, d, d, 0, 90);

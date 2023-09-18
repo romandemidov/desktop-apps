@@ -49,7 +49,7 @@
 #ifdef _WIN32
 # define TITLEBTN_WIDTH     40
 #else
-# define TITLEBTN_WIDTH     (WindowHelper::getEnvInfo() == "KDE" ? 24 : 28)
+# define TITLEBTN_WIDTH     (WindowHelper::getEnvInfo() == "KDE" ? 24 : 32)
 #endif
 #define TITLE_HEIGHT        28
 
