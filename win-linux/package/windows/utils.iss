@@ -107,21 +107,15 @@ end;
 
 procedure CreateBatchFiles();
 var
-   i, count: Integer;
+   i: Integer;
    fileName: String;
-   names, lines, args: TArrayOfString;
+   names, lines: TArrayOfString;
 begin
-#ifdef _ONLYOFFICE
-   count := 4;
-#else
-   count := 3;
-#endif
-   names := ['new_word', 'new_cell', 'new_slide', 'new_form'];
-   args := ['--new:word', '--new:cell', '--new:slide', '--new:form'];
+   names := ['word', 'cell', 'slide'];
    SetArrayLength(lines, 1);
-   for i := 0 to count - 1 do begin
-     fileName := ExpandConstant('{app}\' + names[i] + '.bat');
-     lines[0] := ExpandConstant('start {#iconsExe} ' + args[i]);
+   for i := 0 to GetArrayLength(names) - 1 do begin
+     fileName := ExpandConstant('{app}\new_' + names[i] + '.bat');
+     lines[0] := ExpandConstant('start {#iconsExe} --new:' + names[i]);
      SaveStringsToFile(fileName, lines, False);
    end;
 end;

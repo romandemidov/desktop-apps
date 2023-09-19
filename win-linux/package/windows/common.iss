@@ -1021,9 +1021,6 @@ Name: {group}\{cm:Uninstall}; Filename: {uninstallexe}; WorkingDir: {app};
 Name: "{group}\{cm:extDOCX}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 14; Filename: "{app}\new_word.bat";
 Name: "{group}\{cm:extXLSX}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 15; Filename: "{app}\new_cell.bat";
 Name: "{group}\{cm:extPPTX}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 16; Filename: "{app}\new_slide.bat";
-#ifdef _ONLYOFFICE
-Name: "{group}\{cm:extDOCXF}"; IconFilename: "{app}\{#iconsExe}"; IconIndex: 17; Filename: "{app}\new_form.bat";
-#endif
 
 [Run]
 ;Filename: {app}\{#NAME_EXE_OUT}; Description: {cm:Launch,{#sAppName}}; Flags: postinstall nowait skipifsilent;
@@ -1054,6 +1051,3 @@ Type: filesandordirs; Name: {commonappdata}\{#APP_PATH}\*;  AfterInstall: Refres
 Type: files; Name: "{app}\new_word.bat"
 Type: files; Name: "{app}\new_cell.bat"
 Type: files; Name: "{app}\new_slide.bat"
-#ifdef _ONLYOFFICE
-Type: files; Name: "{app}\new_form.bat"
-#endif
