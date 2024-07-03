@@ -1,12 +1,13 @@
 name: Test1
 run-name: ${{ github.actor }} is testing
-on: 
-  push:
-    branches:
-      - 'hotfix/**'
-      - 'release/**'
+on: create
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Started"
+      - name: Check release or hotfix branch
+        if: (startsWith(github.ref, 'refs/heads/release/') ||
+             startsWith(github.ref, 'refs/heads/hotfix/'))
+        run: echo "Started release or hotfix"
+      - name: For all
+        run: echo "Started any"
