@@ -1,6 +1,10 @@
 name: Test1
 run-name: ${{ github.actor }} is testing
-on: create
+on: 
+  create:
+    branches:
+      - 'hotfix/**'
+      - 'release/**'
 jobs:
   Explore-GitHub-Actions:
     runs-on: ubuntu-latest
