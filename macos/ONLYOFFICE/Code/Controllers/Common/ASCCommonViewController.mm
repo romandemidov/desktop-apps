@@ -164,7 +164,6 @@
         
         // Create CEF event listener
         [ASCEventsController sharedInstance];
-        [ASCThemesController sharedInstance];
         
         [self setupTabControl];
         [self createStartPage];
@@ -442,18 +441,26 @@
 
     [[NSNotificationCenter defaultCenter] postNotificationName:CEFEventNameFullscreen
                                                         object:nil
-                                                      userInfo:@{@"fullscreen" : @(NO)}];
+                                                      userInfo:@{@"fullscreen" : @(NO),
+                                                                 @"terminate"  : @(YES)
+                                                               }];
 
+    NSMutableArray * locked_uuids = [NSMutableArray array];
     for (ASCTabView * tab in self.tabsControl.tabs) {
         if (tab.changed) {
             unsaved++;
         }
 
-        // Blockchain check
         if (NSCefView * cefView = [self cefViewWithTab:tab]) {
+            // Blockchain check
             if ([cefView checkCloudCryptoNeedBuild]) {
                 self.shouldTerminateApp = YES;
                 return NO;
+            } else {
+                if ([cefView isSaveLocked]) {
+                    unsaved++;
+                    [locked_uuids addObject:tab.uuid];
+                }
             }
         }
     }
@@ -478,7 +485,7 @@
             
             NSArray * tabs = [NSArray arrayWithArray:self.tabsControl.tabs];
             for (ASCTabView * tab in tabs) {
-                if (tab.changed) {
+                if (tab.changed || [locked_uuids containsObject:tab.uuid]) {
                     [self.tabsWithChanges addObject:tab];
                 } else {
                     [self.tabsControl removeTab:tab selected:NO];
@@ -700,33 +707,34 @@
 }
 
 - (void)requestSaveChangesForTab:(ASCTabView *)tab {
-    if (tab && tab.changed) {
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:NSLocalizedString(@"Save", nil)];
-        [alert addButtonWithTitle:NSLocalizedString(@"Don't Save", nil)];
-        [[alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)] setKeyEquivalent:@"\e"];
-        [alert setMessageText:[NSString stringWithFormat:NSLocalizedString(@"Do you want to save the changes made to the document \"%@\"?", nil), tab.title]];
-        [alert setInformativeText:NSLocalizedString(@"Your changes will be lost if you don’t save them.", nil)];
-        [alert setAlertStyle:NSAlertStyleWarning];
+    if (tab) {
+        NSCefView * cefView = [self cefViewWithTab:tab];
+        if (tab.changed || (cefView && [cefView isSaveLocked])) {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:NSLocalizedString(@"Save", nil)];
+            [alert addButtonWithTitle:NSLocalizedString(@"Don't Save", nil)];
+            [[alert addButtonWithTitle:NSLocalizedString(@"Cancel", nil)] setKeyEquivalent:@"\e"];
+            [alert setMessageText:[NSString stringWithFormat:NSLocalizedString(@"Do you want to save the changes made to the document \"%@\"?", nil), tab.title]];
+            [alert setInformativeText:NSLocalizedString(@"Your changes will be lost if you don’t save them.", nil)];
+            [alert setAlertStyle:NSAlertStyleWarning];
 
-        [self.tabsControl selectTab:tab];
+            [self.tabsControl selectTab:tab];
 
-        NSInteger returnCode = [alert runModalSheet];
+            NSInteger returnCode = [alert runModalSheet];
 
-        if(returnCode == NSAlertFirstButtonReturn) {
-            NSCefView * cefView = [self cefViewWithTab:tab];
+            if(returnCode == NSAlertFirstButtonReturn) {
+                tab.params[@"shouldClose"] = @(YES);
 
-            tab.params[@"shouldClose"] = @(YES);
-
-            if (cefView) {
-                NSEditorApi::CAscMenuEvent * pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_SAVE);
-                [cefView apply:pEvent];
+                if (cefView) {
+                    NSEditorApi::CAscMenuEvent * pEvent = new NSEditorApi::CAscMenuEvent(ASC_MENU_EVENT_TYPE_CEF_SAVE);
+                    [cefView apply:pEvent];
+                }
+            } else if (returnCode == NSAlertSecondButtonReturn) {
+                [self.tabsControl removeTab:tab];
+            } else if (returnCode == NSAlertThirdButtonReturn) {
+                self.shouldTerminateApp = NO;
+                self.shouldLogoutPortal = NO;
             }
-        } else if (returnCode == NSAlertSecondButtonReturn) {
-            [self.tabsControl removeTab:tab];
-        } else if (returnCode == NSAlertThirdButtonReturn) {
-            self.shouldTerminateApp = NO;
-            self.shouldLogoutPortal = NO;
         }
     }
 }
@@ -747,25 +755,28 @@
         NSMutableDictionary * params = [notification.userInfo mutableCopy];
 
         if ([params[@"action"] isEqualToNumber:@(ASCTabActionCreateLocalFileFromTemplate)]) {
-            NSOpenPanel * openPanel = [NSOpenPanel openPanel];
-            NSMutableArray * filter = [NSMutableArray array];
-
-            if ( [params[@"type"] isEqualToNumber:@((int)AscEditorType::etPresentation)] ) {
-                [filter addObjectsFromArray:@[@"potx", @"otp"]];
-            } else if ( [params[@"type"] isEqualToNumber:@((int)AscEditorType::etSpreadsheet)] ) {
-                [filter addObjectsFromArray:@[@"xltx", @"xltm", @"ots"]];
-            } else {
-                [filter addObjectsFromArray:@[@"dotx", @"ott"]];
+            if ( [params objectForKey:@"path"] or [params objectForKey:@"id"] ) {}
+            else {
+                NSOpenPanel * openPanel = [NSOpenPanel openPanel];
+                NSMutableArray * filter = [NSMutableArray array];
+                
+                if ( [params[@"type"] isEqualToNumber:@((int)AscEditorType::etPresentation)] ) {
+                    [filter addObjectsFromArray:@[@"potx", @"otp"]];
+                } else if ( [params[@"type"] isEqualToNumber:@((int)AscEditorType::etSpreadsheet)] ) {
+                    [filter addObjectsFromArray:@[@"xltx", @"xltm", @"ots"]];
+                } else {
+                    [filter addObjectsFromArray:@[@"dotx", @"ott"]];
+                }
+                
+                openPanel.canChooseDirectories = NO;
+                openPanel.allowsMultipleSelection = NO;
+                openPanel.canChooseFiles = YES;
+                openPanel.allowedFileTypes = filter;
+                
+                if ([openPanel runModal] == NSModalResponseOK) {
+                    [params setValue:[[openPanel URL] path] forKey:@"path"];
+                } else return;
             }
-
-            openPanel.canChooseDirectories = NO;
-            openPanel.allowsMultipleSelection = NO;
-            openPanel.canChooseFiles = YES;
-            openPanel.allowedFileTypes = filter;
-
-            if ([openPanel runModal] == NSModalResponseOK) {
-                [params setValue:[[openPanel URL] path] forKey:@"template"];
-            } else return;
         } else
         if ([params[@"action"] isEqualToNumber:@(ASCTabActionOpenLocalRecentFile)] ||
                 [params[@"action"] isEqualToNumber:@(ASCTabActionOpenLocalFile)])
@@ -834,12 +845,14 @@
 - (void)onCEFSave:(NSNotification *)notification {
     if (notification && notification.userInfo) {
         NSDictionary * params = (NSDictionary *)notification.userInfo;
-        NSString * viewId = params[@"viewId"];
         
-        ASCTabView * tab = [self.tabsControl tabWithUUID:viewId];
-        
-        if (tab && tab.params[@"shouldClose"] && [tab.params[@"shouldClose"] boolValue]) {
-            [self.tabsControl removeTab:tab];
+        if ( ![params[@"cancel"] boolValue] ) {
+            NSString * viewId = params[@"viewId"];
+            ASCTabView * tab = [self.tabsControl tabWithUUID:viewId];
+            
+            if (tab && tab.params[@"shouldClose"] && [tab.params[@"shouldClose"] boolValue]) {
+                [self.tabsControl removeTab:tab];
+            }
         }
     }
 }
@@ -879,8 +892,13 @@
         NSDictionary * params = (NSDictionary *)notification.userInfo;
 
         BOOL isFullscreen = [params[@"fullscreen"] boolValue];
-        int viewId = [params[@"viewId"] intValue];
-        ASCTabView * tab = [self tabViewWithId:viewId];
+        ASCTabView * tab= nil;
+        if ( [params objectForKey:@"viewId"] ) {
+            tab = [self tabViewWithId:[params[@"viewId"] intValue]];
+        } else if ( [params objectForKey:@"terminate"] and [params[@"terminate"] boolValue] ) {
+            if (self.tabsControl.tabs.count > 0)
+                tab = [self.tabsControl selectedTab];
+        }
 
         if ( tab ) {
             NSTabViewItem * item = [self.tabView tabViewItemAtIndex:[self.tabView indexOfTabViewItemWithIdentifier:tab.uuid]];
@@ -944,7 +962,8 @@
         if (eventData) {
             NSEditorApi::CAscKeyboardDown * pData = (NSEditorApi::CAscKeyboardDown *)[eventData pointerValue];
 
-            if ( pData->get_KeyCode() == 112 /*kVK_F1*/ && pData->get_IsShift() && pData->get_IsCtrl() ) {
+            int keyCode = pData->get_KeyCode();
+            if ( keyCode == 112 /*kVK_F1*/ && pData->get_IsShift() && pData->get_IsCtrl() ) {
                 NSOpenPanel * openPanel = [NSOpenPanel openPanel];
 
                 openPanel.canChooseDirectories = YES;
@@ -973,13 +992,24 @@
                         [alert runModal];
                     }
                 }];
-            } else if ( pData->get_KeyCode() == 9 ) {
+            } else if ( keyCode == 9 ) {
                 if ( pData->get_IsCtrl() ) {
                     if ( pData->get_IsShift() ) {
                         [self.tabsControl selectPreviouseTab];
                     } else {
                         [self.tabsControl selectNextTab];
                     }
+                }
+            } else if ( keyCode == 87 ) { // W
+                if ( pData->get_IsCommandMac() ) {
+                    ASCTabView * tab = [self.tabsControl selectedTab];
+                    if ( tab and [self tabs:self.tabsControl willRemovedTab:tab] ) {
+                        [self.tabsControl removeTab:tab];
+                    }
+                }
+            } else if ( keyCode == 81 ) { // Q
+                if ( pData->get_IsCommandMac() ) {
+                    [NSApp terminate:self];
                 }
             }
         }
@@ -1094,6 +1124,7 @@
         [filter addObjectsFromArray:[ASCConstants documents]];
         [filter addObjectsFromArray:[ASCConstants spreadsheets]];
         [filter addObjectsFromArray:[ASCConstants presentations]];
+//        [filter addObjectsFromArray:[ASCConstants draws]];
         
         openPanel.canChooseDirectories = NO;
         openPanel.allowsMultipleSelection = NO;
@@ -1309,6 +1340,7 @@
             };
             
             NSMutableArray * portalTabs = [NSMutableArray array];
+            NSMutableArray * saveLockedTabs = [NSMutableArray array];
             NSInteger unsaved = 0;
             
             for (ASCTabView * tab in self.tabsControl.tabs) {
@@ -1324,15 +1356,17 @@
                 }
                 
                 if ( _is_array_contains_url(portals, tabVirtualUrl) ) {
+                    NSCefView * cefView = [self cefViewWithTab:tab];
                     if ( isReload ) {
-                        if ( NSCefView * cefView = [self cefViewWithTab:tab] ) {
+                        if ( cefView ) {
                             [cefView reload];
                         }
                     } else {
                         [portalTabs addObject:tab];
                         
-                        if (tab.changed) {
+                        if (tab.changed || (cefView && [cefView isSaveLocked])) {
                             unsaved++;
+                            [saveLockedTabs addObject:tab.uuid];
                         }
                     }
                 }
@@ -1356,7 +1390,7 @@
                         // "Review Changes..." clicked
                         
                         for (ASCTabView * tab in portalTabs) {
-                            if (tab.changed) {
+                            if (tab.changed || [saveLockedTabs containsObject:tab.uuid]) {
                                 [self.tabsWithChanges addObject:tab];
                             } else {
                                 [self.tabsControl removeTab:tab selected:NO];
@@ -1455,8 +1489,11 @@
 
 - (void)onCEFFileInFinder:(NSNotification *)notification {
     if (notification && notification.userInfo) {
-        NSURL * fileUrl = [NSURL fileURLWithPath:notification.userInfo[@"path"]];
-        [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[fileUrl]];
+        NSString * info = notification.userInfo[@"info"];
+        if (NSDictionary * json = [info dictionary]) {
+            NSURL * fileUrl = [NSURL fileURLWithPath:json[@"path"]];
+            [[NSWorkspace sharedWorkspace] activateFileViewerSelectingURLs:@[fileUrl]];
+        }
     }
 }
 
@@ -1816,8 +1853,6 @@
             }
         }
 
-        [[ASCEditorJSVariables instance] setVariable:@"theme" withObject:@{@"id":theme}];
-        [[ASCEditorJSVariables instance] apply];
 
         [[ASCEditorJSVariables instance] setParameter:@"uitheme" withString:theme];
         [[ASCEditorJSVariables instance] applyParameters];
@@ -1917,7 +1952,7 @@
                 if (action == ASCTabActionCreateLocalFile ) {
                     [cefView createFileWithName:docName type:docType];
                 } else {
-                    [cefView createFileWithNameFromTemplate:docName tplpath:tab.params[@"template"]];
+                    [cefView createFileWithNameFromTemplate:docName tplpath:tab.params[@"path"]];
                 }
 
                 break;
@@ -1989,7 +2024,7 @@
             return NO;
         }
 
-        if (tab.changed) {
+        if (tab.changed || (cefView && [cefView isSaveLocked])) {
             [self requestSaveChangesForTab:tab];
             return NO;
         }

@@ -32,43 +32,39 @@
 
 #include "windows/ceditorwindow.h"
 #include "windows/ceditorwindow_p.h"
+#include "iconfactory.h"
 #include <QApplication>
 #include <clangater.h>
 
 #define CAPTURED_WINDOW_OFFSET_X  (6*TOOLBTN_WIDTH + 10) * m_dpiRatio
 #define CAPTURED_WINDOW_OFFSET_Y  15 * m_dpiRatio
+#define SKIP_EVENTS_QUEUE(callback) QTimer::singleShot(0, this, callback)
 
 
 CEditorWindow::CEditorWindow(const QRect& rect, CTabPanel* panel)
     : CWindowPlatform(rect)
+    , CScalingWrapper(m_dpiRatio)
     , d_ptr(new CEditorWindowPrivate(this))
 {
-    setObjectName("editorWindow");
-    setWindowTitle("_");
-    d_ptr.get()->init(panel);
-    m_pMainPanel = createMainPanel(this, d_ptr->panel()->data()->title());
-    setCentralWidget(m_pMainPanel);
-#ifdef __linux__
-    if (isCustomWindowStyle()) {
-        CX11Decoration::setTitleWidget(m_boxTitleBtns);
-        m_pMainPanel->setMouseTracking(true);
-        setMouseTracking(true);
+    init(panel);
+}
+
+CEditorWindow::CEditorWindow(const QRect &rect, const COpenOptions &opts)
+    : CWindowPlatform(rect)
+    , CScalingWrapper(m_dpiRatio)
+{
+    if (CTabPanel *panel = CEditorTools::createEditorPanel(opts, this)) {
+        d_ptr = std::unique_ptr<CEditorWindowPrivate>(new CEditorWindowPrivate(this));
+        CAscTabData * panel_data = panel->data();
+        QRegularExpression re("^ascdesktop:\\/\\/(?:compare|merge|template)");
+        if ( re.match(QString::fromStdWString(panel_data->url())).hasMatch() ) {
+            panel_data->setIsLocal(true);
+            panel_data->setUrl("");
+        }
+        init(panel);
+    } else {
+        throw std::invalid_argument("Cannot create panel");
     }
-#else
-    recalculatePlaces();
-#endif
-
-    QTimer::singleShot(0, this, [=]{m_pMainView->show();});
-    AscAppManager::bindReceiver(panel->cef()->GetId(), d_ptr.get());
-    AscAppManager::sendCommandTo(panel->cef(), L"editor:config", L"request");
-
-    if (d_ptr->fillformMode() || d_ptr->panel()->data()->hasError())
-        d_ptr->ffWindowCustomize();
-
-    QTimer::singleShot(200, this, [=]() {
-        if (d_ptr->canExtendTitle())
-            setWindowTitle(panel->data()->title());
-    });
 }
 
 CEditorWindow::~CEditorWindow()
@@ -77,6 +73,15 @@ CEditorWindow::~CEditorWindow()
 }
 
 /** Public **/
+
+CEditorWindow* CEditorWindow::create(const QRect &rect, const COpenOptions &opts)
+{
+    CEditorWindow * editor_win = nullptr;
+    try {
+        editor_win = new CEditorWindow(rect, opts);
+    } catch (const std::exception&) {}
+    return editor_win;
+}
 
 const QObject * CEditorWindow::receiver()
 {
@@ -111,7 +116,7 @@ int CEditorWindow::closeWindow()
     CTabPanel * panel = d_ptr.get()->panel();
 
     int _reply = MODAL_RESULT_YES;
-    if ( panel->data()->hasChanges() && !panel->data()->closed() ) {
+    if ( (panel->data()->hasChanges() || panel->hasUncommittedChanges()) && !panel->data()->closed() ) {
         if (windowState() == Qt::WindowMinimized)
             showNormal();
 
@@ -151,6 +156,12 @@ bool CEditorWindow::closed() const
     return d_ptr.get()->panel()->data()->closed();
 }
 
+bool CEditorWindow::modified() const
+{
+    CAscTabData *doc = d_ptr->panel()->data();
+    return (doc->hasChanges() || d_ptr->panel()->hasUncommittedChanges()) && !doc->closed();
+}
+
 bool CEditorWindow::holdView(const std::wstring& portal) const
 {
     return qobject_cast<CTabPanel *>(m_pMainView)->data()->url().find(portal) != std::wstring::npos;
@@ -175,6 +186,10 @@ bool CEditorWindow::holdView(int id) const
 void CEditorWindow::applyTheme(const std::wstring& theme)
 {
     d_ptr->changeTheme(theme);
+    if (m_pMenu) {
+        m_pMenu->setSectionIcon(CMenu::ActionShowInFolder, IconFactory::icon(IconFactory::Browse, SMALL_ICON * m_dpiRatio));
+        // m_pMenu->setSectionIcon(CMenu::ActionPinToTab, IconFactory::icon(IconFactory::Pin, SMALL_ICON * m_dpiRatio));
+    }
 }
 
 /** Private **/
@@ -217,6 +232,7 @@ QWidget * CEditorWindow::createMainPanel(QWidget * parent, const QString& title)
         }
 
         d_ptr->customizeTitleLabel();
+        setMenu();
     } else {
 //        QLinearGradient gradient(centralWidget->rect().topLeft(), QPoint(centralWidget->rect().left(), 29));
 //        gradient.setColorAt(0, QColor("#eee"));
@@ -252,6 +268,68 @@ QWidget * CEditorWindow::createMainPanel(QWidget * parent, const QString& title)
         mainGridLayout->addWidget(m_boxTitleBtns, 1, 1, Qt::AlignTop);
     }
     return mainPanel;
+}
+
+CMenu* CEditorWindow::menu()
+{
+    return m_pMenu;
+}
+
+void CEditorWindow::init(CTabPanel *panel)
+{
+    setObjectName("editorWindow");
+    setWindowTitle("_");
+    d_ptr.get()->init(panel);
+    m_pMainPanel = createMainPanel(this, d_ptr->panel()->data()->title());
+    setCentralWidget(m_pMainPanel);
+#ifdef __linux__
+    if (isCustomWindowStyle()) {
+        CX11Decoration::setTitleWidget(m_boxTitleBtns);
+        m_pMainPanel->setMouseTracking(true);
+        setMouseTracking(true);
+    }
+#else
+    recalculatePlaces();
+#endif
+
+    QTimer::singleShot(0, this, [=]{m_pMainView->show();});
+    AscAppManager::bindReceiver(panel->cef()->GetId(), d_ptr.get());
+    AscAppManager::sendCommandTo(panel->cef(), L"editor:config", L"request");
+
+    if (d_ptr->fillformMode() || d_ptr->panel()->data()->hasError())
+        d_ptr->ffWindowCustomize();
+
+    QTimer::singleShot(200, this, [=]() {
+        if (d_ptr->canExtendTitle())
+            setWindowTitle(panel->data()->title());
+    });
+}
+
+void CEditorWindow::setMenu()
+{
+    m_pMenu = new CMenu(m_boxTitleBtns);
+    QAction* actClose = m_pMenu->addSection(CMenu::ActionClose);
+    connect(actClose, &QAction::triggered, this, [=]() {
+            onCloseEvent();
+        }, Qt::QueuedConnection);
+
+    m_pMenu->addSeparator();
+    QAction *actShowInFolder = m_pMenu->addSection(CMenu::ActionShowInFolder);
+    actShowInFolder->setIcon(IconFactory::icon(IconFactory::Browse, SMALL_ICON * m_dpiRatio));
+    actShowInFolder->setEnabled(d_ptr->panel()->data()->isLocal() && !d_ptr->panel()->data()->url().empty());
+    connect(actShowInFolder, &QAction::triggered, this, [=]() {
+            if (CTabPanel *panel = d_ptr->panel())
+                Utils::openFileLocation(QString::fromStdWString(panel->data()->url()));
+        }, Qt::QueuedConnection);
+    m_pMenu->addSeparator();
+
+    QAction *actPinToTab = m_pMenu->addSection(CMenu::ActionPinToTab);
+    // actPinToTab->setIcon(IconFactory::icon(IconFactory::Pin, SMALL_ICON * m_dpiRatio));
+    connect(actPinToTab, &QAction::triggered, this, [=]() {
+            hide();
+            AscAppManager::gotoMainWindow();
+            AscAppManager::pinWindowToTab(this, 0);
+        }, Qt::QueuedConnection);
 }
 
 CTabPanel * CEditorWindow::mainView() const
@@ -315,6 +393,8 @@ void CEditorWindow::onMoveEvent(const QRect&)
 void CEditorWindow::captureMouse()
 {
 #ifdef _WIN32
+    ReleaseCapture();
+    PROCESSEVENTS();
     POINT cursor{0,0};
     if (GetCursorPos(&cursor)) {
 //        QRect _g{geometry()};
@@ -325,8 +405,8 @@ void CEditorWindow::captureMouse()
 //        if ( cursor.x > _g.right() - dpiCorr(150) )
 //            _window_offset_x = _g.right() - dpiCorr(150);
 //        else _window_offset_x = cursor.x - _g.x();
-        move(cursor.x - CAPTURED_WINDOW_OFFSET_X, cursor.y - CAPTURED_WINDOW_OFFSET_Y);
-        ReleaseCapture();
+        SetWindowPos((HWND)winId(), NULL, cursor.x - CAPTURED_WINDOW_OFFSET_X, cursor.y - CAPTURED_WINDOW_OFFSET_Y,
+                        0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
         PostMessage((HWND)winId(), WM_NCLBUTTONDOWN, HTCAPTION, MAKELPARAM(cursor.x, cursor.y));
     }
 #else
@@ -359,7 +439,9 @@ void CEditorWindow::onCloseEvent()
 {
     if ( m_pMainView ) {
         if ( closeWindow() == MODAL_RESULT_YES ) {
-            CWindowBase::saveWindowState();
+            AscEditorType editorType = d_ptr->panel()->data()->contentType();
+            QString baseKey = (editorType == AscEditorType::etUndefined) ? "" : "EditorsGeometry/" + QString::number(int(editorType)) + "/";
+            CWindowBase::saveWindowState(baseKey);
             hide();
         }
     }
@@ -391,12 +473,31 @@ bool CEditorWindow::event(QEvent * event)
         QMoveEvent * _e = static_cast<QMoveEvent *>(event);
         onMoveEvent(QRect(_e->pos(), QSize(1,1)));
     }
+    else
+    if (event->type() == QEvent::ContextMenu) {
+        if (m_pMenu) {
+            QContextMenuEvent* cm_event = static_cast<QContextMenuEvent*>(event);
+            QPoint pos = mapToGlobal(cm_event->pos());
+            QWidget *wgt = qApp->widgetAt(pos);
+            if (wgt && (wgt == m_labelTitle || wgt->objectName() == "boxtitlelabel")) {
+                SKIP_EVENTS_QUEUE([=]() {
+                    m_pMenu->exec(pos);
+                });
+                return true;
+            }
+        }
+    } else
+    if (event->type() == UM_ENDMOVE) {
+        if (CMainWindow *w = AscAppManager::mainWindow())
+            w->tabWidget()->setTabPinAllowed();
+    }
     return CWindowPlatform::event(event);
 }
 
 void CEditorWindow::setScreenScalingFactor(double factor, bool resize)
 {
     CWindowPlatform::setScreenScalingFactor(factor, resize);
+    CScalingWrapper::updateScalingFactor(factor);
     if (isCustomWindowStyle()) {
         m_boxTitleBtns->setFixedHeight(int(TOOLBTN_HEIGHT * factor));
         if (m_pSpacer) {
@@ -417,6 +518,10 @@ void CEditorWindow::setScreenScalingFactor(double factor, bool resize)
     d_ptr.get()->onScreenScalingFactor(factor);
     recalculatePlaces();
     updateTitleCaption();
+    if (m_pMenu) {
+        m_pMenu->setSectionIcon(CMenu::ActionShowInFolder, IconFactory::icon(IconFactory::Browse, SMALL_ICON * m_dpiRatio));
+        // m_pMenu->setSectionIcon(CMenu::ActionPinToTab, IconFactory::icon(IconFactory::Pin, SMALL_ICON * m_dpiRatio));
+    }
 }
 
 void CEditorWindow::onClickButtonHome()

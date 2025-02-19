@@ -73,6 +73,10 @@ CWindowBase::CWindowBase(const QRect& rect)
 {
     setWindowIcon(Utils::appIcon());
     m_window_rect = startRect(rect, m_dpiRatio);
+    setMinimumSize(WINDOW_MIN_WIDTH * m_dpiRatio, WINDOW_MIN_HEIGHT * m_dpiRatio);
+#ifdef __linux__
+    setGeometry(m_window_rect); // for Windows is set in CWindowPlatform
+#endif
 }
 
 CWindowBase::~CWindowBase()
@@ -95,7 +99,11 @@ QSize CWindowBase::expectedContentSize(const QRect &rc, bool extended)
 {
     double dpi = 1.0;
     QRect win_rc = startRect(rc, dpi);
+#ifdef _WIN32
+    int brd = Utils::getWinVersion() < Utils::WinVer::Win10 ? MAIN_WINDOW_BORDER_WIDTH * dpi : 0;
+#else
     int brd = MAIN_WINDOW_BORDER_WIDTH * dpi;
+#endif
     return win_rc.adjusted(brd, extended ? brd : TITLE_HEIGHT * dpi + brd, -brd, -brd).size();
 }
 
@@ -118,23 +126,12 @@ void CWindowBase::updateScaling(bool resize)
     }
 }
 
-void CWindowBase::setWindowColors(const QColor& background, const QColor& border)
-{
-    m_brdColor = border;
-    setStyleSheet(QString("QMainWindow{border:1px solid %1;"
-#ifdef _WIN32
-                          "border-bottom:2px solid %1;"
-#endif
-                          "background-color: %2;"
-                          "}").arg(border.name(), background.name()));
-}
-
 void CWindowBase::applyTheme(const std::wstring& theme)
 {
     Q_UNUSED(theme)
     QColor background = GetColorByRole(ecrWindowBackground);
     QColor border = GetColorByRole(ecrWindowBorder);
-    setWindowColors(background, border);
+    setWindowColors(background, border, isActiveWindow());
 }
 
 /** Protected **/
@@ -145,7 +142,7 @@ QPushButton* CWindowBase::createToolButton(QWidget * parent, const QString& name
     btn->setObjectName(name);
     btn->setProperty("class", "normal");
     btn->setProperty("act", "tool");
-    btn->setFixedSize(int(TITLEBTN_WIDTH*m_dpiRatio), int(TOOLBTN_HEIGHT*m_dpiRatio));
+    btn->setFixedSize(int(TITLEBTN_WIDTH*m_dpiRatio), int(m_toolbtn_height * m_dpiRatio));
 #ifdef __linux__
     btn->setMouseTracking(true);
     btn->setProperty("unix", true);
@@ -171,6 +168,7 @@ QWidget* CWindowBase::createTopPanel(QWidget *parent)
     layoutBtns->setContentsMargins(0, 0, 0, 0);
     layoutBtns->setSpacing(int(1*m_dpiRatio));
     layoutBtns->addStretch();
+    layoutBtns->setAlignment(Qt::AlignTop);
     _boxTitleBtns->setLayout(layoutBtns);
     if (isCustomWindowStyle()) {
         const QString names[3] = {"toolButtonMinimize", "toolButtonMaximize", "toolButtonClose"};
@@ -187,15 +185,15 @@ QWidget* CWindowBase::createTopPanel(QWidget *parent)
     return _boxTitleBtns;
 }
 
-void CWindowBase::saveWindowState()
+void CWindowBase::saveWindowState(const QString &baseKey)
 {
     if (!windowState().testFlag(Qt::WindowFullScreen)) {
         GET_REGISTRY_USER(reg_user)
-        reg_user.setValue("position", normalGeometry());
+        reg_user.setValue(baseKey + "position", normalGeometry());
         if (windowState().testFlag(Qt::WindowMaximized)) {
-            reg_user.setValue("maximized", true);
+            reg_user.setValue(baseKey + "maximized", true);
         } else {
-            reg_user.remove("maximized");
+            reg_user.remove(baseKey + "maximized");
         }
     }
 }
@@ -236,7 +234,7 @@ bool CWindowBase::event(QEvent *event)
 void CWindowBase::setScreenScalingFactor(double factor, bool resize)
 {
     if (resize && !isMaximized()) {
-        setMinimumSize(0,0);
+        setMinimumSize(WINDOW_MIN_WIDTH * factor, WINDOW_MIN_HEIGHT * factor);
         double change_factor = factor / m_dpiRatio;
         QRect _src_rect = geometry();
         double dest_width_change = _src_rect.width() * (1 - change_factor);
@@ -249,7 +247,7 @@ void CWindowBase::setScreenScalingFactor(double factor, bool resize)
         pLayoutBtns->setSpacing(int(1 * m_dpiRatio));
         if (isCustomWindowStyle()) {
             pLayoutBtns->setContentsMargins(0, 0, 0, 0);
-            QSize small_btn_size(int(TITLEBTN_WIDTH*m_dpiRatio), int(TOOLBTN_HEIGHT*m_dpiRatio));
+            QSize small_btn_size(int(TITLEBTN_WIDTH*m_dpiRatio), int(m_toolbtn_height * m_dpiRatio));
             foreach (auto pBtn, m_pTopButtons)
                 pBtn->setFixedSize(small_btn_size);
         }
@@ -298,7 +296,6 @@ void CWindowBase::showEvent(QShowEvent *event)
     QMainWindow::showEvent(event);
     if (!m_windowActivated) {
         m_windowActivated = true;
-        setGeometry(m_window_rect);
         adjustGeometry();
         applyTheme(GetCurrentTheme().id());
     }

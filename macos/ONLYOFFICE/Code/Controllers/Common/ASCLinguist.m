@@ -49,11 +49,7 @@ static BOOL uiLayoutDirectionRTL = NO;
     [[NSUserDefaults standardUserDefaults] setObject:[ASCLinguist appLanguageCode] forKey:@"AppleLocale"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 
-//    bool l = [NSLocale characterDirectionForLanguage:[ASCLinguist appLanguageCode]] == NSLocaleLanguageDirectionRightToLeft;
-    NSString * direction = [[NSUserDefaults standardUserDefaults] objectForKey:ASCUserUILayoutDirection];
-    if ( direction != nil )
-        uiLayoutDirectionRTL = [direction isEqualToString:@"rtl"];
-    
+    uiLayoutDirectionRTL = [NSLocale characterDirectionForLanguage:[ASCLinguist appLanguageCode]] == NSLocaleLanguageDirectionRightToLeft;
     if ( uiLayoutDirectionRTL ) {
         [[NSUserDefaults standardUserDefaults] setObject:@"YES" forKey:@"AppleTextDirection"];
         [[NSUserDefaults standardUserDefaults] setObject:@"YES" forKey:@"NSForceRightToLeftWritingDirection"];
@@ -86,64 +82,59 @@ static BOOL uiLayoutDirectionRTL = NO;
     [[NSUserDefaults standardUserDefaults] synchronize];
 }
 
-+ (void)setUILayoutDirectionRtl:(BOOL)value {
-    if ( value )
-        [[NSUserDefaults standardUserDefaults] setObject:@"rtl" forKey:ASCUserUILayoutDirection];
-    else [[NSUserDefaults standardUserDefaults] removeObjectForKey:ASCUserUILayoutDirection];
-
-    [[NSUserDefaults standardUserDefaults] synchronize];
-}
-
 + (BOOL)isUILayoutDirectionRtl {
     return uiLayoutDirectionRTL;
 }
 
 + (NSDictionary *)availableLanguages {
     return @{
-        @"en": @"English",
-        @"ru": @"Русский",
-        @"de": @"Deutsch",
-        @"fr": @"Français",
-        @"es": @"Español",
-        @"it": @"Italiano",
-        @"pt-BR": @"Português Brasileiro",
-        @"pt-PT": @"Português (Portugal)",
-        @"zh-CN": @"简体中文",
-        @"zh-TW": @"繁體中文",
-        @"sk-SK": @"Slovenčina",
-        @"cs-CZ": @"Čeština",
-        @"pl-PL": @"Polski",
-        @"ca-ES": @"Catalan",
-        @"da-DK": @"Dansk",
-        @"el-GR": @"Ελληνικά",
+        @"en-US": @{@"name": @"English (United States)", @"enname": @""},
+        @"en-GB": @{@"name": @"English (United Kingdom)", @"enname": @""},
+        @"ru": @{@"name": @"Русский", @"enname": @"Russian"},
+        @"de": @{@"name": @"Deutsch", @"enname": @"German"},
+        @"fr": @{@"name": @"Français", @"enname": @"French"},
+        @"es": @{@"name": @"Español", @"enname": @"Spanish"},
+        @"it": @{@"name": @"Italiano", @"enname": @"Italian"},
+        @"pt-BR": @{@"name": @"Português Brasileiro", @"enname": @"Portuguese (Brazil)"},
+        @"pt-PT": @{@"name": @"Português (Portugal)", @"enname": @"Portuguese (Portugal)"},
+        @"zh-CN": @{@"name": @"简体中文", @"enname": @"Chinese (Simplified)"},
+        @"zh-TW": @{@"name": @"繁體中文", @"enname": @"Chinese (Traditional)"},
+        @"sk-SK": @{@"name": @"Slovenčina", @"enname": @"Slovak"},
+        @"cs-CZ": @{@"name": @"Čeština", @"enname": @"Czech"},
+        @"pl-PL": @{@"name": @"Polski", @"enname":@"Polish"},
+        @"ca-ES": @{@"name": @"Catalan", @"enname": @"Catalan"},
+        @"da-DK": @{@"name": @"Dansk", @"enname": @"Danish"},
+        @"el-GR": @{@"name": @"Ελληνικά", @"enname": @"Greek"},
         // @"et-EE": @"Eesti",
-        @"fi-FI": @"Suomi",
+        @"fi-FI": @{@"name": @"Suomi", @"enname": @"Finnish"},
         // @"ga-IE": @"Gaeilge",
         // @"hi-IN": @"हिन्दी",
         // @"hr-HR": @"Hrvatska",
-        @"hu-HU": @"Magyar",
-        @"hy-AM": @"Հայերեն",
-        @"id-ID": @"Indonesian",
-        @"no": @"Norsk",
-        @"ro-RO": @"Romanian",
-        @"sl-SI": @"Slovene",
-        @"sv-SE": @"Svenska",
-        @"sr-Latn-RS": @"Srpski (Latin)",
-        @"sr-Cyrl-RS": @"Српски (ћирилица)",
-        @"tr-TR": @"Türkçe",
-        @"ja-JP": @"日本語",
-        @"ko-KR": @"한국어",
-        @"bg-BG": @"Български",
-        @"nl-NL": @"Nederlands",
-        @"vi-VN": @"Tiếng Việt",
-        @"lv-LV": @"Latviešu valoda",
+        @"hu-HU": @{@"name": @"Magyar", @"enname": @"Hungarian"},
+        @"hy-AM": @{@"name": @"Հայերեն", @"enname": @"Armenian"},
+        @"id-ID": @{@"name": @"Indonesian", @"enname": @"Indonesian"},
+        @"no-NO": @{@"name": @"Norsk", @"enname": @"Norwegian"},
+        @"ro-RO": @{@"name": @"Romanian", @"enname": @"Romanian"},
+        @"sl-SI": @{@"name": @"Slovene", @"enname": @"Slovenian"},
+        @"sv-SE": @{@"name": @"Svenska", @"enname": @"Swedish"},
+        @"sr-Latn-RS": @{@"name": @"Srpski (Latin)", @"enname": @"Serbian (Latin)"},
+        @"sr-Cyrl-RS": @{@"name": @"Српски (ћирилица)", @"enname": @"Serbian (Cyrillic)"},
+        @"tr-TR": @{@"name": @"Türkçe", @"enname": @"Turkish"},
+        @"ja-JP": @{@"name": @"日本語", @"enname": @"Japanese"},
+        @"ko-KR": @{@"name": @"한국어", @"enname": @"Korean"},
+        @"bg-BG": @{@"name": @"Български", @"enname": @"Bulgarian"},
+        @"nl-NL": @{@"name": @"Nederlands", @"enname": @"Dutch"},
+        @"vi-VN": @{@"name": @"Tiếng Việt", @"enname": @"Vietnamese"},
+        @"lv-LV": @{@"name": @"Latviešu valoda", @"enname": @"Latvian"},
         // @"lt-LT": @"Lietuvių kalba",
-        @"be-BY": @"Беларуская мова",
-        @"uk-UA": @"Украї́нська мо́ва",
-        @"lo-LA": @"ພາສາລາວ",
-        @"gl-ES": @"Galego",
-        @"si-LK": @"සිංහල",
-        @"ar-SA": @"اَلْعَرَبِيَّة"
+        @"be-BY": @{@"name": @"Беларуская мова", @"enname": @"Belarusian"},
+        @"uk-UA": @{@"name": @"Украї́нська мо́ва", @"enname": @"Ukrainian"},
+        @"lo-LA": @{@"name": @"ພາສາລາວ", @"enname": @"Lao"},
+        @"gl-ES": @{@"name": @"Galego", @"enname": @"Galego"},
+        @"si-LK": @{@"name": @"සිංහල", @"enname": @"Sinhala (Sri Lanka)"},
+        @"ar-SA": @{@"name": @"اَلْعَرَبِيَّة", @"enname": @"Arabic"},
+        @"sq-AL": @{@"name": @"Shqip", @"enname": @"Albanian"},
+        @"he-IL": @{@"name": @"עברית", @"enname": @"Hebrew"}
     };
 }
 

@@ -52,12 +52,12 @@ using namespace std;
  *
 */
 
-template <class T> class VPtr
-{
-public:
-    static T * asPtr(QVariant v) {return  (T *) v.value<void *>();}
-    static QVariant asQVariant(T * ptr){return qVariantFromValue((void *) ptr);}
-};
+//template <class T> class VPtr
+//{
+//public:
+//    static T * asPtr(QVariant v) {return  (T *) v.value<void *>();}
+//    static QVariant asQVariant(T * ptr){return qVariantFromValue((void *) ptr);}
+//};
 
 
 /*
@@ -135,12 +135,13 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
     , m_widthParams({{100, 135, 9}, 68, 3, 0, WINDOW_TITLE_MIN_WIDTH, 140, 0})
     , m_defWidthParams(m_widthParams)
     , m_isCustomStyle(true)
+    , m_isTabPinAllowed(true)
 //    , m_tabIconSize(16, 16)
     , m_pBar(_pBar)
 {
     m_pBar->setObjectName("asc_editors_tabbar");
     setProperty("active", false);
-    setProperty("empty", true);
+    // setProperty("empty", true);
     m_pBar->setProperty("active", false);
 
     static int _dropedindex = -1;
@@ -156,12 +157,13 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
 
         const CTabPanel * _panel = panel(index);
 
-        if ( _panel->data()->viewType() == cvwtEditor ) {
+        if ( _panel && _panel->data()->viewType() == cvwtEditor ) {
             CTabUndockEvent event(index);
             QObject * obj = qobject_cast<QObject*>(&AscAppManager::getInstance());
             if ( QApplication::sendEvent(obj, &event) && event.isAccepted() ) {
                 _dropedindex = index;
                 accept = true;
+                m_isTabPinAllowed = false;
 
                 QTimer::singleShot(0, this, [=]() {
                     if (widget(index)) {
@@ -175,7 +177,7 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
         QTimer::singleShot(0, this, [=]() {
             setCurrentIndex(index);
         });
-        if (old_index > -1)
+        if (old_index > -1 && panel(old_index))
             AscAppManager::sendCommandTo(panel(old_index)->cef(), L"althints:show", L"false");
     };
     QObject::connect(m_pBar, &CTabBar::tabBarClicked, this, [=](int index) {
@@ -188,8 +190,24 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
         if (from < 0 || from >= count() || to < 0 || to >= count() || from == to)
             return;
         auto wgt = widget(from);
+        blockSignals(true);
         removeWidget(wgt);
         insertWidget(to, wgt);
+        if (from < m_pBar->currentIndex()) {
+            if (to >= m_pBar->currentIndex()) {
+                if (m_pBar->currentIndex() - 1 != currentIndex())
+                    QStackedWidget::setCurrentIndex(m_pBar->currentIndex() - 1);
+            }
+        } else
+        if (from == m_pBar->currentIndex()) {
+            QStackedWidget::setCurrentIndex(to);
+        } else {
+            if (to <= m_pBar->currentIndex()) {
+                if (m_pBar->currentIndex() + 1 != currentIndex())
+                    QStackedWidget::setCurrentIndex(m_pBar->currentIndex() + 1);
+            }
+        }
+        blockSignals(false);
     });
     QObject::connect(m_pBar, &CTabBar::tabsSwapped, this, [=](int from, int to) {
         if (from == to || !indexIsValid(from) || !indexIsValid(to))
@@ -213,7 +231,7 @@ CAscTabWidget::CAscTabWidget(QWidget *parent, CTabBar *_pBar)
 CTabPanel * CAscTabWidget::panel(int index) const
 {
     QWidget * _w = widget(index);
-    return _w->children().count() ? static_cast<CTabPanel *>(_w->findChild<CTabPanel*>()) : nullptr;
+    return _w && _w->children().count() ? static_cast<CTabPanel *>(_w->findChild<CTabPanel*>()) : nullptr;
 }
 
 CTabBar *CAscTabWidget::tabBar() const
@@ -226,7 +244,7 @@ int CAscTabWidget::addEditor(const COpenOptions& opts)
     if ( opts.url.isEmpty() && opts.srctype != etNewFile )
         return -1;
 
-    setProperty("empty", false);
+    // setProperty("empty", false);
 
     int file_format = 0;
     if (opts.srctype == etLocalFile) {
@@ -289,8 +307,20 @@ void CAscTabWidget::closeEditor(int i, bool m, bool r)
         CTabPanel * view = panel(i);
         CAscTabData * doc = view->data();
 
-        if (doc && (!m || !doc->hasChanges())) {
+        if (doc && (!m || (!doc->hasChanges() && !view->hasUncommittedChanges()))) {
             doc->close();
+            if (i == currentIndex()) {
+                int last = count() - 1;
+                if (i == last) {
+                    if (last == 0) {
+                        AscAppManager::getInstance().mainWindow()->toggleButtonMain(true);
+                    } else {
+                        QStackedWidget::setCurrentIndex(last - 1);
+                    }
+                } else {
+                    QStackedWidget::setCurrentIndex(i + 1);
+                }
+            }
             AscAppManager::getInstance().DestroyCefView(view->cef()->GetId());
 
 //            RELEASEOBJECT(view)
@@ -360,7 +390,7 @@ int CAscTabWidget::addPortal(const QString& url, const QString& name, const QStr
 {
     if ( url.isEmpty() ) return -1;
 
-    setProperty("empty", false);
+    // setProperty("empty", false);
 
     QString args, _url = url;
     if ( provider == "onlyoffice" && !_url.contains(QRegularExpression("desktop=true")) )
@@ -406,7 +436,7 @@ int CAscTabWidget::addOAuthPortal(const QString& portal, const QString& type, co
 {
     if ( service.isEmpty() || !type.contains(QRegularExpression("sso|outer")) ) return -1;
 
-    setProperty("empty", false);
+    // setProperty("empty", false);
 
     QWidget * panelwidget = createTabPanel(this);
     CTabPanel * pView = panelfromwidget(panelwidget);
@@ -465,20 +495,19 @@ int CAscTabWidget::insertPanel(QWidget * panel, int index)
         switch ( tab_type ) {
         case AscEditorType::etPresentation:
             tabcolor = QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSlideActive));
-            m_pBar->setTabThemeType(tabindex, CTabBar::DarkTab);
             break;
         case AscEditorType::etSpreadsheet:
             tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabCellActive));
-            m_pBar->setTabThemeType(tabindex, CTabBar::DarkTab);
             break;
         case AscEditorType::etDocumentMasterForm:
         case AscEditorType::etDocument:
             tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabWordActive));
-            m_pBar->setTabThemeType(tabindex, CTabBar::DarkTab);
             break;
         case AscEditorType::etPdf:
             tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabViewerActive));
-            m_pBar->setTabThemeType(tabindex, CTabBar::DarkTab);
+            break;
+        case AscEditorType::etDraw:
+            tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDrawActive));
             break;
         case etPortal:
             tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSimpleActiveBackground));
@@ -487,6 +516,19 @@ int CAscTabWidget::insertPanel(QWidget * panel, int index)
         default:
             tabcolor =  QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDefaultActiveBackground));
             m_pBar->setTabThemeType(tabindex, /*ui_theme.isDark() ? CTabBar::DarkTab :*/ CTabBar::LightTab);
+        }
+
+        switch ( tab_type ) {
+        case AscEditorType::etPresentation:
+        case AscEditorType::etSpreadsheet:
+        case AscEditorType::etDocumentMasterForm:
+        case AscEditorType::etPdf:
+        case AscEditorType::etDocument:
+        case AscEditorType::etDraw:
+            m_pBar->setTabThemeType(tabindex,
+                ui_theme.value(CTheme::ColorRole::ecrTabThemeType, L"dark") == L"dark" ? CTabBar::DarkTab : CTabBar::LightTab);
+            break;
+        default: break;
         }
 
         m_pBar->setActiveTabColor(tabindex, tabcolor);
@@ -522,7 +564,7 @@ void CAscTabWidget::reloadTabIcons()
     m_mapTabIcons.clear();
     const char *icons[] = {":/tabbar/icons/newdoc.svg", ":/tabbar/icons/de.svg", ":/tabbar/icons/pe.svg",
                            ":/tabbar/icons/pdf-form.svg",  ":/tabbar/icons/se.svg", ":/tabbar/icons/portal_light.svg",
-                           ":/tabbar/icons/portal.svg", ":/tabbar/icons/pdf.svg"};
+                           ":/tabbar/icons/portal.svg", ":/tabbar/icons/pdf.svg", ":/tabbar/icons/ve.svg"};
     int portal_icon = GetCurrentTheme().isDark() ? 5 : 6;
     m_mapTabIcons.insert({
         {AscEditorType::etUndefined,          std::make_pair(icons[0], icons[0])},
@@ -531,6 +573,7 @@ void CAscTabWidget::reloadTabIcons()
         {AscEditorType::etDocumentMasterForm, std::make_pair(icons[3], icons[3])},
         {AscEditorType::etSpreadsheet,        std::make_pair(icons[4], icons[4])},
         {AscEditorType::etPdf,                std::make_pair(icons[7], icons[7])},
+        {AscEditorType::etDraw,               std::make_pair(icons[8], icons[8])},
         {etPortal,             std::make_pair(icons[portal_icon], icons[6])},
         {etNewPortal,          std::make_pair(icons[portal_icon], icons[6])}
     });
@@ -666,11 +709,7 @@ int CAscTabWidget::openLocalDocument(const COpenOptions& options, bool select, b
     int tabIndex = -1;
     if ( !forcenew && options.srctype != etRecoveryFile ) {
         CCefView * view = AscAppManager::getInstance().GetViewByRecentId( options.id );
-        if ( view ) {
-            tabIndex = tabIndexByView(view->GetId());
-        } else {
-            tabIndex = tabIndexByUrl(options.wurl);
-        }
+        tabIndex = view ? tabIndexByView(view->GetId()) : tabIndexByUrl(options.wurl);
     }
 
     if (tabIndex < 0){
@@ -752,10 +791,8 @@ void CAscTabWidget::applyDocumentChanging(int viewId, const QString& name, const
     if (!(tabIndex < 0)) {
         CAscTabData * doc = panel(tabIndex)->data();
         doc->setTitle(name);
-        if ( doc->isLocal() && !path.isEmpty() ) {
-            QString _path(path);
-            doc->setUrl( Utils::replaceBackslash(_path) );
-        }
+        if ( doc->isLocal() && !path.isEmpty() )
+            doc->setUrl( Utils::replaceBackslash(path) );
 
         m_pBar->setTabText(tabIndex, doc->title());
         m_pBar->setTabToolTip(tabIndex, path.isEmpty() ? doc->title() : path);
@@ -803,30 +840,34 @@ void CAscTabWidget::applyDocumentChanging(int id, int type)
         switch (AscEditorType(type)) {
         case AscEditorType::etDocument:
             panel(tabIndex)->applyLoader("loader:style", "word");
-            m_pBar->setTabThemeType(tabIndex, CTabBar::DarkTab);
             m_pBar->setActiveTabColor(tabIndex,
                 QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabWordActive)));
             break;
         case AscEditorType::etSpreadsheet:
             panel(tabIndex)->applyLoader("loader:style", "cell");
-            m_pBar->setTabThemeType(tabIndex, CTabBar::DarkTab);
             m_pBar->setActiveTabColor(tabIndex,
                 QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabCellActive)));
             break;
         case AscEditorType::etPresentation:
             panel(tabIndex)->applyLoader("loader:style", "slide");
-            m_pBar->setTabThemeType(tabIndex, CTabBar::DarkTab);
             m_pBar->setActiveTabColor(tabIndex,
                 QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSlideActive)));
             break;
         case AscEditorType::etPdf:
             panel(tabIndex)->applyLoader("loader:style", "pdf");
-            m_pBar->setTabThemeType(tabIndex, CTabBar::DarkTab);
             m_pBar->setActiveTabColor(tabIndex,
                 QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabViewerActive)));
             break;
+        case AscEditorType::etDraw:
+            panel(tabIndex)->applyLoader("loader:style", "draw");
+            m_pBar->setActiveTabColor(tabIndex,
+                QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDrawActive)));
+            break;
         default: break;
         }
+
+        m_pBar->setTabThemeType(tabIndex,
+            ui_theme.value(CTheme::ColorRole::ecrTabThemeType, L"dark") == L"dark" ? CTabBar::DarkTab : CTabBar::LightTab);
 
         const char *icon_name = tabIndex == m_pBar->currentIndex() ?
                                     m_mapTabIcons.at(AscEditorType(type)).second : m_mapTabIcons.at(AscEditorType(type)).first;
@@ -914,14 +955,7 @@ void CAscTabWidget::activate(bool a)
     this->setHidden(!a);
     if (property("active").toBool() != a) {
         this->setProperty("active", a);
-        m_pBar->setProperty("active", a);
-    }
-
-    if ( a ) {
-        if ( m_pBar->currentIndex() < 0 )
-            m_pBar->setCurrentIndex(currentIndex());
-    } else {
-        m_pBar->setCurrentIndex(-1);
+        m_pBar->activate(a);
     }
 //    m_pBar->polish();
 }
@@ -931,6 +965,16 @@ bool CAscTabWidget::isActiveWidget()
     return property("active").toBool();
 }
 
+bool CAscTabWidget::isTabPinAllowed()
+{
+    return m_isTabPinAllowed;
+}
+
+void CAscTabWidget::setTabPinAllowed()
+{
+    m_isTabPinAllowed = true;
+}
+
 int CAscTabWidget::modifiedCount()
 {
     int mod_count = 0;
@@ -938,7 +982,7 @@ int CAscTabWidget::modifiedCount()
 
     for (int i = m_pBar->count(); i-- > 0; ) {
         doc = panel(i)->data();
-        doc->hasChanges() && mod_count++;
+        (doc->hasChanges() || panel(i)->hasUncommittedChanges()) && mod_count++;
     }
 
     return mod_count;
@@ -979,7 +1023,7 @@ bool CAscTabWidget::modifiedByIndex(int index)
 {
     if (indexIsValid(index)) {
         const CAscTabData * doc = panel(index)->data();
-        return doc->hasChanges() && !doc->closed();
+        return (doc->hasChanges() || panel(index)->hasUncommittedChanges()) && !doc->closed();
     }
 
     return false;
@@ -1004,7 +1048,7 @@ MapEditors CAscTabWidget::modified(const QString& portalname)
         doc = panel(i)->data();
 
         if (doc->isViewType(cvwtEditor) &&
-                doc->hasChanges() && !doc->closed() &&
+            (doc->hasChanges() || panel(i)->hasUncommittedChanges()) && !doc->closed() &&
                 (portal.empty() || doc->url().find(portal) != wstring::npos))
         {
             mapModified.insert(viewByIndex(i), titleByIndex(i, true));
@@ -1024,7 +1068,7 @@ int CAscTabWidget::findModified(const QString& portalname)
         if ( !doc->closed() && doc->isViewType(cvwtEditor) &&
                 (portal.empty() || doc->url().find(portal) != wstring::npos) )
         {
-            if ( doc->hasChanges() ) {
+            if ( doc->hasChanges() || panel(i)->hasUncommittedChanges() ) {
                 return i;
             }
         }
@@ -1214,10 +1258,12 @@ void CAscTabWidget::applyUITheme(const std::wstring& theme)
                                       QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabCellActive)),
                                       QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSlideActive))};
     QColor back_color = ui_theme.color(CTheme::ColorRole::ecrWindowBackground);
+    const auto tab_theme = ui_theme.value(CTheme::ColorRole::ecrTabThemeType, L"dark") == L"dark" ? CTabBar::DarkTab : CTabBar::LightTab;
     for (int i(count()); i-- > 0; ) {
         panel(i)->setBackground(back_color);
 
-        switch ( panel(i)->data()->contentType() ) {
+        const auto tab_type = panel(i)->data()->contentType();
+        switch ( tab_type ) {
         case AscEditorType::etPresentation:
             m_pBar->setActiveTabColor(i, tab_color.at(2));
             break;
@@ -1231,6 +1277,9 @@ void CAscTabWidget::applyUITheme(const std::wstring& theme)
         case AscEditorType::etPdf:
             m_pBar->setActiveTabColor(i, QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabViewerActive)));
             break;
+        case AscEditorType::etDraw:
+            m_pBar->setActiveTabColor(i, QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDrawActive)));
+            break;
         case etPortal:
             m_pBar->setTabThemeType(i, ui_theme.isDark() ? CTabBar::DarkTab : CTabBar::LightTab);
             m_pBar->setActiveTabColor(i, QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabSimpleActiveBackground)));
@@ -1239,6 +1288,18 @@ void CAscTabWidget::applyUITheme(const std::wstring& theme)
             m_pBar->setTabThemeType(i, ui_theme.isDark() ? CTabBar::DarkTab : CTabBar::LightTab);
             m_pBar->setActiveTabColor(i, QString::fromStdWString(ui_theme.value(CTheme::ColorRole::ecrTabDefaultActiveBackground)));
             break;
+        }
+
+        switch ( tab_type ) {
+        case AscEditorType::etPresentation:
+        case AscEditorType::etSpreadsheet:
+        case AscEditorType::etDocumentMasterForm:
+        case AscEditorType::etPdf:
+        case AscEditorType::etDocument:
+        case AscEditorType::etDraw:
+            m_pBar->setTabThemeType(i, tab_theme);
+            break;
+        default: break;
         }
     }
 

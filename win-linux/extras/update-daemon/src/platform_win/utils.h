@@ -52,6 +52,9 @@ namespace NS_Utils
 {
 void setRunAsApp();
 bool isRunAsApp();
+void parseCmdArgs(int argc, wchar_t *argv[]);
+bool cmdArgContains(const wstring &param);
+wstring cmdArgValue(const wstring &param);
 wstring GetLastErrorAsString();
 int ShowMessage(wstring str, bool showError = false);
 wstring GetAppLanguage();
@@ -69,7 +72,7 @@ bool isProcessRunning(const wstring &fileName);
 bool fileExists(const wstring &filePath);
 bool dirExists(const wstring &dirName);
 bool dirIsEmpty(const wstring &dirName);
-bool makePath(const wstring &path);
+bool makePath(const wstring &path, size_t root_offset = 3);
 bool replaceFile(const wstring &oldFilePath, const wstring &newFilePath);
 bool replaceFolder(const wstring &from, const wstring &to, bool remove_existing = false);
 bool removeFile(const wstring &filePath);
@@ -79,7 +82,7 @@ wstring toNativeSeparators(const wstring &path);
 wstring parentPath(const wstring &path);
 wstring tempPath();
 wstring appPath();
-//string getFileHash(const wstring &fileName);
+wstring getFileHash(const wstring &fileName);
 bool verifyEmbeddedSignature(const wstring &fileName);
 }
 

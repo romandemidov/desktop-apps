@@ -42,6 +42,7 @@
 #include "components/cfullscrwidget.h"
 
 #define PROCESSEVENTS() AscAppManager::getInstance().processEvents()
+#define IsPackage(type) (AppOptions::packageType() == AppOptions::AppPackageType::type)
 
 namespace InputArgs {
     auto init(int argc, char** const argv) -> void;
@@ -105,9 +106,8 @@ public:
     static void replaceAll(std::wstring& subject, const std::wstring& search, const std::wstring& replace);
     static bool isFileLocal(const QString&);
     static QString uniqFileName(const QString& path);
-    static bool setAppUserModelId(const QString&);
-
     static bool makepath(const QString&);
+    static bool writeFile(const QString &filePath, const QByteArray &data);
 
     static QString systemLocationCode();
     static QIcon appIcon();
@@ -120,15 +120,18 @@ public:
     static QJsonObject parseJsonFile(const QString&);
     static bool updatesAllowed();
     static void addToRecent(const std::wstring&);
+    static void processMoreEvents(uint timeout = 60);
 
 #ifdef _WIN32
     enum class WinVer : uchar {
         Undef, WinXP, WinVista, Win7, Win8, Win8_1, Win10, Win11
     };
     static WinVer getWinVersion();
+    static QString GetCurrentUserSID();
     static bool isSessionInProgress();
     static void setSessionInProgress(bool);
-#else
+    static void setAppUserModelId();
+#else    
     static void setInstAppPort(int);
     static int getInstAppPort();
 #endif
@@ -157,15 +160,15 @@ namespace WindowHelper {
     auto getEnvInfo() -> int;
     auto useGtkDialog() -> bool;
 #else
-    auto isWindowSystemDocked(HWND handle) -> bool;
-    auto correctWindowMinimumSize(HWND handle) -> void;
-    auto correctModalOrder(HWND windowhandle, HWND modalhandle) -> void;
-    auto adjustWindowRect(HWND, double, LPRECT) -> void;
+//    auto isWindowSystemDocked(HWND handle) -> bool;
+//    auto correctWindowMinimumSize(HWND handle) -> void;
+//    auto correctModalOrder(HWND windowhandle, HWND modalhandle) -> void;
+//    auto adjustWindowRect(HWND, double, LPRECT) -> void;
     auto bringToTop(HWND) -> void;
     auto toggleLayoutDirection(HWND hwnd) -> void;
 #endif
 
-    auto correctWindowMinimumSize(const QRect&, const QSize&) -> QSize;
+//    auto correctWindowMinimumSize(const QRect&, const QSize&) -> QSize;
     auto isLeftButtonPressed() -> bool;
     auto constructFullscreenWidget(QWidget * panel) -> CFullScrWidget *;
     auto useNativeDialog() -> bool;

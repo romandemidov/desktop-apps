@@ -31,7 +31,9 @@
 */
 
 #include "cx11decoration.h"
+#include "windows/cwindowbase.h"
 #include "utils.h"
+#include "defines.h"
 #include <QX11Info>
 #include <QTimer>
 #include <QApplication>
@@ -40,7 +42,7 @@
 #include <X11/Xutil.h>
 #include "platform_linux/xcbutils.h"
 
-#define CUSTOM_BORDER_WIDTH 4
+#define CUSTOM_BORDER_WIDTH MAIN_WINDOW_BORDER_WIDTH
 #define MOTION_TIMER_MS 250
 
 const int k_NET_WM_MOVERESIZE_SIZE_TOPLEFT =     0;
@@ -455,6 +457,7 @@ void CX11Decoration::dispatchMouseMove(QMouseEvent *e)
             } else {
                 m_motionTimer->stop();
                 sendButtonRelease();
+                QApplication::postEvent(m_window, new QEvent(static_cast<QEvent::Type>(UM_ENDMOVE)));
 //                QTimer::singleShot(25, [=]() {
 //                    if (m_window->size() == m_startSize)
 //                        QApplication::postEvent(m_window, new QEvent(QEvent::User));

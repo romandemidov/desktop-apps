@@ -35,21 +35,22 @@
 #include "version.h"
 #include <Windows.h>
 #include <shlwapi.h>
+#include <ShlObj.h>
 #include <fstream>
-#include <regex>
+#include <algorithm>
+#include <functional>
 #include <cstdio>
-//#include <Wincrypt.h>
+#include <Wincrypt.h>
 #include <WtsApi32.h>
 #include <Softpub.h>
 #include <TlHelp32.h>
 #include <userenv.h>
 #include <vector>
-#include <stack>
 #include <sstream>
 #include "../../src/defines.h"
 #include "../../src/prop/defines_p.h"
 
-//#define BUFSIZE 1024
+#define BUFSIZE 1024
 
 
 static DWORD GetActiveSessionId()
@@ -68,6 +69,50 @@ static DWORD GetActiveSessionId()
     return sesId;
 }
 
+static bool GetDuplicateToken(HANDLE &hTokenDup)
+{
+    DWORD sesId = GetActiveSessionId();
+    if (sesId == 0xFFFFFFFF) {
+        NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
+        return false;
+    }
+    HANDLE hUserToken = NULL;
+    if (!WTSQueryUserToken(sesId, &hUserToken)) {
+        NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
+        return false;
+    }
+    if (!DuplicateTokenEx(hUserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hTokenDup)) {
+        CloseHandle(hUserToken);
+        NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
+        return false;
+    }
+    CloseHandle(hUserToken);
+    return true;
+}
+
+static HRESULT PerformFileOperation(const wstring &pFrom, const std::function<HRESULT(IFileOperation *pfo, IShellItem *pSrcItem)> &callback)
+{
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (SUCCEEDED(hr)) {
+        IFileOperation *pfo;
+        hr = CoCreateInstance(CLSID_FileOperation, NULL, CLSCTX_ALL, IID_PPV_ARGS(&pfo));
+        if (SUCCEEDED(hr)) {
+            hr = pfo->SetOperationFlags(FOF_NOCONFIRMATION | FOF_NOCONFIRMMKDIR | FOF_SILENT);
+            if (SUCCEEDED(hr)) {
+                IShellItem *pSrcItem;
+                hr = SHCreateItemFromParsingName(pFrom.c_str(), NULL, IID_PPV_ARGS(&pSrcItem));
+                if (SUCCEEDED(hr)) {
+                    hr = callback(pfo, pSrcItem);
+                    pSrcItem->Release();
+                }
+            }
+            pfo->Release();
+        }
+        CoUninitialize();
+    }
+    return hr;
+}
+
 namespace NS_Utils
 {
     bool run_as_app = false;
@@ -82,6 +127,32 @@ namespace NS_Utils
         return run_as_app;
     }
 
+    std::vector<wstring> cmd_args;
+
+    void parseCmdArgs(int argc, wchar_t *argv[])
+    {
+        for (int i = 0; i < argc; i++)
+            cmd_args.push_back(argv[i]);
+    }
+
+    bool cmdArgContains(const wstring &param)
+    {
+        auto len = param.length();
+        return std::any_of(cmd_args.cbegin(), cmd_args.cend(), [&param, len](const wstring &arg) {
+            return arg.find(param) == 0 && (len == arg.length() || arg[len] == L'=' || arg[len] == L':' || arg[len] == L'|');
+        });
+    }
+
+    wstring cmdArgValue(const wstring &param)
+    {
+        auto len = param.length();
+        for (const auto &arg : cmd_args) {
+            if (arg.find(param) == 0 && len < arg.length() && (arg[len] == L'=' || arg[len] == L':' || arg[len] == L'|'))
+                return arg.substr(len + 1);
+        }
+        return L"";
+    }
+
     wstring GetLastErrorAsString()
     {
         DWORD errID = ::GetLastError();
@@ -91,8 +162,11 @@ namespace NS_Utils
         LPWSTR msgBuff = NULL;
         size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                        NULL, errID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&msgBuff, 0, NULL);
-        wstring msg(msgBuff, size);
-        LocalFree(msgBuff);
+        wstring msg;
+        if (size > 0) {
+            msg.assign(msgBuff, size);
+            LocalFree(msgBuff);
+        }
         return msg;
     }
 
@@ -119,7 +193,7 @@ namespace NS_Utils
     {
         wstring lang = TEXT("en_US"), subkey = TEXT("SOFTWARE\\" REG_GROUP_KEY "\\" REG_APP_NAME);
         HKEY hKey = NULL, hRootKey = isRunAsApp() ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE;
-        if (RegOpenKeyEx(hRootKey, subkey.c_str(), 0, KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(hRootKey, subkey.c_str(), 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
             DWORD type = REG_SZ, cbData = 0;
             if (RegGetValue(hKey, NULL, TEXT("locale"), RRF_RT_REG_SZ, &type, NULL, &cbData) == ERROR_SUCCESS) {
                 wchar_t *pvData = (wchar_t*)malloc(cbData);
@@ -266,13 +340,16 @@ namespace NS_File
 
     bool runProcess(const wstring &fileName, const wstring &args)
     {
+        wstring _args(L"\"" + fileName + L"\"");
+        if (!args.empty())
+            _args += L" " + args;
         if (NS_Utils::isRunAsApp()) {
             STARTUPINFO si;
             ZeroMemory(&si, sizeof(STARTUPINFO));
             si.cb = sizeof(STARTUPINFO);
             PROCESS_INFORMATION pi;
             ZeroMemory(&pi, sizeof(pi));
-            if (CreateProcess(fileName.c_str(), const_cast<LPWSTR>(args.c_str()),
+            if (CreateProcess(NULL, &_args[0],
                                  NULL, NULL, FALSE, CREATE_UNICODE_ENVIRONMENT,
                                  NULL, NULL, &si, &pi))
             {
@@ -283,26 +360,14 @@ namespace NS_File
             return false;
         }
 
-        DWORD dwSessionId = GetActiveSessionId();
-        if (dwSessionId == 0xFFFFFFFF) {
-            return false;
-        }
-
-        HANDLE hUserToken = NULL;
-        if (!WTSQueryUserToken(dwSessionId, &hUserToken)) {
-            return false;
-        }
-
         HANDLE hTokenDup = NULL;
-        if (!DuplicateTokenEx(hUserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hTokenDup)) {
-            CloseHandle(hUserToken);
+        if (!GetDuplicateToken(hTokenDup)) {
             return false;
         }
 
         LPVOID lpvEnv = NULL;
         if (!CreateEnvironmentBlock(&lpvEnv, hTokenDup, TRUE)) {
             CloseHandle(hTokenDup);
-            CloseHandle(hUserToken);
             return false;
         }
 
@@ -311,8 +376,8 @@ namespace NS_File
         si.cb = sizeof(STARTUPINFO);
         si.lpDesktop = const_cast<LPWSTR>(L"Winsta0\\Default");
         PROCESS_INFORMATION pi;
-        if (CreateProcessAsUser(hTokenDup, fileName.c_str(),
-                                const_cast<LPWSTR>(args.c_str()),
+        if (CreateProcessAsUser(hTokenDup, NULL,
+                                &_args[0],
                                 NULL, NULL, FALSE,
                                 CREATE_UNICODE_ENVIRONMENT,
                                 lpvEnv, NULL, &si, &pi))
@@ -321,12 +386,10 @@ namespace NS_File
             CloseHandle(pi.hProcess);
             DestroyEnvironmentBlock(lpvEnv);
             CloseHandle(hTokenDup);
-            CloseHandle(hUserToken);
             return true;
         }
         DestroyEnvironmentBlock(lpvEnv);
         CloseHandle(hTokenDup);
-        CloseHandle(hUserToken);
         return false;
     }
 
@@ -370,18 +433,31 @@ namespace NS_File
         return PathIsDirectoryEmpty(dirName.c_str());
     }
 
-    bool makePath(const wstring &path)
-    {
-        std::stack<wstring> pathsList;
-        wstring last_path(path);
-        while (!last_path.empty() && !dirExists(last_path)) {
-            pathsList.push(last_path);
-            last_path = parentPath(last_path);
-        }
-        while(!pathsList.empty()) {
-            if (::CreateDirectory(pathsList.top().c_str(), NULL) == 0)
+    bool makePath(const wstring &path, size_t root_offset) {
+        size_t len = path.length();
+        if (len == 0)
+            return false;
+        if (CreateDirectoryW(path.c_str(), NULL) != 0 || GetLastError() == ERROR_ALREADY_EXISTS)
+            return true;
+        if (len >= MAX_PATH || root_offset >= len)
+            return false;
+        wchar_t buf[MAX_PATH];
+        wcscpy(buf, path.c_str());
+        if (buf[len - 1] == '/' || buf[len - 1] == '\\')
+            buf[len - 1] = '\0';
+        wchar_t *it = buf + root_offset;
+        while (1) {
+            while (*it != '\0' && *it != '/' && *it != '\\')
+                it++;
+            wchar_t tmp = *it;
+            *it = '\0';
+            if (CreateDirectoryW(buf, NULL) == 0 && GetLastError() != ERROR_ALREADY_EXISTS) {
+                *it = tmp;
                 return false;
-            pathsList.pop();
+            }
+            if (tmp == '\0')
+                break;
+            *it++ = tmp;
         }
         return true;
     }
@@ -404,44 +480,25 @@ namespace NS_File
             return false;
         }
 
-        WCHAR src_vol[MAX_PATH] = {0};
-        WCHAR dst_vol[MAX_PATH] = {0};
-        BOOL src_res = GetVolumePathName(from.c_str(), src_vol, MAX_PATH);
-        BOOL dst_res = GetVolumePathName(parentPath(to).c_str(), dst_vol, MAX_PATH);
-
-        bool can_use_rename = (src_res != 0 && dst_res != 0 && wcscmp(src_vol, dst_vol) == 0);
-        if (!dirExists(to) && can_use_rename) {
-            if (MoveFileEx(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING |
-                              MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED) == 0) {
-                NS_Logger::WriteLog(L"Can't move dir from " + from + L" to " + to + L". " + NS_Utils::GetLastErrorAsString());
-                return false;
-            }
-        } else {
-            list<wstring> filesList;
-            wstring error;
-            if (!NS_File::GetFilesList(from, &filesList, error)) {
-                NS_Logger::WriteLog(L"Can't get files list: " + error);
-                return false;
-            }
-
-            const size_t sourceLength = from.length();
-            for (const wstring &sourcePath : filesList) {
-                if (!sourcePath.empty()) {
-                    wstring dest = to + sourcePath.substr(sourceLength);
-                    if (!NS_File::dirExists(NS_File::parentPath(dest)) && !NS_File::makePath(NS_File::parentPath(dest))) {
-                        NS_Logger::WriteLog(L"Can't create path: " + NS_File::parentPath(dest));
-                        return false;
-                    }
-                    if (MoveFileEx(sourcePath.c_str(), dest.c_str(), MOVEFILE_REPLACE_EXISTING |
-                                      MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED) == 0) {
-                        NS_Logger::WriteLog(L"Can't move file from " + sourcePath + L" to " + dest + L". " + NS_Utils::GetLastErrorAsString());
-                        return false;
-                    }
+        wstring pFrom = toNativeSeparators(from);
+        HRESULT hr = PerformFileOperation(pFrom, [&to](IFileOperation *pfo, IShellItem *pSrcItem) -> HRESULT {
+            IShellItem *pDstItem;
+            wstring pTo = toNativeSeparators(to);
+            wstring pParentTo = parentPath(pTo);
+            HRESULT hr = SHCreateItemFromParsingName(pParentTo.c_str(), NULL, IID_PPV_ARGS(&pDstItem));
+            if (SUCCEEDED(hr)) {
+                LPWSTR folderName = PathFindFileName(pTo.c_str());
+                hr = pfo->MoveItem(pSrcItem, pDstItem, folderName, NULL);
+                if (SUCCEEDED(hr)) {
+                    hr = pfo->PerformOperations();
                 }
+                pDstItem->Release();
             }
-        }
-        removeDirRecursively(from);
-        return true;
+            return hr;
+        });
+        if (FAILED(hr))
+            NS_Logger::WriteLog(L"Can't move file from " + from + L" to " + to + L". HRESULT: " + std::to_wstring(hr));
+        return SUCCEEDED(hr);
     }
 
     bool removeFile(const wstring &filePath)
@@ -451,35 +508,59 @@ namespace NS_File
 
     bool removeDirRecursively(const wstring &dir)
     {
-        WCHAR pFrom[_MAX_PATH + 1] = {0};
-        swprintf_s(pFrom, sizeof(pFrom)/sizeof(WCHAR), L"%s%c", dir.c_str(), L'\0');
-        SHFILEOPSTRUCT fop = {
-            NULL,
-            FO_DELETE,
-            pFrom,
-            NULL,
-            FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_SILENT,
-            FALSE,
-            0,
-            NULL
-        };
-        return (SHFileOperation(&fop) == 0);
+        if (!dirExists(dir)) {
+            NS_Logger::WriteLog(DEFAULT_ERROR_MESSAGE);
+            return false;
+        }
+
+        wstring pFrom = toNativeSeparators(dir);
+        HRESULT hr = PerformFileOperation(pFrom, [](IFileOperation *pfo, IShellItem *pSrcItem) -> HRESULT {
+            HRESULT hr = pfo->DeleteItem(pSrcItem, NULL);
+            if (SUCCEEDED(hr)) {
+                hr = pfo->PerformOperations();
+            }
+            return hr;
+        });
+        if (FAILED(hr))
+            NS_Logger::WriteLog(L"Can't remove file from " + dir + L". HRESULT: " + std::to_wstring(hr));
+        return SUCCEEDED(hr);
     }
 
     wstring fromNativeSeparators(const wstring &path)
     {
-        return std::regex_replace(path, std::wregex(L"\\\\"), L"/");
+        wstring _path(path);
+        std::replace(_path.begin(), _path.end(), L'\\', L'/');
+        return _path;
     }
 
     wstring toNativeSeparators(const wstring &path)
     {
-        return std::regex_replace(path, std::wregex(L"\\/"), L"\\");
+        wstring _path(path);
+        std::replace(_path.begin(), _path.end(), L'/', L'\\');
+        return _path;
     }
 
     wstring parentPath(const wstring &path)
     {
-        wstring::size_type delim = path.find_last_of(L"\\/");
-        return (delim == wstring::npos) ? L"" : path.substr(0, delim);
+        size_t len = path.length();
+        if (len > 1) {
+            const wchar_t *buf = path.c_str();
+            const wchar_t *it = buf + len - 1;
+            while (*it == '/' || *it == '\\') {
+                if (it == buf)
+                    return L"";
+                it--;
+            }
+            while (*it != '/' && *it != '\\') {
+                if (it == buf)
+                    return L"";
+                it--;
+            }
+            if (it == buf)
+                return L"";
+            return wstring(buf, it - buf);
+        }
+        return L"";
     }
 
     wstring fallbackTempPath()
@@ -495,41 +576,27 @@ namespace NS_File
     wstring tempPath()
     {
         if (NS_Utils::isRunAsApp()) {
-            WCHAR buff[MAX_PATH] = {0};
-            DWORD res = ::GetTempPath(MAX_PATH, buff);
-            if (res != 0)
-                return fromNativeSeparators(parentPath(buff));
-            NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
-            return fallbackTempPath();
-        }
-
-        DWORD sesId = GetActiveSessionId();
-        if (sesId == 0xFFFFFFFF) {
-            NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
-            return fallbackTempPath();
-        }
-
-        HANDLE hUserToken = NULL;
-        if (!WTSQueryUserToken(sesId, &hUserToken)) {
+            WCHAR buff[MAX_PATH + 1] = {0};
+            DWORD res = ::GetTempPath(MAX_PATH + 1, buff);
+            if (res != 0) {
+                buff[res - 1] = '\0';
+                return fromNativeSeparators(buff);
+            }
             NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
             return fallbackTempPath();
         }
 
         HANDLE hTokenDup = NULL;
-        if (!DuplicateTokenEx(hUserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hTokenDup)) {
-            CloseHandle(hUserToken);
-            NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
+        if (!GetDuplicateToken(hTokenDup)) {
             return fallbackTempPath();
         }
 
         WCHAR buff[MAX_PATH] = {0};
         if (ExpandEnvironmentStringsForUser(hTokenDup, L"%TEMP%", buff, MAX_PATH)) {
             CloseHandle(hTokenDup);
-            CloseHandle(hUserToken);
             return fromNativeSeparators(buff);
         }
         CloseHandle(hTokenDup);
-        CloseHandle(hUserToken);
         NS_Logger::WriteLog(ADVANCED_ERROR_MESSAGE);
         return fallbackTempPath();
     }
@@ -541,86 +608,76 @@ namespace NS_File
         return (res != 0) ? fromNativeSeparators(parentPath(buff)) : L"";
     }
 
-//    string getFileHash(const wstring &fileName)
-//    {
-//        HANDLE hFile = NULL;
-//        hFile = CreateFile(fileName.c_str(),
-//            GENERIC_READ,
-//            FILE_SHARE_READ,
-//            NULL,
-//            OPEN_EXISTING,
-//            FILE_FLAG_SEQUENTIAL_SCAN,
-//            NULL);
+    wstring getFileHash(const wstring &fileName)
+    {
+        HANDLE hFile = CreateFile(fileName.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+            return L"";
 
-//        if (hFile == INVALID_HANDLE_VALUE) {
-//            return "";
-//        }
+        // Get handle to the crypto provider
+        HCRYPTPROV hProv = 0;
+        if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+            CloseHandle(hFile);
+            return L"";
+        }
 
-//        // Get handle to the crypto provider
-//        HCRYPTPROV hProv = 0;
-//        if (!CryptAcquireContext(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-//            CloseHandle(hFile);
-//            return "";
-//        }
+        HCRYPTHASH hHash = 0;
+        if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
+            CloseHandle(hFile);
+            CryptReleaseContext(hProv, 0);
+            return L"";
+        }
 
-//        HCRYPTHASH hHash = 0;
-//        if (!CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
-//            CloseHandle(hFile);
-//            CryptReleaseContext(hProv, 0);
-//            return "";
-//        }
+        DWORD cbRead = 0;
+        BYTE rgbFile[BUFSIZE];
+        BOOL bResult = FALSE;
+        while ((bResult = ReadFile(hFile, rgbFile, BUFSIZE, &cbRead, NULL))) {
+            if (cbRead == 0)
+                break;
 
-//        DWORD cbRead = 0;
-//        BYTE rgbFile[BUFSIZE];
-//        BOOL bResult = FALSE;
-//        while ((bResult = ReadFile(hFile, rgbFile, BUFSIZE, &cbRead, NULL))) {
-//            if (cbRead == 0)
-//                break;
+            if (!CryptHashData(hHash, rgbFile, cbRead, 0)) {
+                CryptReleaseContext(hProv, 0);
+                CryptDestroyHash(hHash);
+                CloseHandle(hFile);
+                return L"";
+            }
+        }
 
-//            if (!CryptHashData(hHash, rgbFile, cbRead, 0)) {
-//                CryptReleaseContext(hProv, 0);
-//                CryptDestroyHash(hHash);
-//                CloseHandle(hFile);
-//                return "";
-//            }
-//        }
+        if (!bResult) {
+            CryptReleaseContext(hProv, 0);
+            CryptDestroyHash(hHash);
+            CloseHandle(hFile);
+            return L"";
+        }
 
-//        if (!bResult) {
-//            CryptReleaseContext(hProv, 0);
-//            CryptDestroyHash(hHash);
-//            CloseHandle(hFile);
-//            return "";
-//        }
+        DWORD cbHashSize = 0, dwCount = sizeof(DWORD);
+        if (!CryptGetHashParam( hHash, HP_HASHSIZE, (BYTE*)&cbHashSize, &dwCount, 0)) {
+            CryptReleaseContext(hProv, 0);
+            CryptDestroyHash(hHash);
+            CloseHandle(hFile);
+            return L"";
+        }
 
-//        DWORD cbHashSize = 0,
-//              dwCount = sizeof(DWORD);
-//        if (!CryptGetHashParam( hHash, HP_HASHSIZE, (BYTE*)&cbHashSize, &dwCount, 0)) {
-//            CryptReleaseContext(hProv, 0);
-//            CryptDestroyHash(hHash);
-//            CloseHandle(hFile);
-//            return "";
-//        }
+        std::vector<BYTE> buffer(cbHashSize);
+        if (!CryptGetHashParam(hHash, HP_HASHVAL, reinterpret_cast<BYTE*>(&buffer[0]), &cbHashSize, 0)) {
+            CryptReleaseContext(hProv, 0);
+            CryptDestroyHash(hHash);
+            CloseHandle(hFile);
+            return L"";
+        }
 
-//        std::vector<BYTE> buffer(cbHashSize);
-//        if (!CryptGetHashParam(hHash, HP_HASHVAL, reinterpret_cast<BYTE*>(&buffer[0]), &cbHashSize, 0)) {
-//            CryptReleaseContext(hProv, 0);
-//            CryptDestroyHash(hHash);
-//            CloseHandle(hFile);
-//            return "";
-//        }
+        std::wostringstream oss;
+        for (std::vector<BYTE>::const_iterator it = buffer.begin(); it != buffer.end(); ++it) {
+            oss.fill('0');
+            oss.width(2);
+            oss << std::hex << static_cast<const int>(*it);
+        }
 
-//        std::ostringstream oss;
-//        for (std::vector<BYTE>::const_iterator it = buffer.begin(); it != buffer.end(); ++it) {
-//            oss.fill('0');
-//            oss.width(2);
-//            oss << std::hex << static_cast<const int>(*it);
-//        }
-
-//        CryptReleaseContext(hProv, 0);
-//        CryptDestroyHash(hHash);
-//        CloseHandle(hFile);
-//        return oss.str();
-//    }
+        CryptReleaseContext(hProv, 0);
+        CryptDestroyHash(hHash);
+        CloseHandle(hFile);
+        return oss.str();
+    }
 
     bool verifyEmbeddedSignature(const wstring &fileName)
     {

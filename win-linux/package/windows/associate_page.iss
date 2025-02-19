@@ -6,6 +6,7 @@ ChangesAssociations=true
 [CustomMessages]
 
 en.AssociateDescription =Associate office document file types with {#ASSC_APP_NAME}
+en_GB.AssociateDescription =Associate office document file types with {#ASSC_APP_NAME}
 ar_SA.AssociateDescription =هل تريد ربط صيغة المستند بـ {#ASSC_APP_NAME}
 bg.AssociateDescription =Свържете типовете файлове на офис документи с {#ASSC_APP_NAME}
 ca.AssociateDescription =Associa els tipus de fitxers de documents d'oficina amb{#ASSC_APP_NAME}
@@ -49,8 +50,11 @@ si.AssociateDescription ={#ASSC_APP_NAME} සමඟ කාර්යාල ලේ
 zh_TW.AssociateDescription =與文書處理檔案類型聯結{#ASSC_APP_NAME}
 sr_Latn_RS.AssociateDescription =Poveži ofis dokument fajl tipove sa {#ASSC_APP_NAME}
 sr_Cyrl_RS.AssociateDescription =Повежи офис документ фајл типове са {#ASSC_APP_NAME}
+he.AssociateDescription =שייך סוגי קבצי מסמכי משרד ל-{#ASSC_APP_NAME}
+sq.AssociateDescription =Shoqëroni llojet e skedarëve të dokumentit të zyrës me {#ASSC_APP_NAME}
 
 en.AssociateCaption =File Associations
+en_GB.AssociateCaption =File Associations
 ar_SA.AssociateCaption =ربط الملفات
 bg.AssociateCaption =Свързвания на файлове
 ca.AssociateCaption =Associacions de fitxers
@@ -94,8 +98,11 @@ si.AssociateCaption =ගොනු නිශ්‍රය
 zh_TW.AssociateCaption =檔案聯結
 sr_Latn_RS.AssociateCaption =Fajl povezivanja
 sr_Cyrl_RS.AssociateCaption =Фајл повезивања
+he.AssociateCaption =שיוכי קבצים
+sq.AssociateCaption =Asociimet e skedarëve
 
 en.AssociateDont =Do not associate
+en_GB.AssociateDont =Do not associate
 ar_SA.AssociateDont =عدم ربط
 bg.AssociateDont =Не свързвай
 ca.AssociateDont =No associar
@@ -139,8 +146,11 @@ si.AssociateDont =නිශ්‍ර කොකරන්න
 zh_TW.AssociateDont =不要聯結
 sr_Latn_RS.AssociateDont =Nemoj da povežeš
 sr_Cyrl_RS.AssociateDont =Немој да повежеш
+he.AssociateDont =אל תשייך
+sq.AssociateDont =Mos e asocio
 
 en.AssociateAll =Associate all
+en_GB.AssociateAll =Associate all
 ar_SA.AssociateAll =ربط الكل
 bg.AssociateAll =Свържи всички
 ca.AssociateAll =Associar tots
@@ -184,8 +194,11 @@ si.AssociateAll =සියල්ල නිහ්ශ්‍රය
 zh_TW.AssociateAll =全部聯結
 sr_Latn_RS.AssociateAll =Poveži sve
 sr_Cyrl_RS.AssociateAll =Повежи све
+he.AssociateAll =שייך הכל
+sq.AssociateAll =Asocio të gjitha
 
 en.AssociateSel =Associate selected
+en_GB.AssociateSel =Associate selected
 ar_SA.AssociateSel =ربط المختار
 bg.AssociateSel =Свържи избраните
 ca.AssociateSel =Associar seleccionats
@@ -229,8 +242,11 @@ si.AssociateSel =තේරූ දෑ නිහ්ශ්‍රය
 zh_TW.AssociateSel =聯結已選定
 sr_Latn_RS.AssociateSel =Poveži odabrano
 sr_Cyrl_RS.AssociateSel =Повежи одабрано
+he.AssociateSel =שייך נבחרים
+sq.AssociateSel =Asocio të selektuarit
 
 en.AssociateAudio =File types
+en_GB.AssociateAudio =File types
 ar_SA.AssociateAudio =صيغ الملف
 bg.AssociateAudio =Типове файлове
 ca.AssociateAudio =Tipus de fitxers
@@ -274,8 +290,11 @@ si.AssociateAudio =ගොනු වර්ග
 zh_TW.AssociateAudio =檔案類型
 sr_Latn_RS.AssociateAudio =Fajl tipovi
 sr_Cyrl_RS.AssociateAudio =Фајл типови
+he.AssociateAudio =סוגי קבצים
+sq.AssociateAudio =Llojet e skedarëve
 
 en.extMSWord =Microsoft Word Document
+en_GB.extMSWord =Microsoft Word Document
 ar_SA.extMSWord =مستند مايكروسوفت وورد
 bg.extMSWord =Microsoft Word документ
 ca.extMSWord =Document Microsoft Word
@@ -319,8 +338,11 @@ si.extMSWord =මයික්‍රොසොෆ්ට් වර්ඩ් ලේ�
 zh_TW.extMSWord =Microsoft Word 文件
 sr_Cyrl_RS.extMSWord =Microsoft Word документ
 sr_Latn_RS.extMSWord =Microsoft Word dokument
+he.extMSWord =מסמך Microsoft Word
+sq.extMSWord =Dokument Microsoft Word
 
 en.extMSExcel =Microsoft Excel Workbook
+en_GB.extMSExcel =Microsoft Excel Workbook
 ar_SA.extMSExcel =جدول بياني مايكروسوفت إكسل
 bg.extMSExcel =Microsoft Excel работна книга
 ca.extMSExcel =Llibre de Microsoft Excel
@@ -364,8 +386,11 @@ si.extMSExcel =මයික්‍රොසොෆ්ට් එක්සෙල් 
 zh_TW.extMSExcel =Microsoft Excel 活頁簿
 sr_Cyrl_RS.extMSExcel =Microsoft Excel радна књига
 sr_Latn_RS.extMSExcel =Microsoft Excel radna knjiga
+he.extMSExcel =חוברת עבודה של Microsoft Excel
+sq.extMSExcel =Libër pune Microsoft Excel
 
 en.extMSPresentation =Microsoft PowerPoint Presentation
+en_GB.extMSPresentation =Microsoft PowerPoint Presentation
 ar_SA.extMSPresentation =عرض تقديمي مايكروسوفت بوربوينت قابل للتعديل
 bg.extMSPresentation =Microsoft PowerPoint презентация
 ca.extMSPresentation =Presentació Microsoft PowerPoint
@@ -409,8 +434,11 @@ si.extMSPresentation =මයික්‍රොසොෆ්ට් පවර්ප
 zh_TW.extMSPresentation =Microsoft PowerPoint 簡報
 sr_Cyrl_RS.extMSPresentation =Microsoft PowerPoint презентација
 sr_Latn_RS.extMSPresentation =Microsoft PowerPoint prezentacija
+he.extMSPresentation =מצגת Microsoft PowerPoint
+sq.extMSPresentation =Prezantim Microsoft PowerPoint
 
 en.extMSSlideshow =Microsoft PowerPoint Slideshow
+en_GB.extMSSlideshow =Microsoft PowerPoint Slideshow
 ar_SA.extMSSlideshow =عرض تقديمي مايكروسوفت بوربوينت غير قابل للتعديل
 bg.extMSSlideshow =Microsoft PowerPoint слайдшоу
 ca.extMSSlideshow =Presentació de diapositives Microsoft PowerPoint
@@ -454,8 +482,11 @@ si.extMSSlideshow =මයික්‍රොසොෆ්ට් පවර්පො
 zh_TW.extMSSlideshow =Microsoft PowerPoint 投影片
 sr_Cyrl_RS.extMSSlideshow =Microsoft PowerPoint слајд-шоу
 sr_Latn_RS.extMSSlideshow =Microsoft PowerPoint slajd-šou
+he.extMSSlideshow =מצגת שקופיות של Microsoft PowerPoint
+sq.extMSSlideshow =Shfaqje e slajdeve Microsoft PowerPoint
 
 en.extODT =OpenDocument Text File
+en_GB.extODT =OpenDocument Text File
 ar_SA.extODT =ملف نصي ليبري أوفس
 bg.extODT =OpenDocument текстов файл
 ca.extODT =Fitxer de text OpenDocument
@@ -499,8 +530,11 @@ si.extODT =ඕපන්ඩොකියුමන්ට් පෙළ ලේඛන�
 zh_TW.extODT =OpenDocument Text 文件
 sr_Cyrl_RS.extODT =OpenDocument текст фајл
 sr_Latn_RS.extODT =OpenDocument tekst fajl
+he.extODT =קובץ טקסט OpenDocument
+sq.extODT =Skedar teksti OpenDocument
 
 en.extODS =OpenDocument Spreadsheet
+en_GB.extODS =OpenDocument Spreadsheet
 ar_SA.extODS =جدول ليبري أوفس
 bg.extODS =OpenDocument електронна таблица
 ca.extODS =Full de càlcul OpenDocument
@@ -544,8 +578,11 @@ si.extODS =ඕපන්ඩොකියුමන්ට් පැතුරුම�
 zh_TW.extODS =OpenDocument 試算表
 sr_Cyrl_RS.extODS =OpenDocument прорачунска табела
 sr_Latn_RS.extODS =OpenDocument proračunska tabela
+he.extODS =גיליון אלקטרוני OpenDocument
+sq.extODS =Fletëllogaritëse OpenDocument
 
 en.extODP =OpenDocument Presentation
+en_GB.extODP =OpenDocument Presentation
 ar_SA.extODP =عرض ليبري أوفس
 bg.extODP =OpenDocument презентация
 ca.extODP =Presentació OpenDocument
@@ -589,8 +626,11 @@ si.extODP =ඕපන්ඩොකියුමන්ට් සමර්පණය
 zh_TW.extODP =OpenDocument 簡報
 sr_Cyrl_RS.extODP =OpenDocument презентација
 sr_Latn_RS.extODP =OpenDocument prezentacija
+he.extODP =מצגת OpenDocument
+sq.extODP =Prezantim OpenDocument
 
 en.extDOC =Word 97-2003 Document
+en_GB.extDOC =Word 97-2003 Document
 ar_SA.extDOC =مستند وورد 97-2003
 bg.extDOC =Word 97-2003 документ
 ca.extDOC =Document Word 97-2003
@@ -634,8 +674,11 @@ si.extDOC =වර්ඩ් 97-2003 ලේඛනය
 zh_TW.extDOC =Word 97-2003 文件
 sr_Cyrl_RS.extDOC =Word 97-2003 документ
 sr_Latn_RS.extDOC =Word 97-2003 dokument
+he.extDOC =מסמך Word 97-2003
+sq.extDOC =Dokument Word 97-2003
 
 en.extDOCX =Office Open XML Document
+en_GB.extDOCX =Office Open XML Document
 ar_SA.extDOCX =مستند وورد
 bg.extDOCX =Office Open XML документ
 ca.extDOCX =Document Office Open XML
@@ -645,7 +688,7 @@ el.extDOCX =Έγγραφο Office με ανοιχτή μορφή XML
 fi.extDOCX =Officen avoin XML-asiakirja
 ;lt.extDOCX =Office Atidaryti XML Dokumentą
 lo.extDOCX =ເປີດເອກະສານ XML
-nl.extDOCX =Office Open XML Document
+nl.extDOCX =Office Open XML-document
 ru.extDOCX =Документ Office Open XML
 de.extDOCX =Office Open XML-Dokument
 fr.extDOCX =Document Office Open XML
@@ -679,8 +722,11 @@ si.extDOCX =ඔෆිස් විවෘත XML ලේඛනය
 zh_TW.extDOCX =Office Open XML 文件
 sr_Cyrl_RS.extDOCX =Office Open XML документ
 sr_Latn_RS.extDOCX =Office Open XML dokument
+he.extDOCX =מסמך Office Open XML
+sq.extDOCX =Dokument Office Open XML
 
 en.extDOCXF =ONLYOFFICE Form Template
+en_GB.extDOCXF =ONLYOFFICE Form Template
 ar_SA.extDOCXF =قالب استبيان ONLYOFFICE
 bg.extDOCXF =ONLYOFFICE Шаблон на формуляр
 ca.extDOCXF =Plantilla de formulari ONLYOFFICE
@@ -724,8 +770,11 @@ si.extDOCXF =ඔන්ලිඔෆිස් ආකෘතිපත්‍ර අ�
 zh_TW.extDOCXF =ONLYOFFICE 文档表单模板
 sr_Cyrl_RS.extDOCXF =ONLYOFFICE формулар шаблон
 sr_Latn_RS.extDOCXF =ONLYOFFICE formular šablon
+he.extDOCXF =תבנית טופס ONLYOFFICE
+sq.extDOCXF =Modeli i shablloni ONLYOFFICE
 
 en.extXLS =Excel 97-2003 Spreadsheet
+en_GB.extXLS =Excel 97-2003 Spreadsheet
 ar_SA.extXLS =جدول إكسل 97-2003
 bg.extXLS =Excel 97-2003 таблица
 ca.extXLS =Full de càlcul Excel 97-2003
@@ -769,8 +818,11 @@ si.extXLS =එක්සෙල් 97-2003 පැතුරුම්පත
 zh_TW.extXLS =Excel 97-2003 試算表
 sr_Cyrl_RS.extXLS =Excel 97-2003 прорачунска табела
 sr_Latn_RS.extXLS =Excel 97-2003 proračunska tabela
+he.extXLS =גיליון אלקטרוני Excel 97-2003
+sq.extXLS =Fletëllogaritëse Excel 97-2003
 
 en.extXLSX =Office Open XML Spreadsheet
+en_GB.extXLSX =Office Open XML Spreadsheet
 ar_SA.extXLSX =جدول إكسل
 bg.extXLSX =Office Open XML таблица
 ca.extXLSX =Full de càlcul Office Open XML
@@ -780,7 +832,7 @@ el.extXLSX =Υπολογιστικό φύλλο Office με ανοιχτή μο�
 fi.extXLSX =Officen avoin XML-laskentataulukko
 ;lt.extXLSX =Office Atidaryti XML Skaičiuoklę
 lo.extXLSX =ເປີດຕາຕະລາງ XML
-nl.extXLSX =Office Open XML Spreadsheet
+nl.extXLSX =Office Open XML-spreadsheet
 ru.extXLSX =Электронная таблица Office Open XML
 de.extXLSX =Office Open XML-Tabellenkalkulation
 fr.extXLSX =Classeur Office Open XML
@@ -814,8 +866,11 @@ si.extXLSX =ඔෆිස් විවෘත XML පැතුරුම්පත
 zh_TW.extXLSX =Office Open XML 試算表
 sr_Cyrl_RS.extXLSX =Office Open XML прорачунска табела
 sr_Latn_RS.extXLSX =Office Open XML proračunska tabela
+he.extXLSX =גיליון אלקטרוני Office Open XML
+sq.extXLSX =Fletëllogaritëse Office Open XML
 
 en.extPPT =PowerPoint 97-2003 Presentation
+en_GB.extPPT =PowerPoint 97-2003 Presentation
 ar_SA.extPPT =عرض بوربوينت 97-2003
 bg.extPPT =PowerPoint 97-2003 Презентация
 ca.extPPT =Presentació de diapositives PowerPoint 97-2003
@@ -859,8 +914,11 @@ si.extPPT =පවර්පොයින්ට් 97-2003 සමර්පණය
 zh_TW.extPPT =PowerPoint 97-2003 簡報
 sr_Cyrl_RS.extPPT =PowerPoint 97-2003 презентација
 sr_Latn_RS.extPPT =PowerPoint 97-2003 prezentacija
+he.extPPT =מצגת PowerPoint 97-2003
+sq.extPPT =Prezantim PowerPoint 97-2003
 
 en.extPPTX =Office Open XML Presentation
+en_GB.extPPTX =Office Open XML Presentation
 ar_SA.extPPTX =عرض بوربوينت قابل للتعديل
 bg.extPPTX =Office Open XML Презентация
 ca.extPPTX =Presentació Office Open XML
@@ -870,7 +928,7 @@ el.extPPTX =Παρουσίαση Office με ανοιχτή μορφή XML
 fi.extPPTX =Officen avoin XML-esitys
 ;lt.extPPTX =Office Atidaryti XML Prezentaxiją
 lo.extPPTX =ການນຳສະເໜີ XML
-nl.extPPTX =Office Open XML Presentatie
+nl.extPPTX =Office Open XML-presentatie
 ru.extPPTX =Презентация Office Open XML
 de.extPPTX =Office Open XML-Präsentation
 fr.extPPTX =Présentation Office Open XML
@@ -880,7 +938,7 @@ it_IT.extPPTX =Presentazione Open Office XML
 pt_BR.extPPTX =Apresentação do Office Open XML
 pt_PT.extPPTX =Apresentação em XML Open Office
 pl.extPPTX =Prezentacja Open Office XML
-ro.extPPTX =Prezentare PowerPoint 97-2003
+ro.extPPTX =Prezentare Open Office XML
 sk.extPPTX =Prezentácia Office Open XML
 sl.extPPTX =Office Open XML predstavitev
 sv.extPPTX =Office Open XML-presentation
@@ -904,8 +962,11 @@ si.extPPTX =ඔෆිස් විවෘත XML සමර්පණය
 zh_TW.extPPTX =Office Open XML 簡報
 sr_Cyrl_RS.extPPTX =Office Open XML презентација
 sr_Latn_RS.extPPTX =Office Open XML prezentacija
+he.extPPTX =מצגת Office Open XML
+sq.extPPTX =Prezantim Office Open XML
 
 en.extPPS =PowerPoint 97-2003 Slide Show
+en_GB.extPPS =PowerPoint 97-2003 Slide Show
 ar_SA.extPPS =عرض بوربوينت 97-2003
 bg.extPPS =PowerPoint 97-2003 Слайдшоу
 ca.extPPS =Presentació de diapositives PowerPoint 97-2003
@@ -949,8 +1010,11 @@ si.extPPS =පවර්පොයින්ට් 97-2003 චිත්‍රකා
 zh_TW.extPPS =PowerPoint 97-2003投影片
 sr_Cyrl_RS.extPPS =PowerPoint 97-2003 слајд-шоу
 sr_Latn_RS.extPPS =PowerPoint 97-2003 slajd-šou
+he.extPPS =מצגת שקופיות PowerPoint 97-2003
+sq.extPPS =Shfaqje e slajdeve PowerPoint 97-2003
 
 en.extPPSX =Office Open XML Slide Show
+en_GB.extPPSX =Office Open XML Slide Show
 ar_SA.extPPSX =عرض بوربوينت غير قابل للتعديل
 bg.extPPSX =Office Open XML Слайдшоу
 ca.extPPSX =Presentació de diapositives Office Open XML
@@ -960,7 +1024,7 @@ el.extPPSX =Προβολή παρουσίασης Office με ανοιχτή μ�
 fi.extPPSX =Officen avoin XML-diaesitys
 ;lt.extPPSX =Office Atidaryti XML Skaidrių Demonstraciją
 lo.extPPSX =ເປີດສະແດງສະໄລ XML
-nl.extPPSX =Office Open XML Diavoorstelling
+nl.extPPSX =Office Open XML-diavoorstelling
 ru.extPPSX =Слайдшоу Office Open XML
 de.extPPSX =Office Open XML-Slideshow
 fr.extPPSX =Diaporama Office Open XML
@@ -994,8 +1058,11 @@ si.extPPSX =ඔෆිස් විවෘත XML චිත්‍රකාච ද�
 zh_TW.extPPSX =Office Open XML 投影片
 sr_Cyrl_RS.extPPSX =Office Open XML слајд-шоу
 sr_Latn_RS.extPPSX =Office Open XML slajd-šou
+he.extPPSX =מצגת שקופיות Office Open XML
+sq.extPPSX =Shfaqje e slajdeve Office Open XML
 
 en.extRTF =Rich Text Format File
+en_GB.extRTF =Rich Text Format File
 ar_SA.extRTF =ملف نصي غني
 bg.extRTF =Файл с богат текстов формат
 ca.extRTF =Fitxer en format de text enriquit
@@ -1039,8 +1106,11 @@ si.extRTF =පොහොසත් පෙළ ආකෘති ගොනුව
 zh_TW.extRTF =Rich Text Format 文件
 sr_Latn_RS.extRTF =Богати текст формат фајл
 sr_Latn_RS.extRTF =Bogati tekst format fajl
+he.extRTF =קובץ בפורמט טקסט עשיר
+sq.extRTF =Skedari i formatit të tekstit të pasur
 
 en.extCSV =Comma Separated Values
+en_GB.extCSV =Comma Separated Values
 ar_SA.extCSV =قيم مفرّقة بفاصلة
 bg.extCSV =Стойности, разделени със запетая
 ca.extCSV =Valors separats per comes
@@ -1084,8 +1154,11 @@ si.extCSV =අල්පවිරාම මගින් වෙන්කළ අග
 zh_TW.extCSV =逗點分隔值
 sr_Cyrl_RS.extCSV =Вредности одвојене зарезом
 sr_Latn_RS.extCSV =Vrednosti odvojene zarezom
+he.extCSV =ערכים מופרדים בפסיקים
+sq.extCSV =Vlerat e ndara me presje
 
 en.extPDF =Portable Document
+en_GB.extPDF =Portable Document
 ar_SA.extPDF =بي دي إف
 bg.extPDF =Преносим документ
 ca.extPDF =Document portàtil
@@ -1129,8 +1202,11 @@ si.extPDF =සුවහ ලේඛනය
 zh_TW.extPDF =PDF 檔案
 sr_Cyrl_RS.extPDF =Преносиви документ
 sr_Latn_RS.extPDF =Prenosivi dokument
+he.extPDF =מסמך נייד
+sq.extPDF =Dokument portativ
 
 en.extDJVU =Digital Document
+en_GB.extDJVU =Digital Document
 ar_SA.extDJVU =مستند رقمي
 bg.extDJVU =Дигитален документ
 ca.extDJVU =Document digital
@@ -1174,8 +1250,11 @@ si.extDJVU =සංඛ්‍යාංක ලේඛනය
 zh_TW.extDJVU =DjVu 檔案
 sr_Cyrl_RS.extDJVU =Дигитални документ
 sr_Latn_RS.extDJVU =Digitalni dokument
+he.extDJVU =מסמך דיגיטלי
+sq.extDJVU =Dokument dixhital
 
 en.extXPS =Open XML Paper Specification
+en_GB.extXPS =Open XML Paper Specification
 ar_SA.extXPS =مستند أوبن إكس بي إس
 bg.extXPS =Open XML хартиена спецификация
 ca.extXPS =Especificació de paper Open XML
@@ -1219,8 +1298,11 @@ si.extXPS =විවෘත XML කොළයේ පිරිවිතර
 zh_TW.extXPS =OpenXPS 檔案
 sr_Cyrl_RS.extXPS =Open XML папир спецификација
 sr_Latn_RS.extXPS =Open XML papir specifikacija
+he.extXPS =מפרט נייר XML פתוח
+sq.extXPS =Letër specifikimi Open XML
 
 en.extPOT =PowerPoint Template
+en_GB.extPOT =PowerPoint Template
 ar_SA.extPOT =قالب بوربوينت
 sr_Latn_RS.extPOT =PowerPoint Šablon
 si.extPOT =පවර්පොයින්ට් අච්චුව
@@ -1236,8 +1318,11 @@ de.extPOT =PowerPoint-Vorlage
 it_IT.extPOT =Modello PowerPoint
 sr_Cyrl_RS.extPOT =PowerPoint шаблон
 sr_Latn_RS.extPOT =PowerPoint šablon
+he.extPOT =תבנית PowerPoint
+sq.extPOT =Shabllon PowerPoint
 
 en.extPPTM =PowerPoint Open XML Macro-Enabled Presentation
+en_GB.extPPTM =PowerPoint Open XML Macro-Enabled Presentation
 ar_SA.extPPTM =عرض بوربوينت مع خاصية الماكرو
 sr_Latn_RS.extPPTM =PowerPoint Open XML Makro-omogućena Prezentacija
 si.extPPTM =පවර්පොයින්ට් විවෘත XML සාර්ව-සබල සමර්පණය
@@ -1253,8 +1338,11 @@ de.extPPTM =PowerPoint Open XML-Makro-fähige Präsentation
 it_IT.extPPTM =Presentazione PowerPoint Open XML con attivazione macro
 sr_Cyrl_RS.extPPTM =PowerPoint презентација са макроима у отвореном XML формату
 sr_Latn_RS.extPPTM =PowerPoint prezentacija sa makroima u otvorenom XML formatu
+he.extPPTM =מצגת PowerPoint Open XML עם מאקרו
+sq.extPPTM =Prezantim me makro të aktivizuar PowerPoint Open XML
 
 en.extEPUB =Open eBook File
+en_GB.extEPUB =Open eBook File
 ar_SA.extEPUB =كتاب النشر الإلكتروني
 sr_Latn_RS.extEPUB =Open eBook Fajl
 si.extEPUB =වි-පොත් ගොනුව අරින්න
@@ -1270,8 +1358,11 @@ de.extEPUB =eBook-Datei öffnen
 it_IT.extEPUB =File Open eBook
 sr_Cyrl_RS.extEPUB =Отворена еКњига
 sr_Latn_RS.extEPUB =Otvorena eKnjiga
+he.extEPUB =קובץ ספר אלקטרוני פתוח
+sq.extEPUB =Hapni skedarin e librit elektronik
 
 en.extFB2 =FictionBook 2.0 File
+en_GB.extFB2 =FictionBook 2.0 File
 ar_SA.extFB2 =ملف فكشنبوك 2.0
 sr_Latn_RS.extFB2 =KnjigaFikcije 2.0 Fajl
 si.extFB2 =ෆික්ෂන්බුක් 2.0 ගොනුව
@@ -1287,8 +1378,11 @@ de.extFB2 =FictionBook 2.0-Datei
 it_IT.extFB2 =File FictionBook 2.0
 sr_Cyrl_RS.extFB2 =FictionBook 2.0 датотека
 sr_Latn_RS.extFB2 =FictionBook 2.0 datoteka
+he.extFB2 =קובץ FictionBook 2.0
+sq.extFB2 =Skedar FictionBook 2.0
 
 en.extDOTX =Word Open XML Document Template
+en_GB.extDOTX =Word Open XML Document Template
 ar_SA.extDOTX =قالب وورد
 sr_Latn_RS.extDOTX =Word Open XML Dokument Šablon
 si.extDOTX =වර්ඩ් විවෘත XML ලේඛන අච්චුව
@@ -1304,8 +1398,11 @@ de.extDOTX =Word Open XML Dokumentvorlage
 it_IT.extDOTX =Modello di documento Word Open XML
 sr_Cyrl_RS.extDOTX =Word шаблон документа у отвореном XML формату
 sr_Latn_RS.extDOTX =Word šablon dokumenta u otvorenom XML formatu
+he.extDOTX =תבנית מסמך Word Open XML
+sq.extDOTX =Shabllon dokumenti Word Open XML
 
 en.extOXPS =Open XML Paper Specification
+en_GB.extOXPS =Open XML Paper Specification
 ar_SA.extOXPS =مستند أوبن إكس بي إس
 bg.extOXPS =Open XML хартиена спецификация
 ca.extOXPS =Especificació de paper Open XML
@@ -1348,8 +1445,11 @@ gl.extOXPS =Especificación do papel Open XML
 si.extOXPS =විවෘත XML කොළයේ පිරිවිතර
 sr_Cyrl_RS.extOXPS =Open XML папир спецификација
 sr_Latn_RS.extOXPS =Open XML papir specifikacija
+he.extOXPS =מפרט נייר XML פתוח
+sq.extOXPS =Letër specifikimi Open XML
 
 en.extXLSB =Excel Binary File Format
+en_GB.extXLSB =Excel Binary File Format
 si.extXLSB =එක්සෙල් ද්විමය ගොනු ආකෘතිය
 es.extXLSB =Formato de archivo binario de Excel
 fr.extXLSB =Format de fichier binaire Excel
@@ -1363,10 +1463,24 @@ de.extXLSB =Excel-Binärdateiformat
 it_IT.extXLSB =Formato di file binario Excel
 sr_Cyrl_RS.extXLSB =Excel бинарни формат датотеке
 sr_Latn_RS.extXLSB =Excel binarni format datoteke
+he.extXLSB =פורמט קובץ בינארי של Excel
+sq.extXLSB =Fromati i skedarit binar të Excel
 
+en.extXLSM =Microsoft Excel Macro-Enabled Workbook
+sq.extXLSM =Libri i punës i aktivizuar me makro Microsoft Excel
+
+en.extFODS =OpenDocument Flat XML Spreadsheet
+sq.extFODS =Fletëllogaritëse e sheshtë OpenDocument XML
+
+en.extFODT =OpenDocument Flat XML Document
+sq.extFODT =Dokument XML i sheshtë OpenDocument
+
+en.extVSDX =Visio Drawing
+sq.extVSDX =Vizatim Visio
 ;======================================================================================================
 
 en.jumpDOCX =New document
+en_GB.jumpDOCX =New document
 ar_SA.jumpDOCX =مستند جديد
 bg.jumpDOCX =Нов документ
 ca.jumpDOCX =Nou document
@@ -1410,8 +1524,11 @@ si.jumpDOCX =නව ලේඛනය
 zh_TW.jumpDOCX =新文件
 sr_Latn_RS.jumpDOCX =Novi dokument
 sr_Cyrl_RS.jumpDOCX =Нови документ
+he.jumpDOCX =מסמך חדש
+sq.jumpDOCX =Dokument i ri
 
 en.jumpXLSX =New spreadsheet
+en_GB.jumpXLSX =New spreadsheet
 ar_SA.jumpXLSX =جدول بياني جديد
 bg.jumpXLSX =Нова електронна таблица
 ca.jumpXLSX =Nou full de càlcul
@@ -1455,8 +1572,11 @@ si.jumpXLSX =නව පැතුරුම්පත
 zh_TW.jumpXLSX =新試算表
 sr_Latn_RS.jumpXLSX =Nova proračunska tabela
 sr_Cyrl_RS.jumpXLSX =Нова прорачунска табела
+he.jumpXLSX =גיליון אלקטרוני חדש
+sq.jumpXLSX =Fletëllogaritëse e re
 
 en.jumpPPTX =New presentation
+en_GB.jumpPPTX =New presentation
 ar_SA.jumpPPTX =عرض تقديمي جديد
 bg.jumpPPTX =Нова презентация
 ca.jumpPPTX =Nova presentació
@@ -1500,8 +1620,11 @@ si.jumpPPTX =නව සමර්පණය
 zh_TW.jumpPPTX =新簡報
 sr_Latn_RS.jumpPPTX =Nova prezentacija
 sr_Cyrl_RS.jumpPPTX =Нова презентација
+he.jumpPPTX =מצגת חדשה
+sq.jumpPPTX =Prezantim i ri
 
 en.jumpDOCXF =New PDF Form
+en_GB.jumpDOCXF =New PDF Form
 ar_SA.jumpDOCXF =نموذج PDF جديد
 bg.jumpDOCXF =Нов PDF формуляр
 ca.jumpDOCXF =Nou formulari PDF
@@ -1545,8 +1668,11 @@ si.jumpDOCXF =නව PDF පෝරමය
 zh_TW.jumpDOCXF =新的 PDF 表格
 sr_Latn_RS.jumpDOCXF =Novi PDF formular
 sr_Cyrl_RS.jumpDOCXF =Нови PDF формулар
+he.jumpDOCXF =טופס PDF חדש
+sq.jumpDOCXF =Format PDF i ri
 
 en.defprogAppDescription=Free desktop office suite for document editing and collaboration
+en_GB.defprogAppDescription=Free desktop office suite for document editing and collaboration
 ar_SA.defprogAppDescription=حزمة برامج مكتبية مجانية لتحرير المستندات والتعاون لإنجازها مع رفقائك
 bg.defprogAppDescription=Безплатен офис пакет за редактиране и съвместна работа по документи
 ca.defprogAppDescription=Suite d'oficina gratuïta per a l'edició de documents i col·laboració
@@ -1590,8 +1716,11 @@ si.defprogAppDescription=ලේඛන සංස්කරණය සහ සහය�
 zh_TW.defprogAppDescription=使用於檔案編輯和協作的免費桌面辦公套件
 sr_Latn_RS.defprogAppDescription=Besplatni desktop ofis paket za uređivanje dokumenata i saradnju
 sr_Cyrl_RS.defprogAppDescription =Бесплатни десктоп офис пакет за уређивање докумената и сарадњу
+he.defprogAppDescription=חבילת תוכנות משרדיות חינמית לשולחן העבודה לעריכת מסמכים ושיתוף פעולה
+sq.defprogAppDescription=Pako falas për zyrën në desktop për redaktimin dhe bashkëpunimin në dokumente
 
 en.warnWin10FileAssociationDesc=To associate the files with the application, open the following window after the installation is complete:
+en_GB.warnWin10FileAssociationDesc=To associate the files with the application, open the following window after the installation is complete:
 ar_SA.warnWin10FileAssociationDesc=لربط الملفات مع التطبيق، افتح النافذة التالية بعد إكمال التثبيت
 bg.warnWin10FileAssociationDesc=За да свържете файловете с приложението, отворете следния прозорец, след като инсталацията приключи:
 ca.warnWin10FileAssociationDesc=Per associar els fitxers a l'aplicació, obriu la finestra següent després de la instal·lació:
@@ -1635,8 +1764,11 @@ si.warnWin10FileAssociationDesc=යෙදුම සමඟ ගොනු නිහ
 zh_TW.warnWin10FileAssociationDesc=當安裝完成後，開啟以下的視窗將檔案與應用程式聯結：
 sr_Latn_RS.warnWin10FileAssociationDesc=Da biste povezali fajlove sa aplikacijom, otvorite predstojeći prozor nakon što se instalacija završi
 sr_Cyrl_RS.warnWin10FileAssociationDesc =Да бисте повезали фајлове са апликацијом, отворите предстојећи прозор након што се инсталација заврши
+he.warnWin10FileAssociationDesc=כדי לשייך את הקבצים ליישום, פתח את החלון הבא לאחר סיום ההתקנה:
+sq.warnWin10FileAssociationDesc=Për të asocionuar skedarët me aplikacionin, hapni ditaren e mëposhtme pas përfundimit të instalimit:
 
 en.warnWin10FileAssociationPath=Settings > Apps > Default apps
+en_GB.warnWin10FileAssociationPath=Settings > Apps > Default apps
 ar_SA.warnWin10FileAssociationPath=الإعدادات > تطبيقات > الافتراضية
 bg.warnWin10FileAssociationPath=Настройки> Приложения> Приложение по подразбиране
 ca.warnWin10FileAssociationPath=Configuració> Aplicacions> Aplicacions predeterminades
@@ -1680,8 +1812,11 @@ si.warnWin10FileAssociationPath=සැකසුම් > යෙදුම් > ප
 zh_TW.warnWin10FileAssociationPath=設定 > 應用程式 > 預設應用程式
 sr_Latn_RS.warnWin10FileAssociationPath=Podešavanja > Aplikacije > Podrazumevane aplikacije
 sr_Cyrl_RS.warnWin10FileAssociationPath =Подешавања > Апликације > Подразумеване апликације
+he.warnWin10FileAssociationPath=הגדרות > יישומים > יישומי ברירת מחדל
+sq.warnWin10FileAssociationPath=Cilësimet > Aplikacione > Aplikacione të paracaktuara
 
 en.runOpenDefaultApps=Open Default apps
+en_GB.runOpenDefaultApps=Open Default apps
 ar_SA.runOpenDefaultApps=افتح التطبيقات الافتراضية
 bg.runOpenDefaultApps=Отвори приложения по подразбиране
 ca.runOpenDefaultApps=Obriu les aplicacions per defecte
@@ -1725,6 +1860,8 @@ si.runOpenDefaultApps=පෙරනිමි යෙදුම් අරින්�
 zh_TW.runOpenDefaultApps=開啟預設應用程式
 sr_Cyrl_RS.runOpenDefaultApps =Отвори подразумеване апликације
 sr_Latn_RS.runOpenDefaultApps=Otvori podrazumevane aplikacije
+he.runOpenDefaultApps=פתח יישומי ברירת מחדל
+sq.runOpenDefaultApps=Hapni aplikacionet e paracaktuara
 
 [Run]
 Filename: ms-settings:defaultapps; Description: {cm:runOpenDefaultApps}; Flags:postinstall shellexec nowait unchecked; MinVersion: 10.0.10240;
@@ -1778,9 +1915,9 @@ var
   prefix: string;
 begin
 #ifdef _ONLYOFFICE
-  SetArrayLength(AudioExts, 24);
+  SetArrayLength(AudioExts, 27);
 #else
-  SetArrayLength(AudioExts, 23);
+  SetArrayLength(AudioExts, 26);
 #endif
   SetArrayLength(AudioExtEnabled,  GetArrayLength(AudioExts));
 
@@ -1808,10 +1945,14 @@ begin
   AudioExts[20] := 'DOTX';
   AudioExts[21] := 'OXPS';
   AudioExts[22] := 'XLSB';
+  AudioExts[23] := 'FODS';
+  AudioExts[24] := 'FODT';
+//  AudioExts[25] := 'VSDX';
+  AudioExts[25] := 'XLSM';
 #ifdef _ONLYOFFICE
-  AudioExts[23] := 'DOCXF';
+  AudioExts[26] := 'DOCXF';
 #endif
-  
+
   SetArrayLength(ExtensionRegistryInfo,  GetArrayLength(AudioExts));
 
   prefix := '{#ASCC_REG_PREFIX}' + '.';
@@ -1840,8 +1981,12 @@ begin
   ExtensionRegistryInfo[20] := prefix + 'Dotx:'         + ExpandConstant('{cm:extDOTX}')            + ':' + '30';
   ExtensionRegistryInfo[21] := prefix + 'Oxps:'         + ExpandConstant('{cm:extOXPS}')            + ':' + '31';
   ExtensionRegistryInfo[22] := prefix + 'Xlsb:'         + ExpandConstant('{cm:extXLSB}')            + ':' + '32';
+  ExtensionRegistryInfo[23] := prefix + 'Fods:'         + ExpandConstant('{cm:extFODS}')            + ':' + '34';
+  ExtensionRegistryInfo[24] := prefix + 'Fodt:'         + ExpandConstant('{cm:extFODT}')            + ':' + '35';
+//  ExtensionRegistryInfo[25] := prefix + 'Vsdx:'         + ExpandConstant('{cm:extVSDX}')            + ':' + '36';
+  ExtensionRegistryInfo[25] := prefix + 'Xlsm:'         + ExpandConstant('{cm:extXLSM}')            + ':' + '37';
 #ifdef _ONLYOFFICE
-  ExtensionRegistryInfo[23] := prefix + 'Docxf:'        + ExpandConstant('{cm:extDOCXF}')           + ':' + '13';
+  ExtensionRegistryInfo[26] := prefix + 'Docxf:'        + ExpandConstant('{cm:extDOCXF}')           + ':' + '13';
 #endif
 end;
 
@@ -2023,42 +2168,29 @@ end;
 procedure AddContextMenuNewItems;
 var
   lang, dir, regpath, progpath: String;
-  langs, args, values: TArrayOfString;
+  args, values: TArrayOfString;
   version: TWindowsVersion;
   found: Boolean;
   i: Integer;
 begin
-  langs := ['az-Latn-AZ', 'bg-BG', 'cs-CZ', 'de-DE', 'el-GR', 'en-US', 'en-GB', 'es-ES', 
-            'eu-ES',      'fr-FR', 'gl-ES', 'hy-AM', 'it-IT', 'ja-JP', 'ko-KR', 'lv-LV', 
-            'ms-MY',      'nl-NL', 'pl-PL', 'pt-PT', 'pt-BR', 'ru-RU', 'sk-SK', 'sv-SE', 
-            'tr-TR',      'uk-UA', 'vi-VN', 'zh-CN', 'zh-TW', 'ar-SA', 'sr-Latn-RS'];
-
-  found := False;
-  dir := 'en-US';
-  lang := ExpandConstant('{language}');
-  StringChangeEx(lang, '_', '-', True);
-  for i := 0 to GetArrayLength(langs) - 1 do begin
-    if langs[i] = lang then begin
-       dir := langs[i];
-       found := True;
-       break;
-    end;
-  end;
-  
-  if not found then begin
-    for i := 0 to GetArrayLength(langs) - 1 do begin
-      if Copy(langs[i], 1, 2) = lang then begin
-        dir := langs[i];
-        break;
-      end;
-    end;
+  lang := ExpandConstant('{cm:AppLocale}');
+  case lang of
+    'ar-SA', 'az-Latn-AZ', 'bg-BG', 'cs-CZ', 'de-DE', 'el-GR',
+    'en-GB', 'en-US', 'es-ES', 'eu-ES', 'fi-FI', 'fr-FR',
+    'gl-ES', 'he-IL', 'hy-AM', 'it-IT', 'ja-JP', 'ko-KR',
+    'lv-LV', 'ms-MY', 'nb-NO', 'nl-NL', 'pl-PL', 'pt-BR',
+    'pt-PT', 'ru-RU', 'si-LK', 'sk-SK', 'sl-SI', 'sr-Cyrl-RS',
+    'sr-Latn-RS', 'sv-SE', 'tr-TR', 'uk-UA', 'vi-VN', 'zh-CN',
+    'zh-TW' : dir := lang;
+  else
+    dir := 'default';
   end;
 
-  args := ['new.docx:.docx:.Document.12:7', 
-           'new.pptx:.pptx:.Show.12:9', 
-           'new.xlsx:.xlsx:.Sheet.12:10' 
+  args := ['new.docx:.docx:.Document.12:7:1000:1100',
+           'new.pptx:.pptx:.Show.12:9:1002:1102',
+           'new.xlsx:.xlsx:.Sheet.12:10:1001:1101'
 #ifdef _ONLYOFFICE
-           ,'new.pdf:.pdf:.Pdf:5'
+           ,'new.pdf:.pdf:.Pdf:5:1003:1103'
 #endif
            ];
 
@@ -2070,9 +2202,13 @@ begin
      if not RegKeyExists(HKEY_LOCAL_MACHINE, regpath) then begin
        RegWriteStringValue(HKEY_LOCAL_MACHINE, regpath, 'IconPath', ExpandConstant('{app}\{#iconsExe},' + values[3]));
        RegWriteStringValue(HKEY_LOCAL_MACHINE, regpath, 'FileName', progpath + '\' + values[0]);
+       RegWriteStringValue(HKEY_LOCAL_MACHINE, regpath, 'MenuText', ExpandConstant('@{app}\{#iconsExe},-' + values[4]));
+       RegWriteStringValue(HKEY_LOCAL_MACHINE, regpath, 'ItemName', ExpandConstant('@{app}\{#iconsExe},-' + values[5]));
      end;
      if version.Major = 10 then begin
        RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + values[1], '', '{#ASCC_REG_PREFIX}' + values[2]);
+       if RegValueExists(HKEY_CURRENT_USER, 'Software\Classes\' + values[1], '') then
+         RegWriteStringValue(HKEY_CURRENT_USER, 'Software\Classes\' + values[1], '', '{#ASCC_REG_PREFIX}' + values[2]);
      end;
   end;
 end;
@@ -2083,6 +2219,7 @@ var
   ext, progId1, progId2: string;
   argsArray: TArrayOfString;
   cleanExts, extensionInfo: TArrayOfString;
+  version: TWindowsVersion;
   prefix, str: string;
 begin
     isFullAssociation := CheckCommandlineParam('/FULLASSOCIATION');
@@ -2090,8 +2227,9 @@ begin
       initExtensions();
     end;
 
+    GetWindowsVersionEx(version);
     for  i := 0 to GetArrayLength(AudioExts) - 1 do
-    begin     
+    begin
       Explode(argsArray, ExtensionRegistryInfo[i],':');
 
       // checking existance is temporary locked to rewrite new icons indexes
@@ -2102,6 +2240,10 @@ begin
         RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0], 'AppUserModelID', ExpandConstant('{#APP_USER_MODEL_ID}'));
         RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0] + '\DefaultIcon', '', ExpandConstant('{app}\{#iconsExe},' + argsArray[2]));
         RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0] + '\shell\open\command', '', ExpandConstant('"{app}\{#iconsExe}" "%1"'));
+        RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0] + '\Application', 'ApplicationName', '{#sAppName}');
+        if (version.Major = 10) and (version.Minor = 0) and (version.Build < 22000) then begin
+          RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0] + '\Application', 'ApplicationIcon', ExpandConstant('{app}\{#iconsExe},33'));
+        end;
       //end;
 
       ext := LowerCase(AudioExts[i]);
@@ -2115,12 +2257,12 @@ begin
 
         if not RegValueExists(HKEY_LOCAL_MACHINE, 'Software\Classes\.' + ext + '\OpenWithProgids', argsArray[0]) then
           RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\Classes\.' + ext + '\OpenWithProgids', argsArray[0], '');
-        
-        if RegValueExists(HKEY_CURRENT_USER, 'Software\Classes\.' + ext, '') then 
+
+        if RegValueExists(HKEY_CURRENT_USER, 'Software\Classes\.' + ext, '') then
           RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Classes\.' + ext, '', progId2);
 
-        if ((Length(progId2) <> 0) and (CompareText(progId2, argsArray[0]) <> 0)) or 
-              ((Length(progId1) <> 0) and (CompareText(progId1, argsArray[0]) <> 0)) then 
+        if ((Length(progId2) <> 0) and (CompareText(progId2, argsArray[0]) <> 0)) or
+              ((Length(progId1) <> 0) and (CompareText(progId1, argsArray[0]) <> 0)) then
         begin
           RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.' + ext + '\UserChoice');
           RegWriteStringValue(HKEY_CURRENT_USER, 'Software\Classes\.' + ext, '', argsArray[0])
@@ -2147,7 +2289,7 @@ begin
   extensionInfo[0] := prefix + 'Docxf:' + ExpandConstant('{cm:extDOCXF}') + ':' + '13';
 
   for  i := 0 to GetArrayLength(cleanExts) - 1 do
-  begin     
+  begin
     Explode(argsArray, extensionInfo[i],':');
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0]);
 
@@ -2166,7 +2308,7 @@ begin
     RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.' + ext + '\UserChoice', 'Progid', str);
     if CompareText(str, argsArray[0]) = 0 then
       RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.' + ext + '\UserChoice');
-  
+
     //RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, ExpandConstant('Software\Classes\Applications\{#NAME_EXE_OUT})'));
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, ExpandConstant('Software\Classes\.' + ext + '\OpenWithList\{#NAME_EXE_OUT}'));
   end;
@@ -2192,7 +2334,7 @@ begin
   initExtensions();
 
   for  i := 0 to GetArrayLength(AudioExts) - 1 do
-  begin     
+  begin
     Explode(argsArray, ExtensionRegistryInfo[i],':');
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, 'Software\Classes\' + argsArray[0]);
 
@@ -2211,7 +2353,7 @@ begin
     RegQueryStringValue(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.' + ext + '\UserChoice', 'Progid', str);
     if CompareText(str, argsArray[0]) = 0 then
       RegDeleteKeyIncludingSubkeys(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.' + ext + '\UserChoice');
-  
+
     //RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, ExpandConstant('Software\Classes\Applications\{#NAME_EXE_OUT})'));
     RegDeleteKeyIncludingSubkeys(HKEY_LOCAL_MACHINE, ExpandConstant('Software\Classes\.' + ext + '\OpenWithList\{#NAME_EXE_OUT}'));
   end;

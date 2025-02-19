@@ -56,6 +56,68 @@ void setNativeUILanguage(std::wstring localeTag)
 }
 #endif
 
+QString normalizeLocale(const QString &locale)
+{
+    int len = locale.length();
+    if (len > 1) {
+        int prim = locale.indexOf(QRegExp("[-_]"));
+        if (prim == -1) {
+            if (len <= 3)
+                return locale.toLower();
+        } else
+        if (prim == 2 || prim == 3) {
+            QString out = locale.mid(0, prim).toLower();
+            int scnd = locale.indexOf(QRegExp("[-_]"), prim + 1);
+            if ((scnd == -1 && len - prim == 3) || (scnd != -1 && scnd - prim == 3)) {
+                out += "-" + locale.mid(prim + 1, 2).toUpper();
+            } else
+            if ((scnd == -1 && len - prim == 5) || (scnd != -1 && scnd - prim == 5)) {
+                out += QString("-") + locale.at(prim + 1).toUpper() + locale.mid(prim + 2, 3).toLower();
+                if (scnd != -1) {
+                    int thrd = locale.indexOf(QRegExp("[-_]"), scnd + 1);
+                    if ((thrd == -1 && len - scnd == 3) || (thrd != -1 && thrd - scnd == 3))
+                        out += "-" + locale.mid(scnd + 1, 2).toUpper();
+                }
+            }
+            return out;
+        }
+    }
+    return "en";
+}
+
+enum class LocaleParts : unsigned char {Language, LanguageAndScript, LanguageAndRegion};
+
+QString getLocaleParts(const QString &locale, LocaleParts parts = LocaleParts::Language)
+{
+    int len = locale.length();
+    if (len > 1) {
+        int prim = locale.indexOf('-');
+        if (prim == -1) {
+            if (len <= 3)
+                return locale;
+        } else
+        if (prim == 2 || prim == 3) {
+            QString out = locale.mid(0, prim);
+            int scnd = locale.indexOf('-', prim + 1);
+            if (parts == LocaleParts::LanguageAndScript) {
+                if ((scnd == -1 && len - prim == 5) || (scnd != -1 && scnd - prim == 5))
+                    return locale.mid(0, prim + 5);
+            } else
+            if (parts == LocaleParts::LanguageAndRegion) {
+                if ((scnd == -1 && len - prim == 3) || (scnd != -1 && scnd - prim == 3)) {
+                    return locale.mid(0, prim + 3);
+                } else
+                if (scnd != -1 && scnd - prim == 5) {
+                    int thrd = locale.indexOf('-', scnd + 1);
+                    if ((thrd == -1 && len - scnd == 3) || (thrd != -1 && thrd - scnd == 3))
+                        out += locale.midRef(scnd, 3);
+                }
+            }
+            return out;
+        }
+    }
+    return "en";
+}
 
 class CLangater::CLangaterIntf
 {
@@ -107,7 +169,11 @@ public:
     }
 
     QString langName(const QString& code) {
-        return m_langs.value(code);
+        foreach (const auto &lang, m_langs) {
+            if (lang.first == code)
+                return lang.second.first;
+        }
+        return "";
     }
 
     bool reload(const QString& lang) {
@@ -140,10 +206,10 @@ public:
     }
 
     QString findCloseLang(const QString& n) {
-        QMap<QString, QString>::iterator i = m_langs.begin();
+        auto i = m_langs.begin();
         while ( i != m_langs.end() ) {
-            if ( i.key().startsWith(n) )
-                return i.key();
+            if ( i->first.startsWith(n) )
+                return i->first;
 
             ++i;
         }
@@ -155,51 +221,54 @@ private:
     std::list<QTranslator *> m_list;
     std::list<QString> m_dirs;
 
-    QMap<QString, QString> m_langs{
-        {"en-US", "English"},
-        {"ru-RU", "Русский"},
-        {"de-DE", "Deutsch"},
-        {"fr-FR", "Français"},
-        {"es-ES", "Español"},
-        {"sk-SK", "Slovenčina"},
-        {"cs-CZ", "Čeština"},
-        {"it-IT", "Italiano"},
-        {"pt-BR", "Português Brasileiro"}
-        ,{"pt-PT", "Português (Portugal)"}
-        ,{"pl-PL", "Polski"}
-        ,{"zh-CN", "简体中文"}
-        ,{"zh-TW", "繁體中文"}
-        ,{"ca-ES", "Catalan"}
-        ,{"da-DK", "Dansk"}
-        ,{"el-GR", "Ελληνικά"}
+    QVector<std::pair<QString, std::pair<QString, QString>>> m_langs{
+        {"en-US", {"English (United States)", ""}},
+        {"en-GB", {"English (United Kingdom)", ""}},
+        {"ru-RU", {"Русский", "Russian"}},
+        {"de-DE", {"Deutsch", "German"}},
+        {"fr-FR", {"Français", "French"}},
+        {"es-ES", {"Español", "Spanish"}},
+        {"sk-SK", {"Slovenčina", "Slovak"}},
+        {"cs-CZ", {"Čeština", "Czech"}},
+        {"it-IT", {"Italiano", "Italian"}},
+        {"pt-PT", {"Português (Portugal)", "Portuguese (Portugal)"}},
+        {"pt-BR", {"Português Brasileiro", "Portuguese (Brazil)"}}
+        ,{"pl-PL", {"Polski", "Polish"}}
+        ,{"zh-CN", {"简体中文", "Chinese (Simplified)"}}
+        ,{"zh-TW", {"繁體中文", "Chinese (Traditional)"}}
+        ,{"ca-ES", {"Catalan", "Catalan"}}
+        ,{"da-DK", {"Dansk", "Danish"}}
+        ,{"el-GR", {"Ελληνικά", "Greek"}}
 //        ,{"et-EE", "Eesti"}
-        ,{"fi-FI", "Suomi"}
-//        ,{"ga-IE", "Gaeilge"}
+        ,{"fi-FI", {"Suomi", "Finnish"}}
+//        ,{"ga-IE", {"Gaeilge", "Galego"}}
+        ,{"he-IL", {"עברית", "Hebrew"}}
 //        ,{"hi-IN", "हिन्दी"}
 //        ,{"hr-HR", "Hrvatska"}
-        ,{"hu-HU", "Magyar"}
-        ,{"hy-AM", "Հայերեն"}
-        ,{"id-ID", "Indonesian"}
-        ,{"no", "Norsk"}
-        ,{"ro-RO", "Romanian"}
-        ,{"sl-SI", "Slovene"}
-        ,{"sv-SE", "Svenska"}
-        ,{"tr-TR", "Türkçe"}
-        ,{"ja-JP", "日本語"}
-        ,{"ko-KR", "한국어"}
-        ,{"bg-BG", "Български"}
-        ,{"nl-NL", "Nederlands"}
-        ,{"vi-VN", "Tiếng Việt"}
-        ,{"lv-LV", "Latviešu valoda"}
+        ,{"hu-HU", {"Magyar", "Hungarian"}}
+        ,{"hy-AM", {"Հայերեն", "Armenian"}}
+        ,{"id-ID", {"Indonesian", "Indonesian"}}
+        ,{"no-NO", {"Norsk", "Norwegian"}}
+        ,{"ro-RO", {"Romanian", "Romanian"}}
+        ,{"sl-SI", {"Slovene", "Slovenian"}}
+        ,{"sq-AL", {"Shqip", "Albanian"}}
+        ,{"sv-SE", {"Svenska", "Swedish"}}
+        ,{"tr-TR", {"Türkçe", "Turkish"}}
+        ,{"ja-JP", {"日本語", "Japanese"}}
+        ,{"ko-KR", {"한국어", "Korean"}}
+        ,{"bg-BG", {"Български", "Bulgarian"}}
+        ,{"nl-NL", {"Nederlands", "Dutch"}}
+        ,{"vi-VN", {"Tiếng Việt", "Vietnamese"}}
+        ,{"lv-LV", {"Latviešu valoda", "Latvian"}}
 //        ,{"lt-LT", "Lietuvių kalba"}
-        ,{"be-BY", "Беларуская мова"}
-        ,{"uk-UA", "Украї́нська мо́ва"}
-        ,{"lo-LA", "ພາສາລາວ"}
-        ,{"gl-ES", "Galego"}
-        ,{"si-LK", "සිංහල"}
-        ,{"ar-SA", "اَلْعَرَبِيَّة"}
-        ,{"sr-Latn-RS", "Srpski (Latin)"}
-        ,{"sr-Cyrl-RS", "Српски (Ћирилица)"}
+        ,{"be-BY", {"Беларуская мова", "Belarusian"}}
+        ,{"uk-UA", {"Украї́нська мо́ва", "Ukrainian"}}
+        ,{"lo-LA", {"ພາສາລາວ", "Lao"}}
+        ,{"gl-ES", {"Galego", "Galego"}}
+        ,{"si-LK", {"සිංහල", "Sinhala (Sri Lanka)"}}
+        ,{"ar-SA", {"اَلْعَرَبِيَّة", "Arabic"}}
+        ,{"sr-Latn-RS", {"Srpski (Latin)", "Serbian (Latin)"}}
+        ,{"sr-Cyrl-RS", {"Српски (Ћирилица)", "Serbian (Cyrillic)"}}
     };
 };
 
@@ -254,7 +323,7 @@ void CLangater::init()
     _lang.isEmpty() &&
         !((_lang = reg_system.value("locale").value<QString>()).size()) && (_lang = APP_DEFAULT_LOCALE).size();
 #endif
-
+    _lang = normalizeLocale(_lang);
     getInstance()->m_intf->addSearchPath({"./langs", ":/i18n/langs", ":/i18n"});
 
     auto _check_lang = [=](const std::list<QString>& dirs, const QString& l) {
@@ -266,8 +335,17 @@ void CLangater::init()
     };
 
     bool _exist = _check_lang(getInstance()->m_intf->m_dirs, _lang);
-    if ( !_exist && _lang.length() == 2 ) {
-        QString _close_lang = getInstance()->m_intf->findCloseLang(_lang);
+    if ( !_exist ) {
+        QString lang_part = getLocaleParts(_lang, LocaleParts::LanguageAndScript);
+        QString _close_lang = getInstance()->m_intf->findCloseLang(lang_part);
+        if (_close_lang.isEmpty() && lang_part.length() > 3) {
+            lang_part = getLocaleParts(_lang, LocaleParts::LanguageAndRegion);
+            _close_lang = getInstance()->m_intf->findCloseLang(lang_part);
+            if (_close_lang.isEmpty() && lang_part.length() > 3) {
+                lang_part = getLocaleParts(_lang);
+                _close_lang = getInstance()->m_intf->findCloseLang(lang_part);
+            }
+        }
         if ( !_close_lang.isEmpty() )
             _lang = _close_lang,
             _exist = _check_lang(getInstance()->m_intf->m_dirs, _lang);
@@ -317,7 +395,7 @@ void CLangater::reloadTranslations(const QString& lang)
 #endif
 }
 
-void CLangater::refreshLangs(const QMap<QString,QString>& map)
+void CLangater::refreshLangs(const QVector<std::pair<QString, std::pair<QString, QString>>>& map)
 {
     getInstance()->m_intf->m_langs = {map};
 }
@@ -339,10 +417,13 @@ QString CLangater::getLangName(const QString& code)
 QJsonObject CLangater::availableLangsToJson()
 {
     QJsonObject _out_obj;
+    QMap<QString, std::pair<QString, QString>> langMap;
+    foreach (const auto &lang, getInstance()->m_intf->m_langs)
+        langMap.insert(lang.first, lang.second);
 
-    QMap<QString, QString>::const_iterator i = getInstance()->m_intf->m_langs.constBegin();
-    while ( i != getInstance()->m_intf->m_langs.constEnd() ) {
-        _out_obj.insert(i.key(), i.value());
+    auto i = langMap.constBegin();
+    while ( i != langMap.constEnd() ) {
+        _out_obj.insert(i.key(), QJsonObject{{"name", i.value().first},{"enname", i.value().second}});
         ++i;
     }
 

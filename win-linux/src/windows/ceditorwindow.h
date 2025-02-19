@@ -40,26 +40,30 @@
 #endif
 
 #include "components/ctabpanel.h"
+#include "components/asctabwidget.h"
 #include <memory>
 #include <QCoreApplication>
-#include <QSpacerItem>
 
+class QSpacerItem;
 class CEditorWindowPrivate;
-class CEditorWindow : public CWindowPlatform
+class CEditorWindow : public CWindowPlatform, public CScalingWrapper
 {
-    Q_DECLARE_TR_FUNCTIONS(CEditorWindow)
+    Q_OBJECT
 
 public:
     CEditorWindow(const QRect& rect, CTabPanel* view);
     ~CEditorWindow();
 
+    static CEditorWindow* create(const QRect& rect, const COpenOptions& opts);
     const QObject * receiver();
     CTabPanel * releaseEditorView() const;
+    CTabPanel * mainView() const;
     AscEditorType editorType() const;
     QString documentName() const;
     double scaling() const;
     int closeWindow();
     bool closed() const;
+    bool modified() const;
     bool holdView(const std::wstring& portal) const;
     void undock(bool maximized = false);
     virtual bool holdView(int id) const final;
@@ -70,8 +74,12 @@ protected:
     virtual void onLayoutDirectionChanged() final;
 
 private:
+    CEditorWindow(const QRect& rect, const COpenOptions& opts);
+
     QWidget * createMainPanel(QWidget *, const QString&);
-    CTabPanel * mainView() const;
+    CMenu* menu();
+    void init(CTabPanel *panel);
+    void setMenu();
     void recalculatePlaces();
     void updateTitleCaption();
     void onSizeEvent(int);
@@ -90,6 +98,7 @@ private:
     QString m_css;
     bool m_restoreMaximized = false;
     QSpacerItem *m_pSpacer = nullptr;
+    CMenu *m_pMenu = nullptr;
 
     friend class CEditorWindowPrivate;
     std::unique_ptr<CEditorWindowPrivate> d_ptr;

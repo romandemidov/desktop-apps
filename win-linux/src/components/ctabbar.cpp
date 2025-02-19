@@ -32,6 +32,7 @@
 
 #include "components/ctabbar.h"
 #include "components/canimatedicon.h"
+#include "components/cmenu.h"
 #include "cascapplicationmanagerwrapper.h"
 #include <QApplication>
 #include <QHBoxLayout>
@@ -80,6 +81,7 @@ public:
     CAnimatedIcon *icon_label = nullptr;
     QLabel *text_label = nullptr;
     QToolButton *close_btn = nullptr;
+    CMenu *menu = nullptr;
     QString text;
     QString tabcolor;
     int tab_width = -1;
@@ -122,6 +124,7 @@ Tab::Tab(QWidget *parent) :
 
     text_label = new QLabel(this);
     text_label->setObjectName("tabText");
+    text_label->setTextFormat(Qt::PlainText);
     text_label->setAlignment((AscAppManager::isRtlEnabled() ? Qt::AlignRight : Qt::AlignLeft) | Qt::AlignVCenter | Qt::AlignAbsolute);
     text_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     lut->addWidget(text_label);
@@ -138,6 +141,8 @@ Tab::~Tab()
 {
     if (tab_icon)
         delete tab_icon, tab_icon = nullptr;
+    if (menu)
+        delete menu, menu = nullptr;
 }
 
 void Tab::setText(const QString &text, Qt::TextElideMode mode)
@@ -221,11 +226,17 @@ void Tab::refreshIcon(const QString& themetype)
 void Tab::refreshTextColor()
 {
     const CTheme & _app_theme = AscAppManager::themes().current();
-    const CTheme & _tab_theme = tab_theme_type == "dark" ? AscAppManager::themes().defaultDark() :
-                                                            AscAppManager::themes().defaultLight();
+    std::wstring text_color;
+    if (tab_theme_type == "dark") {
+        text_color = _app_theme.isDark() ? _app_theme.value(CTheme::ColorRole::ecrTabSimpleActiveText) :
+                         _app_theme.value(CTheme::ColorRole::ecrTextInverse);
+    } else {
+        text_color = _app_theme.isDark() ? _app_theme.value(CTheme::ColorRole::ecrTextInverse) :
+                         _app_theme.value(CTheme::ColorRole::ecrTabSimpleActiveText);
+    }
 
     QString _styles = "#tabText{color:" + QString::fromStdWString(_app_theme.value(CTheme::ColorRole::ecrTabSimpleActiveText)) + ";}"
-                      "[selected=true] #tabText{color:" + QString::fromStdWString(_tab_theme.value(CTheme::ColorRole::ecrTabSimpleActiveText)) + ";}";
+                      "[selected=true] #tabText{color:" + QString::fromStdWString(text_color) + ";}";
     text_label->setStyleSheet(_styles);
 }
 
@@ -285,7 +296,8 @@ void Tab::paintEvent(QPaintEvent *ev)
 //        if (tabBar && tabBar->property("active").toBool())
         {
             QStylePainter p(this);
-            p.fillRect(rect(), QBrush(QColor(tabcolor)));
+            int left = AscAppManager::isRtlEnabled() ? frameWidth() : 0;
+            p.fillRect(rect().adjusted(left, 0, left ? 0 : -frameWidth(), 0), QBrush(QColor(tabcolor)));
         }
     }
 }
@@ -333,6 +345,7 @@ public:
     void changeScrollerState();
     void reorderIndexes();
     void recalcWidth();
+    void setActive(int index);
     bool indexIsValid(int index);
 
     CTabBar*     owner = nullptr;
@@ -345,6 +358,7 @@ public:
     Qt::TextElideMode elideMode;
     Tab* movedTab = nullptr;
     bool lock = false;
+    bool isActive = false;
     int animationInProgress = 0;
     int movedTabPosX = 0;
     int movedTabPressPosX = 0;
@@ -515,18 +529,11 @@ void CTabBar::CTabBarPrivate::onCurrentChanged(int index)
         PROCESSEVENTS();
 
     recalcWidth();
-
-    if ( !(index < 0) )
-        scrollTo(index);
+    scrollTo(index);
 
     currentIndex = index;
 
-    for (int i = 0; i < tabList.size(); i++) {
-        tabList[i]->setProperty("selected", i == index);
-
-        tabList[i]->setActive(i == index);
-        tabList[i]->polish();
-    }
+    setActive(index);
 
     emit owner->currentChanged(index);
 }
@@ -598,6 +605,18 @@ void CTabBar::CTabBarPrivate::recalcWidth()
     tabArea->setMaximumWidth(minWidth * tabList.size());
     owner->setMaximumWidth(tabArea->maximumWidth() + scrollFrame->maximumWidth());
     PROCESSEVENTS();
+}
+
+void CTabBar::CTabBarPrivate::setActive(int index)
+{
+    for (int i = 0; i < tabList.size(); i++) {
+        bool state = (i == index);
+        if (tabList[i]->property("selected").toBool() != (state && isActive)) {
+            tabList[i]->setProperty("selected", state && isActive);
+            tabList[i]->polish();
+        }
+        tabList[i]->setActive(state);
+    }
 }
 
 bool CTabBar::CTabBarPrivate::indexIsValid(int index)
@@ -759,6 +778,37 @@ void CTabBar::swapTabs(int from, int to)
         d->onCurrentChanged(from);
 }
 
+void CTabBar::moveTab(int from, int to)
+{
+    while (d->animationInProgress)
+        PROCESSEVENTS();
+    if (from == to || !d->indexIsValid(from) || !d->indexIsValid(to))
+        return;
+    d->movedTab = nullptr;
+    d->movedTabIndex = -1;
+    d->tabList[from]->move(d->_tabRect(to).x(), 0);
+    d->tabIndex(from) = d->tabIndex(to);
+    int start = (from < to) ? from + 1 : to;
+    int end = (from < to) ? to : from - 1;
+    int sign = signum(from < to);
+    for (int i = start; i <= end; i++) {
+        d->tabList[i]->move(d->tabList[i]->x() - sign * d->cellWidth(), 0);
+        d->tabIndex(i) = i - sign;
+    }
+    d->reorderIndexes();
+    emit tabMoved(from, to);
+    if (from < d->currentIndex) {
+        if (to >= d->currentIndex)
+            d->onCurrentChanged(d->currentIndex - 1);
+    } else
+    if (from == d->currentIndex) {
+        d->onCurrentChanged(to);
+    } else {
+        if (to <= d->currentIndex)
+            d->onCurrentChanged(d->currentIndex + 1);
+    }
+}
+
 void CTabBar::removeTab(int index)
 {
     while (d->animationInProgress)
@@ -809,12 +859,8 @@ void CTabBar::removeTab(int index)
         if (index > 0) {
             d->recalcWidth();
         } else {
-            if ( property("active").toBool() ) {
-                const int initialMaxIndex = d->tabList.size(); // max index before deletion
-                d->onCurrentChanged(index < initialMaxIndex ? index : -1);
-            } else {
-                d->recalcWidth();
-            }
+            const int initialMaxIndex = d->tabList.size(); // max index before deletion
+            d->onCurrentChanged(index < initialMaxIndex ? index : -1);
         }
     }
 }
@@ -878,6 +924,17 @@ void CTabBar::setTabButton(int index, QWidget *widget)
     }
 }
 
+void CTabBar::setTabMenu(int index, CMenu *menu)
+{
+    if (!d->indexIsValid(index))
+        return;
+    Tab *tab = d->tabList[index];
+    if (tab->menu)
+        delete tab->menu;
+    tab->menu = menu;
+    menu->setObjectName("tabMenu");
+}
+
 //void CTabBar::setTabData(int index, const QVariant &data)
 //{
 //    if (d->indexIsValid(index))
@@ -911,7 +968,7 @@ void CTabBar::setCurrentIndex(int index)
     while (d->animationInProgress)
         PROCESSEVENTS();
 
-    if (/*!d->indexIsValid(index) ||*/ index == d->currentIndex)
+    if (!d->indexIsValid(index) || index == d->currentIndex)
         return;
 
     d->onCurrentChanged(index);
@@ -976,6 +1033,14 @@ void CTabBar::polish()
     d->rightButton->style()->polish(d->rightButton);
 }
 
+void CTabBar::activate(bool isActive)
+{
+    if (d->isActive != isActive) {
+        d->isActive = isActive;
+        d->setActive(isActive ? d->currentIndex : -1);
+    }
+}
+
 void CTabBar::refreshTheme()
 {
     for (int i = 0; i < d->tabList.size(); i++) {
@@ -1003,6 +1068,11 @@ int CTabBar::tabIndexAt(const QPoint &pos) const
     return -1;
 }
 
+QWidget *CTabBar::tabAtIndex(int index) const
+{
+    return d->indexIsValid(index) ? d->tabList[index] : nullptr;
+}
+
 QWidget *CTabBar::tabIconLabel(int index) const
 {
     return d->indexIsValid(index) ? d->tabList[index]->icon_label : nullptr;
@@ -1011,6 +1081,22 @@ QWidget *CTabBar::tabIconLabel(int index) const
 QWidget *CTabBar::tabButton(int index) const
 {
     return d->indexIsValid(index) ? d->tabList[index]->close_btn : nullptr;
+}
+
+CMenu *CTabBar::tabMenu(int index) const
+{
+    return d->indexIsValid(index) ? d->tabList[index]->menu : nullptr;
+}
+
+int CTabBar::tabMenuIndex(CMenu *menu) const
+{
+    if (menu) {
+        for (int i = 0; i < d->tabList.size(); i++) {
+            if (d->tabList[i]->menu == menu)
+                return d->tabList[i]->index;
+        }
+    }
+    return -1;
 }
 
 //QVariant CTabBar::tabData(int index) const
@@ -1090,7 +1176,7 @@ bool CTabBar::eventFilter(QObject *watched, QEvent *event)
     if (watched == d->tabArea) {
         switch (event->type()) {
         case QEvent::MouseMove: {
-            QMouseEvent* me = dynamic_cast<QMouseEvent*>(event);
+            QMouseEvent* me = static_cast<QMouseEvent*>(event);
             if (me->buttons().testFlag(Qt::LeftButton)) {
                 if (d->movedTab && !d->lock) {
                     int currPosX = d->movedTab->x();
@@ -1111,21 +1197,21 @@ bool CTabBar::eventFilter(QObject *watched, QEvent *event)
                                 d->slide(interIndex, interIndex, delta, ANIMATION_MOVE_TAB_MS);
                                 d->movedTab->index = interIndex;
                                 d->tabIndex(interIndex) = destIndex;
-                                d->currentIndex = interIndex;
                                 std::swap(d->tabList[interIndex], d->tabList[destIndex]);
                                 emit tabMoved(interIndex, destIndex);
+                                d->currentIndex = interIndex;
                                 emit currentChanged(interIndex);
                             }
                         }
                     }
-                    bool undockDirectionIsValid = AscAppManager::isRtlEnabled() ? d->tabArea->rect().left() <= me->x() : d->tabArea->rect().right() >= me->x();
-                    if (!d->tabArea->rect().contains(me->pos()) && undockDirectionIsValid) {
+                    // bool undockDirectionIsValid = AscAppManager::isRtlEnabled() ? d->tabArea->rect().left() <= me->x() : d->tabArea->rect().right() >= me->x();
+                    if (!d->tabArea->rect().contains(me->pos()) /*&& undockDirectionIsValid*/) {
                         if (d->currentIndex != d->movedTabIndex)
                             d->reorderIndexes();
                         bool accepted = false;
                         emit tabUndock(d->currentIndex, accepted);
                         if (accepted) {
-                            d->movedTab->hide();
+                            // d->movedTab->hide();
                             d->movedTab = nullptr;
                             d->movedTabIndex = -1;
                             SKIP_EVENTS_QUEUE([=]() {
@@ -1141,7 +1227,7 @@ bool CTabBar::eventFilter(QObject *watched, QEvent *event)
             break;
         }
         case QEvent::MouseButtonPress: {
-            QMouseEvent* me = dynamic_cast<QMouseEvent*>(event);
+            QMouseEvent* me = static_cast<QMouseEvent*>(event);
             if (me->button() == Qt::LeftButton) {
                 if (!d->animationInProgress) {
                     for (int i = 0; i < d->tabList.size(); i++) {
@@ -1176,7 +1262,7 @@ bool CTabBar::eventFilter(QObject *watched, QEvent *event)
             break;
         }
         case QEvent::MouseButtonRelease: {
-            QMouseEvent* mouse_event = dynamic_cast<QMouseEvent*>(event);
+            QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
             if (mouse_event->button() == Qt::LeftButton) {
                 while (d->animationInProgress)
                     PROCESSEVENTS();
@@ -1198,6 +1284,21 @@ bool CTabBar::eventFilter(QObject *watched, QEvent *event)
                 for (int i = 0; i < d->tabList.size(); i++) {
                     if (d->_tabRect(i).contains(mouse_event->pos())) {
                         emit tabCloseRequested(i);
+                        return true;
+                    }
+                }
+            }
+            break;
+        }
+        case QEvent::ContextMenu: {
+            QContextMenuEvent* cm_event = static_cast<QContextMenuEvent*>(event);
+            for (int i = 0; i < d->tabList.size(); i++) {
+                if (d->_tabRect(i).contains(cm_event->pos())) {
+                    if (d->tabList[i]->menu) {
+                        QPoint pos = d->tabArea->mapToGlobal(cm_event->pos());
+                        SKIP_EVENTS_QUEUE([=]() {
+                            d->tabList[i]->menu->exec(pos);
+                        });
                         return true;
                     }
                 }

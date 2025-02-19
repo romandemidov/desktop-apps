@@ -45,24 +45,28 @@
 
     const themes_map = {
         'theme-system': {
-            text: 'Same as system',
+            text: utils.Lang.settOptThemeSystem,
             type: THEME_TYPE_SYSTEM,
         },
         'theme-light': {
-            text: 'Light',
+            text: utils.Lang.settOptThemeLight,
             type: 'light',
         },
         'theme-classic-light': {
-            text: 'Classic Light',
+            text: utils.Lang.settOptThemeClassicLight,
             type: 'light',
         },
         'theme-dark': {
-            text: 'Dark',
+            text: utils.Lang.settOptThemeDark,
             type: 'dark',
         },
         'theme-contrast-dark': {
-            text: 'Dark Contrast',
+            text: utils.Lang.settOptThemeContrastDark,
             type: 'dark',
+        },
+        'theme-gray': {
+            text: utils.Lang.settOptThemeGray,
+            type: 'light',
         },
     }
 
@@ -171,19 +175,12 @@
                                             </div>
                                         </div>
                                         <div class='settings-field settings-field-lang'>
-                                            <label class='sett__caption' l10n>${_lang.settLanguage}</label>
+                                            <label class='sett__caption' l10n>${_lang.settLanguage}</label><label class='sett__caption sett__caption-restart' style='display:none'> *</label>
                                             <div class='sett--label-lift-top hbox'>
                                                 <section class='box-cmp-select'>
-                                                    <select class='combobox' data-size="10"></select>
+                                                    <select class='combobox subtext-right' data-size="10"></select>
                                                 </section>
                                             </div>
-                                        </div>
-                                        <div class='settings-field' style='display:none;'>
-                                            <section class='switch-labeled hbox' id='sett-box-rtl-mode'>
-                                                <input type="checkbox" class="checkbox" id="sett-rtl-mode">
-                                                <label for="sett-rtl-mode" class='sett__caption' l10n>${_lang.settRtlMode} *</label>
-                                                <span class='sett__caption sett__caption-beta'>Beta</span>
-                                            </section>
                                         </div>
                                         <div class='settings-field' id='opts-ui-scaling' style='display:none'>
                                             <label class='sett__caption' l10n>${_lang.settScaling}</label><label class='sett__caption'> *</label>
@@ -211,7 +208,7 @@
                                             <label class='sett__caption' l10n>${_lang.settAUpdateMode}</label>
                                             <div class='sett--label-lift-top hbox'>
                                                 <section class='box-cmp-select'>
-                                                    <select class='combobox'>
+                                                    <select class='combobox subtext-bottom'>
                                                         <option data-subtext="${_lang.settOptDescAUpdateSilent}" value='silent' l10n>${_lang.settOptAUpdateSilent}</option>
                                                         <option data-subtext="${_lang.settOptDescAUpdateAsk}" value='ask' l10n>${_lang.settOptAUpdateAsk}</option>
                                                         <option data-subtext="${_lang.settOptDescDisabled}" value='disabled' l10n>${_lang.settOptAUpdateDisabled}</option>
@@ -314,8 +311,7 @@
             $optsSpellcheckMode,
             $optsLaunchMode,
             $optsAutoupdateMode;
-        let $chRtl,
-            $chGpu;
+        let $chGpu;
         let appSettings;
 
         function _set_user_name(name) {
@@ -345,6 +341,7 @@
 
                 const _divider = _combo.find('[data-divider]');
                 objs.forEach(t => {
+                    t.l10n || (t.l10n = {});
                     const _css = create_colors_css(t.id, t.colors);
                     if ( _css ) {
                         const _$style = $(`style[data-theme-id=${t.id}]`);
@@ -376,14 +373,17 @@
             *  that version has no support for unicode in regexp
             */
             if (window.utils.inParams.osver == 'winxp' || /windows nt 5/i.test(navigator.appVersion)) return true;
-            else return (new RegExp('^[\\p{L}\\p{M}\\p{N}\'"\\.\\- ]+$', 'iu')).test(name)
+            else return (new RegExp('^[\\p{L}\\p{M}\\p{N}\'"«»()_+=&^%$#@!~*\\/.\\- ]+$', 'iu')).test(name)
         };
 
         function _on_btn_apply(e) {
             let _user_new_name = $userName.val();
             if ( _user_new_name && _user_new_name.length &&
-                    _validate_user_name(_user_new_name) ) 
+                    _validate_user_name(_user_new_name) )
             {
+                _user_new_name = _user_new_name.trim();
+                $userName.val(_user_new_name);
+
                 let _doc_open_mode = $chOpenMode.prop('checked') ? 'view' : 'edit';
                 let _new_settings = {
                     username:_user_new_name,
@@ -444,15 +444,6 @@
                     $optsSpellcheckMode.selectpicker('refresh');
                 }
 
-                if ( $chRtl ) {
-                    _new_settings.rtl = $chRtl.prop("checked");
-
-                    if ( appSettings.rtl != _new_settings.rtl ) {
-                        _new_settings.restart = true;
-                        appSettings.rtl = _new_settings.rtl;
-                    }
-                }
-
                 if ( $chGpu ) {
                     _new_settings.usegpu = $chGpu.prop("checked");
 
@@ -464,7 +455,7 @@
 
                 sdk.command("settings:apply", JSON.stringify(_new_settings));
                 $btnApply.disable(true);
-                
+
                 localStorage.setItem('username', _user_new_name);
                 localStorage.setItem('docopenmode', _doc_open_mode);
 
@@ -476,14 +467,11 @@
 
         function _on_txt_user_change(e) {
             $userName.removeClass('error');
-            
+
             if ( $btnApply.isdisabled() )
                 $btnApply.disable(false);
         };
 
-        function _is_lang_rtl(code) {
-            return code == 'ar-SA';
-        }
 
         function _on_lang_change(e) {
             let l = $optsLang.find('select').val(),
@@ -493,21 +481,12 @@
                 $btnApply.disable(false);
             }
 
-            const _is_rtl = _is_lang_rtl(l);
-            if ( $chRtl ) {
-                $chRtl.prop("checked", _is_rtl);
-                if ( !_is_rtl ) {
-                    $chRtl.prop("disabled", "disabled");
-                    $chRtl.next().attr("disabled", "disabled");
-                } else {
-                    $chRtl.removeAttr("disabled");
-                    $chRtl.next().removeAttr("disabled");
-                }
-            }
-
+            const _is_rtl = utils.Lang.isLangRTL(l);
             $btnApply.parent().toggleClass('rtl-font', _is_rtl);
             $btnApply.toggleClass('rtl-font--skip', !_is_rtl);
             $optsLang.toggleClass('notted', true);
+
+            sdk.command("settings:check", JSON.stringify({"langid":l}));
         };
 
         function _on_autoupdate_change() {
@@ -544,16 +523,19 @@
                             $panel.find('.settings-field-lang').show();
                             let $combo = $panel.find('.settings-field-lang select');
 
-                            let def_lang;
+                            let def_lang = 'en';
                             for (let lang in appSettings.locale.langs) {
-                                /^en/.test(lang) && (def_lang = lang);
-                                $combo.append(`<option value='${lang}'>${appSettings.locale.langs[lang]}</option>`);
+                                /^en[-_]US/.test(lang) && (def_lang = lang);
+                                const n = appSettings.locale.langs[lang];
+                                $combo.append(`<option value='${lang}' data-subtext='${n['enname']}'>${n["name"]}</option>`);
                             }
 
                             if ( !appSettings.locale.langs[appSettings.locale.current] ) {
                                 appSettings.locale.current = appSettings.locale.current.substring(0,2);
-                                if ( !appSettings.locale.langs[appSettings.locale.current] && !!def_lang ) {
-                                    appSettings.locale.current = def_lang;
+                                if ( !appSettings.locale.langs[appSettings.locale.current] ) {
+                                    if ( appSettings.locale.langs[def_lang] ) {
+                                        appSettings.locale.current = def_lang;
+                                    }
                                 }
                             }
 
@@ -561,13 +543,18 @@
                             $combo.selectpicker();
 
                             if ( appSettings.locale.restart ) {
-                                if ( !$panel.find('.settings-field-lang label[l10n] + .sett__caption-restart').length ) 
-                                    $panel.find('.settings-field-lang label[l10n]').after(`<label class='sett__caption sett__caption-restart'> *</label>`);
-
+                                $panel.find('.settings-field-lang label.sett__caption-restart').show();
                                 $('#caption-restart', $panel).show();
                             }
 
-                            $(document.body).toggleClass('rtl-font', _is_lang_rtl(appSettings.locale.current));
+                            $(document.body).toggleClass('rtl-font', utils.Lang.isLangRTL(appSettings.locale.current));
+                        }
+
+                        if ( appSettings.rtl === true ) {
+                            document.body.setAttribute('dir', 'rtl');
+                            document.body.classList.add('rtl');
+
+                            $userName.css('direction', 'rtl');
                         }
 
                         if ( appSettings.uiscaling != undefined && !$optsUIScaling ) {
@@ -583,29 +570,26 @@
                         if ( !!appSettings.uitheme ) {
                             appSettings.uitheme == 'canuse' && (appSettings.uitheme = 'theme-light');
 
-                            const _themes = [{'theme-system': utils.Lang.settOptThemeSystem},
-                                            {'theme-light': utils.Lang.settOptThemeLight},
-                                            {'theme-classic-light': utils.Lang.settOptThemeClassicLight},
-                                            {'theme-dark': utils.Lang.settOptThemeDark},
-                                            {'theme-contrast-dark': utils.Lang.settOptThemeContrastDark}];
 
                             if ( nativevars.theme ) {
                                 if ( nativevars.theme.system == 'disabled' )
-                                    _themes.shift();
+                                    delete themes_map['theme-system'];
                             }
 
+                            const lang = utils.Lang.id;
                             const _combo = $('#opts-ui-theme select', $panel).empty();
-                            _themes.forEach(item => {
-                                const entries = Object.entries(item)[0];
-                                _combo.append(`<option value=${entries[0]} l10n>${entries[1]}</option>`);
-                            });
+                            for (const [key, value] of Object.entries(themes_map)) {
+                                let _new_title;
+                                if ( value.l10n )
+                                    _new_title = value.l10n[lang] || value.l10n[lang.substring(0,2)] || value.text;
 
-                            if ( nativevars.localthemes ) {
-                                for ( const t of nativevars.localthemes ) {
-                                    const _theme_title = t.l10n[utils.Lang.id] || t.name;
-                                    _combo.append(`<option value=${t.id} ml10n>${_theme_title}</option>`);
-                                }
+                                if ( !_new_title )
+                                    _new_title = value.text;
+
+                                _combo.append(`<option value=${key}>${_new_title}</option>`);
                             }
+
+
 
                             if ( !$optsUITheme ) {
                                 ($optsUITheme = _combo)
@@ -688,12 +672,13 @@
                     }
 
                     if ( appSettings.rtl !== undefined ) {
-                        if ( !$chRtl || $chRtl.prop('checked') != appSettings.rtl ) {
-                            $chRtl = $('#sett-box-rtl-mode', $panel).parent().show().find('#sett-rtl-mode');
-                            $chRtl.prop('checked', !!appSettings.rtl)
-                                .on('change', e => {
-                                    $btnApply.prop('disabled') && $btnApply.prop('disabled', false);
-                                });
+                        // if ( !$chRtl || $chRtl.prop('checked') != appSettings.rtl ) 
+                        {
+                            // $chRtl = $('#sett-box-rtl-mode', $panel).parent().show().find('#sett-rtl-mode');
+                            // $chRtl.prop('checked', !!appSettings.rtl)
+                            //     .on('change', e => {
+                            //         $btnApply.prop('disabled') && $btnApply.prop('disabled', false);
+                            //     });
 
                             if ( appSettings.rtl ) {
                                 document.body.setAttribute('dir', 'rtl');
@@ -701,15 +686,29 @@
 
                                 $userName.css('direction', 'rtl');
                             } else {
-                                if ( !_is_lang_rtl(appSettings.locale.current) )
-                                    $chRtl.attr('disabled', 'disabled')
-                                        .next().attr('disabled', 'disabled');
+                                // if ( !utils.Lang.isLangRTL(appSettings.locale.current) )
+                                //     $chRtl.attr('disabled', 'disabled')
+                                //         .next().attr('disabled', 'disabled');
                             }
 
                         }
                     }
 
                     $('.settings-field:visible:last').css('margin-bottom','0');
+                } else
+                if (/lang$/.test(cmd)) {
+                    if ( param.startsWith("restart:") ) {
+                        const $label = $panel.find('.settings-field-lang label.sett__caption-restart');
+                        const is_sign_visible = $label.is(':visible');
+                        if ( param.endsWith("true") && !is_sign_visible ) {
+                            $label.show();
+                            appSettings.locale.restart = true;
+                        } else
+                        if ( param.endsWith("false") && is_sign_visible) {
+                            $label.hide();
+                            appSettings.locale.restart = false;
+                        }
+                    }
                 } else
                 if (/updates/.test(cmd)) {
                     // TODO: will be deprecated soon
@@ -800,6 +799,36 @@
             $('option[value=silent]', this.view.$panel).attr('data-subtext', utils.Lang.settOptDescAUpdateSilent);
             $('option[value=ask]', this.view.$panel).attr('data-subtext', utils.Lang.settOptDescAUpdateAsk);
             $('option[value=disabled]', this.view.$panel).attr('data-subtext', utils.Lang.settOptDescDisabled);
+
+            const l10n = {
+                'theme-system': {
+                    text: utils.Lang.settOptThemeSystem,
+                },
+                'theme-light': {
+                    text: utils.Lang.settOptThemeLight,
+                },
+                'theme-classic-light': {
+                    text: utils.Lang.settOptThemeClassicLight,
+                },
+                'theme-dark': {
+                    text: utils.Lang.settOptThemeDark,
+                },
+                'theme-contrast-dark': {
+                    text: utils.Lang.settOptThemeContrastDark,
+                },
+                'theme-gray': {
+                    text: utils.Lang.settOptThemeGray,
+                },
+            }
+
+            for (const [key, value] of Object.entries(l10n)) {
+                if ( themes_map[key] ) {
+                    if ( !themes_map[key]['l10n'] )
+                        themes_map[key]['l10n'] = {};
+
+                    themes_map[key]['l10n'][nl] = value.text;
+                }
+            }
 
             // for ( let k of Object.keys(themes_map) ) {
             //     const t = themes_map[k]

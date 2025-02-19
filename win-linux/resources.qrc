@@ -99,6 +99,7 @@
         <file alias="pdf-form.svg">res/icons/tabbar/tabicon_pdf_normal.svg</file>
         <file alias="pe.svg">res/icons/tabbar/tabicon_pe_normal.svg</file>
         <file alias="se.svg">res/icons/tabbar/tabicon_se_normal.svg</file>
+        <file alias="ve.svg">res/icons/tabbar/tabicon_ve_normal.svg</file>
         <file alias="pdf.svg">res/icons/tabbar/tabicon_pdf_normal.svg</file>
         <file alias="portal.svg">res/icons/tabbar/portal.svg</file>
         <file alias="portal_light.svg">res/icons/tabbar/portal_light.svg</file>
@@ -130,6 +131,14 @@
     <qresource prefix="/title/icons">
         <file alias="buttons.svg">res/icons/webeditor/buttons.svg</file>
         <file alias="secure.svg">res/icons/webeditor/secureicon.svg</file>
+    </qresource>
+    <qresource prefix="/menu/icons">
+        <file alias="iconssmall_1x.png">res/icons/menu/iconssmall.png</file>
+        <file alias="iconssmall_1.25x.png">res/icons/menu/iconssmall@1.25x.png</file>
+        <file alias="iconssmall_1.5x.png">res/icons/menu/iconssmall@1.5x.png</file>
+        <file alias="iconssmall_1.75x.png">res/icons/menu/iconssmall@1.75x.png</file>
+        <file alias="iconssmall_2x.png">res/icons/menu/iconssmall@2x.png</file>
+        <file alias="iconssmall_2.5x.svg">res/icons/menu/iconssmall@2.5x.svg</file>
     </qresource>
     <qresource prefix="/styles">
         <file alias="styles.qss">res/styles/styles.qss</file>
@@ -186,12 +195,14 @@
         <file alias="de-DE.qm">langs/de.qm</file>
         <file alias="el-GR.qm">langs/el_GR.qm</file>
         <file alias="en-US.qm">langs/en.qm</file>
+        <file alias="en-GB.qm">langs/en_GB.qm</file>
         <file alias="es-ES.qm">langs/es.qm</file>
         <file alias="et-EE.qm">langs/et.qm</file>
         <file alias="fi-FI.qm">langs/fi.qm</file>
         <file alias="fr-FR.qm">langs/fr.qm</file>
         <file alias="ga-IE.qm">langs/ga.qm</file>
         <file alias="gl-ES.qm">langs/gl.qm</file>
+        <file alias="he-IL.qm">langs/he.qm</file>
         <file alias="hi-IN.qm">langs/hi.qm</file>
         <file alias="hr-HR.qm">langs/hr.qm</file>
         <file alias="hu-HU.qm">langs/hu.qm</file>
@@ -204,7 +215,7 @@
         <file alias="lt-LT.qm">langs/lt.qm</file>
         <file alias="lv-LV.qm">langs/lv.qm</file>
         <file alias="nl-NL.qm">langs/nl.qm</file>
-        <file alias="no.qm">langs/no.qm</file>
+        <file alias="no-NO.qm">langs/no.qm</file>
         <file alias="pl-PL.qm">langs/pl.qm</file>
         <file alias="pt-BR.qm">langs/pt_BR.qm</file>
         <file alias="pt-PT.qm">langs/pt_PT.qm</file>
@@ -213,6 +224,7 @@
         <file alias="si-LK.qm">langs/si.qm</file>
         <file alias="sk-SK.qm">langs/sk.qm</file>
         <file alias="sl-SI.qm">langs/sl.qm</file>
+        <file alias="sq-AL.qm">langs/sq.qm</file>
         <file alias="sr-Latn-RS.qm">langs/sr_Latn_RS.qm</file>
         <file alias="sr-Cyrl-RS.qm">langs/sr_Cyrl_RS.qm</file>
         <file alias="sv-SE.qm">langs/sv.qm</file>
@@ -228,5 +240,6 @@
         <file alias="theme-classic-light.json">res/styles/theme-classic-light.json</file>
         <file alias="theme-dark.json">res/styles/theme-dark.json</file>
         <file alias="theme-contrast-dark.json">res/styles/theme-contrast-dark.json</file>
+        <file alias="theme-gray.json">res/styles/theme-gray.json</file>
     </qresource>
 </RCC>

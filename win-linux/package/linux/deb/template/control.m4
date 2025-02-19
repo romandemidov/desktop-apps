@@ -17,6 +17,7 @@ ifelse(M4_PACKAGE_EDITION, full,
 ` x11-common,
   libasound2,
   curl | wget,
+  desktop-file-utils,
   gstreamer1.0-libav,
   gstreamer1.0-plugins-ugly,
   libxss1,
@@ -24,15 +25,19 @@ ifelse(M4_PACKAGE_EDITION, full,
   libgtk-3-0,
   libcairo2,
   libstdc++6 (>=4.8),
+  libxkbcommon-x11-0,
   fonts-dejavu | ttf-dejavu,
   fonts-liberation,
   fonts-crosextra-carlito,
   xdg-utils')
 Recommends: ttf-mscorefonts-installer, fonts-takao-gothic 
-ifelse(M4_COMPANY_NAME, ONLYOFFICE,Suggest: M4_PACKAGE_NAME-help
+ifelse(M4_COMPANY_NAME, ONLYOFFICE,Suggests: M4_PACKAGE_NAME-help
 ,)dnl
-Description: M4_COMPANY_NAME M4_PRODUCT_NAME installation package
- M4_COMPANY_NAME M4_PRODUCT_NAME is an application for editing office documents (text documents, spreadsheets and presentations) from M4_COMPANY_NAME cloud portal on local computer without browser using.
+Description: office suite
+ M4_COMPANY_NAME M4_PRODUCT_NAME is a free office suite that combines text,
+ spreadsheet and presentation editors allowing to create, view and edit
+ documents without an Internet connection.
+ It is fully compatible with Office Open XML formats: .docx, .xlsx, .pptx.
 
 ifelse(M4_COMPANY_NAME, ONLYOFFICE,
 Package: M4_PACKAGE_NAME-help
@@ -40,6 +45,5 @@ Architecture: all
 Pre-Depends: dpkg (>= 1.14.0)
 Depends:
   M4_PACKAGE_NAME
-Description: M4_COMPANY_NAME M4_PRODUCT_NAME local help files
- M4_COMPANY_NAME M4_PRODUCT_NAME is an application for editing office documents (text documents, spreadsheets and presentations) from M4_COMPANY_NAME cloud portal on local computer without browser using.
- This package contains the local help files.,)
+Description: offline help for M4_COMPANY_NAME M4_PRODUCT_NAME
+ This package contains offline help files.,)

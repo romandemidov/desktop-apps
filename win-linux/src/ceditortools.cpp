@@ -260,7 +260,7 @@ namespace CEditorTools
         return dlg.selectFolder(sel_path).toStdWString();
     }
 
-    auto createEditorPanel(const COpenOptions& opts) -> CTabPanel *
+    auto createEditorPanel(const COpenOptions& opts, QWidget *parent) -> CTabPanel *
     {
         int _file_format{0};
         if ( opts.srctype == etLocalFile ) {
@@ -272,13 +272,14 @@ namespace CEditorTools
             if (CFileInspector::isLocalFile(QString::fromStdWString(opts.wurl))) {
                 QFileInfo info(opts.url);
                 if (!info.isReadable()) {
+                    AscAppManager::gotoMainWindow();
                     CMessage::error(AscAppManager::getInstance().mainWindow(), QObject::tr("Access to file '%1' is denied!").arg(opts.url));
                     return nullptr;
                 }
             }
         }
 
-        CTabPanel * panel = CTabPanel::createEditorPanel(nullptr, opts.panel_size);
+        CTabPanel * panel = CTabPanel::createEditorPanel(parent, opts.panel_size);
         QJsonObject json_opts = opts.parent_widget == COpenOptions::eWidgetType::window ?
                             QJsonObject{{"widgetType","window"}, {"captionHeight",TOOLBTN_HEIGHT}} :
                             QJsonObject{{"widgetType","tab"}, {"captionHeight",0}};
@@ -318,7 +319,8 @@ namespace CEditorTools
 
         if ( result ) {
             CAscTabData * data = new CAscTabData(opts.name);
-            data->setUrl(opts.wurl);
+            if (!(opts.srctype == etTemplateFile))
+                data->setUrl(opts.wurl);
             data->setCloudName(opts.cloud);
             data->setIsLocal( opts.srctype == etLocalFile || opts.srctype == etNewFile || opts.srctype == etTemplateFile ||
                            (opts.srctype == etRecentFile && !CExistanceController::isFileRemote(opts.url)) );
@@ -368,6 +370,9 @@ namespace CEditorTools
         else
         if (format > AVS_OFFICESTUDIO_FILE_CROSSPLATFORM && format < AVS_OFFICESTUDIO_FILE_IMAGE )
             return AscEditorType::etPdf;
+        else
+        if (format & AVS_OFFICESTUDIO_FILE_DRAW )
+            return AscEditorType::etDraw;
 
         return AscEditorType::etUndefined;
     }

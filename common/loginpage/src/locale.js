@@ -121,6 +121,7 @@ l10n.en = {
     settOptThemeLight: 'Light',
     settOptThemeClassicLight: 'Classic Light',
     settOptThemeDark: 'Dark',
+    settOptThemeGray: 'Gray',
     settOptLaunchMode: 'Open file',
     settOptLaunchInTab: 'In its own tab',
     settOptLaunchInWindow: 'In its own window',
@@ -143,8 +144,9 @@ l10n.en = {
     settOptDescDisabled: "Auto checking updates will be disabled",
     settOptDescAUpdateSilent: "Download and install update in background",
     settOptDescAUpdateAsk: "You will be notified about all updates steps",
-    settRtlMode: "RTL Interface",
     settGpuUseMode: "Use graphics acceleration when available",
+    tplPanelLocal: "Local",
+    tplPanelCloud: "Cloud",
 }
 
 
@@ -155,7 +157,7 @@ function loadLocale(lang) {
             utils.Lang[i] = l10n[lang][i];
         }
 
-        utils.Lang.id = lang;
+        // utils.Lang.id = lang;
     }
 };
 
@@ -202,6 +204,7 @@ function changelang(lang) {
     if ( lang ) {
         let old = utils.Lang.id;
         lang = correctLang(lang);
+        utils.Lang.id = lang;
 
         if ( l10n[lang] ) {
             _applytohtml(lang);
@@ -222,13 +225,19 @@ function changelang(lang) {
     }
 };
 
+function is_lang_rtl(code) {
+    return code.startsWith('ar') || code.startsWith('he');
+}
+
 +function mixLocale(lang) {
     utils.Lang = Object.assign({}, l10n.en);
     utils.Lang.tr = translate;
     utils.Lang.change = changelang;
+    utils.Lang.isLangRTL = is_lang_rtl;
 
     if ( lang ) {
         lang = correctLang(lang);
+        utils.Lang.id = lang;
 
         if ( l10n[lang] )
             loadLocale(lang);

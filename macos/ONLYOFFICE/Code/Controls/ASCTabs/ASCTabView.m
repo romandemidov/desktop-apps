@@ -124,6 +124,8 @@ static NSUInteger const kASTabViewCloseButtonSize = 12;
                @{@"normal": @"icon_tabs_pe_inactive", @"active": @"icon_tabs_pe_active"},
                // ASCTabViewTypePdf
                @{@"normal": @"icon_tabs_pdf_inactive", @"active": @"icon_tabs_pdf_active"},
+               // ASCTabViewTypeDraw
+               @{@"normal": @"icon_tabs_ve_inactive", @"active": @"icon_tabs_ve_active"},
                // ASCTabViewTypePortal
                @{@"normal": @"icon_tab_portal_active", @"active": @"icon_tab_portal_active"}
                ]
@@ -230,37 +232,24 @@ static NSUInteger const kASTabViewCloseButtonSize = 12;
     if (type == ASCTabViewTypePortal) {
         tabViewCell.activeColor     = [ASCThemesController currentThemeColor:btnPortalActiveBackgroundColor];
         tabViewCell.activeTextColor = [tabViewCell.activeColor isLight] ? NSColor.blackColor : NSColor.whiteColor;
-    } else if (type == ASCTabViewTypeDocument) {
-        tabViewCell.activeColor = [ASCThemesController currentThemeColor:tabWordActiveBackgroundColor];
-        tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabWordActiveBackgroundColor];
-        if (@available(macOS 10.13, *)) {
-            tabViewCell.activeTextColor = [NSColor colorNamed:@"tab-editorsActiveTextColor"];
-        } else {
-            tabViewCell.activeTextColor = UIColorFromRGB(0xffffff);
-        }
-    } else if (type == ASCTabViewTypeSpreadsheet) {
-        tabViewCell.activeColor = [ASCThemesController currentThemeColor:tabCellActiveBackgroundColor];
-        tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabCellActiveBackgroundColor];
-        if (@available(macOS 10.13, *)) {
-            tabViewCell.activeTextColor = [NSColor colorNamed:@"tab-editorsActiveTextColor"];
-        } else {
-            tabViewCell.activeTextColor = UIColorFromRGB(0xffffff);
-        }
-    } else if (type == ASCTabViewTypePresentation) {
-        tabViewCell.activeColor = [ASCThemesController currentThemeColor:tabSlideActiveBackgroundColor];
-        tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabSlideActiveBackgroundColor];
-        if (@available(macOS 10.13, *)) {
-            tabViewCell.activeTextColor = [NSColor colorNamed:@"tab-editorsActiveTextColor"];
-        } else {
-            tabViewCell.activeTextColor = UIColorFromRGB(0xffffff);
-        }
-    } else if (type == ASCTabViewTypePdf) {
-        tabViewCell.activeColor = [ASCThemesController currentThemeColor:tabPdfActiveBackgroundColor];
-        tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabPdfActiveBackgroundColor];
-        if (@available(macOS 10.13, *)) {
-            tabViewCell.activeTextColor = [NSColor colorNamed:@"tab-editorsActiveTextColor"];
-        } else {
-            tabViewCell.activeTextColor = UIColorFromRGB(0xffffff);
+    } else {
+        tabViewCell.activeTextColor = [ASCThemesController currentThemeColor:tabActiveTextColor];
+
+        if (type == ASCTabViewTypeDocument) {
+            tabViewCell.activeColor =
+            tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabWordActiveBackgroundColor];
+        } else if (type == ASCTabViewTypeSpreadsheet) {
+            tabViewCell.activeColor =
+            tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabCellActiveBackgroundColor];
+        } else if (type == ASCTabViewTypePresentation) {
+            tabViewCell.activeColor =
+            tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabSlideActiveBackgroundColor];
+        } else if (type == ASCTabViewTypePdf) {
+            tabViewCell.activeColor =
+            tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabPdfActiveBackgroundColor];
+        } else if (type == ASCTabViewTypeDraw) {
+            tabViewCell.activeColor =
+            tabViewCell.clickColor  = [ASCThemesController currentThemeColor:tabDrawActiveBackgroundColor];
         }
     }
 
@@ -294,8 +283,10 @@ static NSUInteger const kASTabViewCloseButtonSize = 12;
                                     )];
 }
 
-- (NSString *)title {
-    return _changed ? [NSString stringWithFormat:@"%@*", [super title]] : [super title];
+- (void)setTitle:(NSString *)title {
+    [super setTitle:title];
+    
+    originalTitle = title;
 }
 
 - (NSMutableDictionary *)params {
@@ -314,6 +305,15 @@ static NSUInteger const kASTabViewCloseButtonSize = 12;
 
 - (void)setChanged:(BOOL)changed {
     _changed = changed;
+    
+    unichar l = [[super title] characterAtIndex:0];
+    if ( changed ) {
+        if ( l != '*' )
+            [super setTitle:[NSString stringWithFormat:@"*%@", originalTitle]];
+    } else {
+        if ( l == '*' )
+            [super setTitle:originalTitle];
+    }
 }
 
 - (void)drawRect:(NSRect)dirtyRect {

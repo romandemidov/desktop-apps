@@ -50,6 +50,9 @@ using std::list;
 
 namespace NS_Utils
 {
+void parseCmdArgs(int argc, char *argv[]);
+bool cmdArgContains(const string &param);
+string cmdArgValue(const string &param);
 string GetLastErrorAsString();
 int ShowMessage(string str, bool showError = false);
 //string GetSysLanguage();
@@ -66,7 +69,7 @@ bool isProcessRunning(const string &fileName);
 bool fileExists(const string &filePath);
 bool dirExists(const string &dirName);
 bool dirIsEmpty(const string &dirName);
-bool makePath(const string &path);
+bool makePath(const string &path, size_t root_offset = 1);
 bool replaceFile(const string &oldFilePath, const string &newFilePath);
 bool replaceFolder(const string &from, const string &to, bool remove_existing = false);
 bool removeFile(const string &filePath);
@@ -74,7 +77,7 @@ bool removeDirRecursively(const string &dir);
 string parentPath(const string &path);
 string tempPath();
 string appPath();
-//string getFileHash(const string &fileName);
+string getFileHash(const string &fileName);
 //bool verifyEmbeddedSignature(const string &fileName);
 }
 

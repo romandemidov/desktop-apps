@@ -7,6 +7,7 @@ CONFIG += app_bundle
 CONFIG += c++11
 
 TRANSLATIONS = ./langs/en.ts \
+                ./langs/en_GB.ts \
                 ./langs/ru.ts \
                 ./langs/de.ts \
                 ./langs/es.ts \
@@ -26,6 +27,7 @@ TRANSLATIONS = ./langs/en.ts \
                 ./langs/fi.ts \
                 ./langs/ga.ts \
                 ./langs/gl.ts \
+                ./langs/he.ts \
                 ./langs/hi.ts \
                 ./langs/hr.ts \
                 ./langs/hu.ts \
@@ -41,6 +43,7 @@ TRANSLATIONS = ./langs/en.ts \
                 ./langs/pt_PT.ts \
                 ./langs/ro.ts \
                 ./langs/sl.ts \
+                ./langs/sq.ts \
                 ./langs/sv.ts \
                 ./langs/tr.ts \
                 ./langs/uk.ts \
@@ -86,6 +89,7 @@ HEADERS += \
     $$PWD/src/components/cfullscrwidget.h \
     $$PWD/src/components/cprintdialog.h \
     $$PWD/src/components/ctooltip.h \
+    $$PWD/src/components/cmenu.h \
     $$PWD/src/version.h \
     $$PWD/src/defines.h \
     $$PWD/src/ccefeventstransformer.h \
@@ -106,6 +110,7 @@ HEADERS += \
     $$PWD/src/cwindowsqueue.h \
     $$PWD/src/ceventdriver.h \
     $$PWD/src/cappeventfilter.h \
+    $$PWD/src/iconfactory.h \
     $$PWD/src/cthemes.h
 
 SOURCES += \
@@ -127,6 +132,7 @@ SOURCES += \
     $$PWD/src/components/cfullscrwidget.cpp \
     $$PWD/src/components/cprintdialog.cpp \
     $$PWD/src/components/ctooltip.cpp \
+    $$PWD/src/components/cmenu.cpp \
     $$PWD/src/main.cpp \
     $$PWD/src/ccefeventstransformer.cpp \
     $$PWD/src/cascapplicationmanagerwrapper.cpp \
@@ -144,6 +150,7 @@ SOURCES += \
     $$PWD/src/ceditortools.cpp \
     $$PWD/src/ceventdriver.cpp \
     $$PWD/src/cappeventfilter.cpp \
+    $$PWD/src/iconfactory.cpp \
     $$PWD/src/cthemes.cpp
 
 updmodule:!build_xp {
@@ -180,7 +187,7 @@ PLATFORM_BUILD=$$CORE_BUILDS_PLATFORM_PREFIX
 
 core_linux:LIBS += -Wl,-unresolved-symbols=ignore-in-shared-libs
 
-ADD_DEPENDENCY(PdfFile, DjVuFile, XpsFile, HtmlRenderer, UnicodeConverter, hunspell, ooxmlsignature, kernel, kernel_network, graphics, ascdocumentscore, qtascdocumentscore)
+ADD_DEPENDENCY(PdfFile, DjVuFile, XpsFile, UnicodeConverter, hunspell, ooxmlsignature, kernel, kernel_network, graphics, ascdocumentscore, qtascdocumentscore)
 include($$CORE_ROOT_DIR/../desktop-sdk/ChromiumBasedEditors/videoplayerlib/videoplayerlib_deps.pri)
 
 core_linux {
@@ -249,6 +256,7 @@ core_windows {
     HEADERS += $$PWD/src/windows/platform_win/cwindowplatform.h \
                $$PWD/src/windows/platform_win/caption.h \
                $$PWD/src/platform_win/singleapplication.h \
+               $$PWD/src/platform_win/association.h \
                $$PWD/src/platform_win/filechooser.h \
                $$PWD/src/platform_win/printdialog.h \
                $$PWD/src/platform_win/message.h \
@@ -256,6 +264,7 @@ core_windows {
 
     SOURCES += $$PWD/src/windows/platform_win/cwindowplatform.cpp \
                $$PWD/src/platform_win/singleapplication.cpp \
+               $$PWD/src/platform_win/association.cpp \
                $$PWD/src/platform_win/filechooser.cpp \
                $$PWD/src/platform_win/printdialog.cpp \
                $$PWD/src/platform_win/message.cpp
@@ -301,8 +310,6 @@ core_windows {
 
     build_xp {
         DEFINES += __OS_WIN_XP
-    } else {
-        LIBS += -ldwmapi
     }
 }
 

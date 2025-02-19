@@ -21,7 +21,33 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		5A02294D2CB9C0410011C6EC /* QuickLookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A02294C2CB9C0410011C6EC /* QuickLookUI.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		5A02294E2CB9C3260011C6EC /* QuickLookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5A02294C2CB9C0410011C6EC /* QuickLookUI.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		5A0229502CCFBF260011C6EC /* file-fods.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02294F2CCFBF260011C6EC /* file-fods.icns */; };
+		5A0229512CCFBF260011C6EC /* file-fods.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02294F2CCFBF260011C6EC /* file-fods.icns */; };
+		5A0229522CCFBF260011C6EC /* file-fods.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02294F2CCFBF260011C6EC /* file-fods.icns */; };
+		5A0229542CCFC01B0011C6EC /* file-dotx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229532CCFC01B0011C6EC /* file-dotx.icns */; };
+		5A0229552CCFC01B0011C6EC /* file-dotx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229532CCFC01B0011C6EC /* file-dotx.icns */; };
+		5A0229562CCFC01B0011C6EC /* file-dotx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229532CCFC01B0011C6EC /* file-dotx.icns */; };
+		5A0229582CCFC02B0011C6EC /* file-oxps.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229572CCFC02B0011C6EC /* file-oxps.icns */; };
+		5A0229592CCFC02B0011C6EC /* file-oxps.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229572CCFC02B0011C6EC /* file-oxps.icns */; };
+		5A02295A2CCFC02B0011C6EC /* file-oxps.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A0229572CCFC02B0011C6EC /* file-oxps.icns */; };
+		5A02295F2CCFC05C0011C6EC /* file-pot.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295B2CCFC05B0011C6EC /* file-pot.icns */; };
+		5A0229602CCFC05C0011C6EC /* file-pot.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295B2CCFC05B0011C6EC /* file-pot.icns */; };
+		5A0229612CCFC05C0011C6EC /* file-pot.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295B2CCFC05B0011C6EC /* file-pot.icns */; };
+		5A0229622CCFC05C0011C6EC /* file-xltx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295C2CCFC05C0011C6EC /* file-xltx.icns */; };
+		5A0229632CCFC05C0011C6EC /* file-xltx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295C2CCFC05C0011C6EC /* file-xltx.icns */; };
+		5A0229642CCFC05C0011C6EC /* file-xltx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295C2CCFC05C0011C6EC /* file-xltx.icns */; };
+		5A0229652CCFC05C0011C6EC /* file-pptm.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295D2CCFC05C0011C6EC /* file-pptm.icns */; };
+		5A0229662CCFC05C0011C6EC /* file-pptm.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295D2CCFC05C0011C6EC /* file-pptm.icns */; };
+		5A0229672CCFC05C0011C6EC /* file-pptm.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295D2CCFC05C0011C6EC /* file-pptm.icns */; };
+		5A0229682CCFC05C0011C6EC /* file-potx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295E2CCFC05C0011C6EC /* file-potx.icns */; };
+		5A0229692CCFC05C0011C6EC /* file-potx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295E2CCFC05C0011C6EC /* file-potx.icns */; };
+		5A02296A2CCFC05C0011C6EC /* file-potx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A02295E2CCFC05C0011C6EC /* file-potx.icns */; };
 		5A452E4B257688C700C58E01 /* providers in Resources */ = {isa = PBXBuildFile; fileRef = 5A452E4A257688C700C58E01 /* providers */; };
+		5A54B9342D0353A8008FA596 /* file-vsdx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A54B9332D0353A8008FA596 /* file-vsdx.icns */; };
+		5A54B9352D0353A8008FA596 /* file-vsdx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A54B9332D0353A8008FA596 /* file-vsdx.icns */; };
+		5A54B9362D0353A8008FA596 /* file-vsdx.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5A54B9332D0353A8008FA596 /* file-vsdx.icns */; };
 		5A9D7AE8289336130069EE5A /* ASCEditorJSVariables.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5A9D7AE7289336130069EE5A /* ASCEditorJSVariables.mm */; };
 		5A9D7AE92893D86C0069EE5A /* ASCEditorJSVariables.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5A9D7AE7289336130069EE5A /* ASCEditorJSVariables.mm */; };
 		5A9D7AEA2893D86D0069EE5A /* ASCEditorJSVariables.mm in Sources */ = {isa = PBXBuildFile; fileRef = 5A9D7AE7289336130069EE5A /* ASCEditorJSVariables.mm */; };
@@ -36,6 +62,15 @@
 		5AAE526F28B53B9A001E31F4 /* ASCThemesController.m in Sources */ = {isa = PBXBuildFile; fileRef = 5AAE526C28B53B9A001E31F4 /* ASCThemesController.m */; };
 		5AB20F60274D35F3003732A0 /* file-docxf.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB20F5D274D35F2003732A0 /* file-docxf.icns */; };
 		5AB20F62274D360A003732A0 /* file-oform.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB20F61274D360A003732A0 /* file-oform.icns */; };
+		5AB89E2A2CFD1441000972EF /* file-pages.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E262CFD1440000972EF /* file-pages.icns */; };
+		5AB89E2B2CFD1441000972EF /* file-pages.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E262CFD1440000972EF /* file-pages.icns */; };
+		5AB89E2C2CFD1441000972EF /* file-pages.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E262CFD1440000972EF /* file-pages.icns */; };
+		5AB89E302CFD1441000972EF /* file-numbers.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E282CFD1441000972EF /* file-numbers.icns */; };
+		5AB89E312CFD1441000972EF /* file-numbers.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E282CFD1441000972EF /* file-numbers.icns */; };
+		5AB89E322CFD1441000972EF /* file-numbers.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E282CFD1441000972EF /* file-numbers.icns */; };
+		5AB89E332CFD1441000972EF /* file-key.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E292CFD1441000972EF /* file-key.icns */; };
+		5AB89E342CFD1441000972EF /* file-key.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E292CFD1441000972EF /* file-key.icns */; };
+		5AB89E352CFD1441000972EF /* file-key.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5AB89E292CFD1441000972EF /* file-key.icns */; };
 		5ACC12852BC033080089A585 /* file-xlsb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5ACC12842BC033080089A585 /* file-xlsb.icns */; };
 		5ACC12862BC033080089A585 /* file-xlsb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5ACC12842BC033080089A585 /* file-xlsb.icns */; };
 		5ACC12872BC033080089A585 /* file-xlsb.icns in Resources */ = {isa = PBXBuildFile; fileRef = 5ACC12842BC033080089A585 /* file-xlsb.icns */; };
@@ -132,7 +167,6 @@
 		FC0BD6D4258B63F700C47F95 /* Presentation-Reporter.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC54A2891F94BA6D0086F4FE /* Presentation-Reporter.storyboard */; };
 		FC0BD6D5258B63F700C47F95 /* providers in Resources */ = {isa = PBXBuildFile; fileRef = 5A452E4A257688C700C58E01 /* providers */; };
 		FC0BD6D6258B63F700C47F95 /* editors in Resources */ = {isa = PBXBuildFile; fileRef = FC09073D1C1855A400D9E881 /* editors */; };
-		FC0BD6D7258B63F700C47F95 /* file-fobs.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FD2570EC9400DCAB12 /* file-fobs.icns */; };
 		FC0BD6D8258B63F700C47F95 /* file-fodt.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FE2570EC9400DCAB12 /* file-fodt.icns */; };
 		FC0BD6D9258B63F700C47F95 /* Document-Sign.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FCDDD606208F3C25008AF573 /* Document-Sign.storyboard */; };
 		FC0BD6DA258B63F700C47F95 /* file-djvu.icns in Resources */ = {isa = PBXBuildFile; fileRef = FC98AEFD1E94E16A00718A12 /* file-djvu.icns */; };
@@ -214,7 +248,6 @@
 		FCA0B3401B9EB5960073EDD4 /* ASCTitleWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = FCA0B33F1B9EB5960073EDD4 /* ASCTitleWindow.m */; };
 		FCA0B3521B9F002B0073EDD4 /* ASCTitleBackground.m in Sources */ = {isa = PBXBuildFile; fileRef = FCA0B3511B9F002B0073EDD4 /* ASCTitleBackground.m */; };
 		FCA0B3551B9F006F0073EDD4 /* ASCHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FCA0B3541B9F006F0073EDD4 /* ASCHelper.m */; };
-		FCA3F3072570EC9500DCAB12 /* file-fobs.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FD2570EC9400DCAB12 /* file-fobs.icns */; };
 		FCA3F3082570EC9500DCAB12 /* file-fodt.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FE2570EC9400DCAB12 /* file-fodt.icns */; };
 		FCA3F3092570EC9500DCAB12 /* file-otp.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FF2570EC9500DCAB12 /* file-otp.icns */; };
 		FCA3F30B2570EC9500DCAB12 /* file-ott.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F3012570EC9500DCAB12 /* file-ott.icns */; };
@@ -313,7 +346,6 @@
 		FCB4C71026DD018B0012C20D /* Presentation-Reporter.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FC54A2891F94BA6D0086F4FE /* Presentation-Reporter.storyboard */; };
 		FCB4C71126DD018B0012C20D /* providers in Resources */ = {isa = PBXBuildFile; fileRef = 5A452E4A257688C700C58E01 /* providers */; };
 		FCB4C71226DD018B0012C20D /* editors in Resources */ = {isa = PBXBuildFile; fileRef = FC09073D1C1855A400D9E881 /* editors */; };
-		FCB4C71326DD018B0012C20D /* file-fobs.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FD2570EC9400DCAB12 /* file-fobs.icns */; };
 		FCB4C71426DD018B0012C20D /* file-fodt.icns in Resources */ = {isa = PBXBuildFile; fileRef = FCA3F2FE2570EC9400DCAB12 /* file-fodt.icns */; };
 		FCB4C71526DD018B0012C20D /* Document-Sign.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FCDDD606208F3C25008AF573 /* Document-Sign.storyboard */; };
 		FCB4C71626DD018B0012C20D /* file-djvu.icns in Resources */ = {isa = PBXBuildFile; fileRef = FC98AEFD1E94E16A00718A12 /* file-djvu.icns */; };
@@ -420,6 +452,33 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5A0229392C4A54600011C6EC /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		5A02293A2C7770DF0011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
+		5A02293B2C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		5A02293C2C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "en-GB"; path = "en-GB.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
+		5A02293D2C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Main.strings"; sourceTree = "<group>"; };
+		5A02293E2C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/MoveApplication.strings"; sourceTree = "<group>"; };
+		5A02293F2C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/Presentation-Reporter.strings"; sourceTree = "<group>"; };
+		5A0229402C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5A0229412C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5A0229422C7770E00011C6EC /* en-GB */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "en-GB"; path = "en-GB.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5A0229432CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = "he.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
+		5A0229442CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Localizable.strings; sourceTree = "<group>"; };
+		5A0229452CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = he; path = he.lproj/Localizable.stringsdict; sourceTree = "<group>"; };
+		5A0229462CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/Main.strings; sourceTree = "<group>"; };
+		5A0229472CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/MoveApplication.strings; sourceTree = "<group>"; };
+		5A0229482CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = "he.lproj/Presentation-Reporter.strings"; sourceTree = "<group>"; };
+		5A0229492CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5A02294A2CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5A02294B2CAC14940011C6EC /* he */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = he; path = he.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5A02294C2CB9C0410011C6EC /* QuickLookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickLookUI.framework; path = System/Library/Frameworks/QuickLookUI.framework; sourceTree = SDKROOT; };
+		5A02294F2CCFBF260011C6EC /* file-fods.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-fods.icns"; sourceTree = "<group>"; };
+		5A0229532CCFC01B0011C6EC /* file-dotx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-dotx.icns"; sourceTree = "<group>"; };
+		5A0229572CCFC02B0011C6EC /* file-oxps.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-oxps.icns"; sourceTree = "<group>"; };
+		5A02295B2CCFC05B0011C6EC /* file-pot.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-pot.icns"; sourceTree = "<group>"; };
+		5A02295C2CCFC05C0011C6EC /* file-xltx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-xltx.icns"; sourceTree = "<group>"; };
+		5A02295D2CCFC05C0011C6EC /* file-pptm.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-pptm.icns"; sourceTree = "<group>"; };
+		5A02295E2CCFC05C0011C6EC /* file-potx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-potx.icns"; sourceTree = "<group>"; };
 		5A18BAA3285B5BF6004625C7 /* CertificateCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CertificateCommon.h; sourceTree = "<group>"; };
 		5A417F722C05265E00758795 /* sr-Latn-RS */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sr-Latn-RS"; path = "sr-Latn-RS.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
 		5A417F732C05265E00758795 /* sr-Latn-RS */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sr-Latn-RS"; path = "sr-Latn-RS.lproj/Localizable.strings"; sourceTree = "<group>"; };
@@ -447,6 +506,7 @@
 		5A4ECA692AA88CB900286D52 /* zh-Hant-TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant-TW"; path = "zh-Hant-TW.lproj/MoveApplication.strings"; sourceTree = "<group>"; };
 		5A4ECA6A2AA88CB900286D52 /* zh-Hant-TW */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant-TW"; path = "zh-Hant-TW.lproj/Presentation-Reporter.strings"; sourceTree = "<group>"; };
 		5A513A992A1827F2001A5FBD /* ascprinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ascprinter.h; sourceTree = "<group>"; };
+		5A54B9332D0353A8008FA596 /* file-vsdx.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-vsdx.icns"; sourceTree = "<group>"; };
 		5A7F85D027A00C18006B6E27 /* lv-LV */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "lv-LV"; path = "lv-LV.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
 		5A7F85D127A00C18006B6E27 /* lv-LV */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "lv-LV"; path = "lv-LV.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		5A7F85D227A00C18006B6E27 /* lv-LV */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "lv-LV"; path = "lv-LV.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
@@ -802,6 +862,9 @@
 		5AAFF0A62989B70400D433B5 /* si */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = si; path = si.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		5AB20F5D274D35F2003732A0 /* file-docxf.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-docxf.icns"; sourceTree = "<group>"; };
 		5AB20F61274D360A003732A0 /* file-oform.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-oform.icns"; sourceTree = "<group>"; };
+		5AB89E262CFD1440000972EF /* file-pages.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-pages.icns"; sourceTree = "<group>"; };
+		5AB89E282CFD1441000972EF /* file-numbers.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-numbers.icns"; sourceTree = "<group>"; };
+		5AB89E292CFD1441000972EF /* file-key.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-key.icns"; sourceTree = "<group>"; };
 		5ABE02512B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar-SA"; path = "ar-SA.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
 		5ABE02522B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar-SA"; path = "ar-SA.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		5ABE02532B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "ar-SA"; path = "ar-SA.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
@@ -811,6 +874,15 @@
 		5ABE02572B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar-SA"; path = "ar-SA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		5ABE02582B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar-SA"; path = "ar-SA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		5ABE02592B22699F0031328E /* ar-SA */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "ar-SA"; path = "ar-SA.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5AC6441F2D36901900145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/Document-Sign.strings"; sourceTree = "<group>"; };
+		5AC644202D36901900145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		5AC644212D36901900145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.stringsdict; name = "sq-AL"; path = "sq-AL.lproj/Localizable.stringsdict"; sourceTree = "<group>"; };
+		5AC644222D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/Main.strings"; sourceTree = "<group>"; };
+		5AC644232D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/MoveApplication.strings"; sourceTree = "<group>"; };
+		5AC644242D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/Presentation-Reporter.strings"; sourceTree = "<group>"; };
+		5AC644252D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5AC644262D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		5AC644272D36901A00145A90 /* sq-AL */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "sq-AL"; path = "sq-AL.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		5ACC12842BC033080089A585 /* file-xlsb.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-xlsb.icns"; sourceTree = "<group>"; };
 		5AD24E292902AE3C00748926 /* Sparkle.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Sparkle.framework; path = Vendor/Sparkle/Sparkle.framework; sourceTree = SOURCE_ROOT; };
 		BE6251B922BD089100656116 /* dictionaries */ = {isa = PBXFileReference; lastKnownFileType = folder; name = dictionaries; path = ../../../../dictionaries; sourceTree = "<group>"; };
@@ -952,7 +1024,6 @@
 		FCA0B3531B9F006F0073EDD4 /* ASCHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASCHelper.h; sourceTree = "<group>"; };
 		FCA0B3541B9F006F0073EDD4 /* ASCHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ASCHelper.m; sourceTree = "<group>"; };
 		FCA0B3601B9F0AA10073EDD4 /* ASCConstants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ASCConstants.h; sourceTree = "<group>"; };
-		FCA3F2FD2570EC9400DCAB12 /* file-fobs.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-fobs.icns"; sourceTree = "<group>"; };
 		FCA3F2FE2570EC9400DCAB12 /* file-fodt.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-fodt.icns"; sourceTree = "<group>"; };
 		FCA3F2FF2570EC9500DCAB12 /* file-otp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-otp.icns"; sourceTree = "<group>"; };
 		FCA3F3002570EC9500DCAB12 /* file-ots.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = "file-ots.icns"; sourceTree = "<group>"; };
@@ -1138,6 +1209,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A02294D2CB9C0410011C6EC /* QuickLookUI.framework in Frameworks */,
 				FC0BD6C3258B63F700C47F95 /* libascdocumentscore.dylib in Frameworks */,
 				FC0BD6C4258B63F700C47F95 /* libooxmlsignature.dylib in Frameworks */,
 				5AD24E2C2902AE3C00748926 /* Sparkle.framework in Frameworks */,
@@ -1162,6 +1234,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5A02294E2CB9C3260011C6EC /* QuickLookUI.framework in Frameworks */,
 				FCF2762122C10DA400984E83 /* libascdocumentscore.dylib in Frameworks */,
 				FCF2762022C10D9400984E83 /* libooxmlsignature.dylib in Frameworks */,
 				5AD24E2B2902AE3C00748926 /* Sparkle.framework in Frameworks */,
@@ -1184,13 +1257,23 @@
 		FC081EBC1C325E8400F9881C /* file-formats */ = {
 			isa = PBXGroup;
 			children = (
+				5A54B9332D0353A8008FA596 /* file-vsdx.icns */,
+				5AB89E292CFD1441000972EF /* file-key.icns */,
+				5AB89E282CFD1441000972EF /* file-numbers.icns */,
+				5AB89E262CFD1440000972EF /* file-pages.icns */,
+				5A02295B2CCFC05B0011C6EC /* file-pot.icns */,
+				5A02295E2CCFC05C0011C6EC /* file-potx.icns */,
+				5A02295D2CCFC05C0011C6EC /* file-pptm.icns */,
+				5A02295C2CCFC05C0011C6EC /* file-xltx.icns */,
+				5A0229572CCFC02B0011C6EC /* file-oxps.icns */,
+				5A0229532CCFC01B0011C6EC /* file-dotx.icns */,
 				5ACC12842BC033080089A585 /* file-xlsb.icns */,
 				5A9F8D382848AA06007CA93F /* file-xlsm.icns */,
 				5AB20F61274D360A003732A0 /* file-oform.icns */,
 				5AB20F5D274D35F2003732A0 /* file-docxf.icns */,
 				FCA3F3062570EC9500DCAB12 /* file-epub.icns */,
 				FCA3F3022570EC9500DCAB12 /* file-fb2.icns */,
-				FCA3F2FD2570EC9400DCAB12 /* file-fobs.icns */,
+				5A02294F2CCFBF260011C6EC /* file-fods.icns */,
 				FCA3F2FE2570EC9400DCAB12 /* file-fodt.icns */,
 				FCA3F3052570EC9500DCAB12 /* file-htm.icns */,
 				FCA3F3042570EC9500DCAB12 /* file-mht.icns */,
@@ -1672,6 +1755,7 @@
 		FCF2761F22C10D9300984E83 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				5A02294C2CB9C0410011C6EC /* QuickLookUI.framework */,
 				FCB4C78A26DE3CBB0012C20D /* libascdocumentscore.dylib */,
 				FCB4C78926DE3CBB0012C20D /* libooxmlsignature.dylib */,
 			);
@@ -1954,6 +2038,9 @@
 				"ar-SA",
 				"sr-Latn-RS",
 				"sr-RS",
+				"en-GB",
+				he,
+				"sq-AL",
 			);
 			mainGroup = FCBC425F1B9D650400405301;
 			productRefGroup = FCBC42691B9D650400405301 /* Products */;
@@ -1977,6 +2064,7 @@
 				FC0BD6C9258B63F700C47F95 /* file-otp.icns in Resources */,
 				FCB4C78026DD02960012C20D /* InfoPlist.strings in Resources */,
 				5A9F8D3B2848AA07007CA93F /* file-xlsm.icns in Resources */,
+				5A0229612CCFC05C0011C6EC /* file-pot.icns in Resources */,
 				FCB4C77F26DD02960012C20D /* EULA.html in Resources */,
 				FC0BD6CA258B63F700C47F95 /* file-fb2.icns in Resources */,
 				FC0BD6CB258B63F700C47F95 /* file-epub.icns in Resources */,
@@ -1986,12 +2074,12 @@
 				FC0BD6CF258B63F700C47F95 /* file-odp.icns in Resources */,
 				FC0BD6D0258B63F700C47F95 /* file-pdf.icns in Resources */,
 				FC0BD6D1258B63F700C47F95 /* file-mht.icns in Resources */,
+				5AB89E352CFD1441000972EF /* file-key.icns in Resources */,
 				FC0BD6D2258B63F700C47F95 /* file-xlsx.icns in Resources */,
 				FC0BD6D3258B63F700C47F95 /* file-ppsx.icns in Resources */,
 				FC0BD6D4258B63F700C47F95 /* Presentation-Reporter.storyboard in Resources */,
 				FC0BD6D5258B63F700C47F95 /* providers in Resources */,
 				FC0BD6D6258B63F700C47F95 /* editors in Resources */,
-				FC0BD6D7258B63F700C47F95 /* file-fobs.icns in Resources */,
 				FC0BD6D8258B63F700C47F95 /* file-fodt.icns in Resources */,
 				FC0BD6D9258B63F700C47F95 /* Document-Sign.storyboard in Resources */,
 				5ACC12872BC033080089A585 /* file-xlsb.icns in Resources */,
@@ -1999,18 +2087,25 @@
 				FC0BD6DB258B63F700C47F95 /* file-csv.icns in Resources */,
 				FC0BD6DC258B63F700C47F95 /* file-xps.icns in Resources */,
 				FC0BD6DD258B63F700C47F95 /* dictionaries in Resources */,
+				5A54B9362D0353A8008FA596 /* file-vsdx.icns in Resources */,
 				FC0BD6DE258B63F700C47F95 /* file-docx.icns in Resources */,
+				5A0229562CCFC01B0011C6EC /* file-dotx.icns in Resources */,
 				FC0BD6DF258B63F700C47F95 /* login in Resources */,
 				FC0BD6E0258B63F700C47F95 /* file-doc.icns in Resources */,
 				FC0BD6E1258B63F700C47F95 /* file-pps.icns in Resources */,
 				FC0BD6E2258B63F700C47F95 /* converter in Resources */,
+				5AB89E322CFD1441000972EF /* file-numbers.icns in Resources */,
 				FC0BD6E3258B63F700C47F95 /* file-ods.icns in Resources */,
+				5A02295A2CCFC02B0011C6EC /* file-oxps.icns in Resources */,
+				5A0229672CCFC05C0011C6EC /* file-pptm.icns in Resources */,
 				FC0BD6E4258B63F700C47F95 /* Images.xcassets in Resources */,
+				5AB89E2C2CFD1441000972EF /* file-pages.icns in Resources */,
 				5AB20F60274D35F3003732A0 /* file-docxf.icns in Resources */,
 				FC0BD6E5258B63F700C47F95 /* Localizable.strings in Resources */,
 				FC0BD6E6258B63F700C47F95 /* Localizable.stringsdict in Resources */,
 				FC0BD6E7258B63F700C47F95 /* file-ppt.icns in Resources */,
 				FC0BD6E8258B63F700C47F95 /* MoveApplication.strings in Resources */,
+				5A02296A2CCFC05C0011C6EC /* file-potx.icns in Resources */,
 				FC0BD6E9258B63F700C47F95 /* file-ots.icns in Resources */,
 				FC0BD6EA258B63F700C47F95 /* file-ott.icns in Resources */,
 				FC0BD6EB258B63F700C47F95 /* file-xls.icns in Resources */,
@@ -2018,6 +2113,8 @@
 				FC0BD6EF258B63F700C47F95 /* file-pptx.icns in Resources */,
 				FC0BD6F0258B63F700C47F95 /* file-txt.icns in Resources */,
 				FC0BD6F1258B63F700C47F95 /* Main.storyboard in Resources */,
+				5A0229522CCFBF260011C6EC /* file-fods.icns in Resources */,
+				5A0229642CCFC05C0011C6EC /* file-xltx.icns in Resources */,
 				FC0BD6F2258B63F700C47F95 /* file-xml.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2030,6 +2127,7 @@
 				FCB4C70526DD018B0012C20D /* file-otp.icns in Resources */,
 				FCB4C77D26DD027B0012C20D /* InfoPlist.strings in Resources */,
 				5A9F8D392848AA07007CA93F /* file-xlsm.icns in Resources */,
+				5A02295F2CCFC05C0011C6EC /* file-pot.icns in Resources */,
 				FCB4C77C26DD02750012C20D /* EULA.html in Resources */,
 				FCB4C70626DD018B0012C20D /* file-fb2.icns in Resources */,
 				FCB4C70726DD018B0012C20D /* file-epub.icns in Resources */,
@@ -2039,31 +2137,38 @@
 				FCB4C70A26DD018B0012C20D /* file-rtf.icns in Resources */,
 				FCB4C70B26DD018B0012C20D /* file-odp.icns in Resources */,
 				FCB4C70C26DD018B0012C20D /* file-pdf.icns in Resources */,
+				5AB89E332CFD1441000972EF /* file-key.icns in Resources */,
 				FCB4C70D26DD018B0012C20D /* file-mht.icns in Resources */,
 				FCB4C70E26DD018B0012C20D /* file-xlsx.icns in Resources */,
 				FCB4C70F26DD018B0012C20D /* file-ppsx.icns in Resources */,
 				FCB4C71026DD018B0012C20D /* Presentation-Reporter.storyboard in Resources */,
 				FCB4C71126DD018B0012C20D /* providers in Resources */,
 				FCB4C71226DD018B0012C20D /* editors in Resources */,
-				FCB4C71326DD018B0012C20D /* file-fobs.icns in Resources */,
 				FCB4C71426DD018B0012C20D /* file-fodt.icns in Resources */,
 				FCB4C71526DD018B0012C20D /* Document-Sign.storyboard in Resources */,
 				FCB4C71626DD018B0012C20D /* file-djvu.icns in Resources */,
 				5ACC12892BC036B30089A585 /* file-ots.icns in Resources */,
 				FCB4C71726DD018B0012C20D /* file-csv.icns in Resources */,
 				FCB4C71826DD018B0012C20D /* file-xps.icns in Resources */,
+				5A54B9342D0353A8008FA596 /* file-vsdx.icns in Resources */,
 				FCB4C71926DD018B0012C20D /* dictionaries in Resources */,
+				5A0229542CCFC01B0011C6EC /* file-dotx.icns in Resources */,
 				FCB4C71A26DD018B0012C20D /* file-docx.icns in Resources */,
 				FCB4C71B26DD018B0012C20D /* login in Resources */,
 				5ACC12852BC033080089A585 /* file-xlsb.icns in Resources */,
 				FCB4C71C26DD018B0012C20D /* file-doc.icns in Resources */,
+				5AB89E302CFD1441000972EF /* file-numbers.icns in Resources */,
 				FCB4C71D26DD018B0012C20D /* file-pps.icns in Resources */,
+				5A0229582CCFC02B0011C6EC /* file-oxps.icns in Resources */,
+				5A0229652CCFC05C0011C6EC /* file-pptm.icns in Resources */,
 				FCB4C71E26DD018B0012C20D /* converter in Resources */,
+				5AB89E2A2CFD1441000972EF /* file-pages.icns in Resources */,
 				FCB4C71F26DD018B0012C20D /* file-ods.icns in Resources */,
 				FCB4C72026DD018B0012C20D /* Images.xcassets in Resources */,
 				FCB4C72126DD018B0012C20D /* Localizable.strings in Resources */,
 				FCB4C72226DD018B0012C20D /* Localizable.stringsdict in Resources */,
 				FCB4C72326DD018B0012C20D /* file-ppt.icns in Resources */,
+				5A0229682CCFC05C0011C6EC /* file-potx.icns in Resources */,
 				FCB4C72426DD018B0012C20D /* MoveApplication.strings in Resources */,
 				FCB4C72626DD018B0012C20D /* file-ott.icns in Resources */,
 				FCB4C72726DD018B0012C20D /* file-xls.icns in Resources */,
@@ -2071,6 +2176,8 @@
 				FCB4C72B26DD018B0012C20D /* file-pptx.icns in Resources */,
 				FCB4C72C26DD018B0012C20D /* file-txt.icns in Resources */,
 				FCB4C72D26DD018B0012C20D /* Main.storyboard in Resources */,
+				5A0229502CCFBF260011C6EC /* file-fods.icns in Resources */,
+				5A0229622CCFC05C0011C6EC /* file-xltx.icns in Resources */,
 				FCB4C72E26DD018B0012C20D /* file-xml.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2083,6 +2190,7 @@
 				5AFA1CF1277A6D2900619952 /* file-docxf.icns in Resources */,
 				FCA3F3092570EC9500DCAB12 /* file-otp.icns in Resources */,
 				5A9F8D3A2848AA07007CA93F /* file-xlsm.icns in Resources */,
+				5A0229602CCFC05C0011C6EC /* file-pot.icns in Resources */,
 				FCB4C78326DD02A40012C20D /* InfoPlist.strings in Resources */,
 				FCB4C78226DD02A40012C20D /* EULA.html in Resources */,
 				FCA3F30C2570EC9500DCAB12 /* file-fb2.icns in Resources */,
@@ -2092,31 +2200,38 @@
 				FC98AF351E94E16A00718A12 /* file-rtf.icns in Resources */,
 				FC98AF1D1E94E16A00718A12 /* file-odp.icns in Resources */,
 				FC98AF261E94E16A00718A12 /* file-pdf.icns in Resources */,
+				5AB89E342CFD1441000972EF /* file-key.icns in Resources */,
 				FCA3F30E2570EC9500DCAB12 /* file-mht.icns in Resources */,
 				FC98AF3E1E94E16A00718A12 /* file-xlsx.icns in Resources */,
 				FC98AF2C1E94E16A00718A12 /* file-ppsx.icns in Resources */,
 				FC54A2851F94BA6D0086F4FE /* Presentation-Reporter.storyboard in Resources */,
 				5A452E4B257688C700C58E01 /* providers in Resources */,
 				FC09073E1C1855A400D9E881 /* editors in Resources */,
-				FCA3F3072570EC9500DCAB12 /* file-fobs.icns in Resources */,
 				FCA3F3082570EC9500DCAB12 /* file-fodt.icns in Resources */,
 				FCDDD602208F3C25008AF573 /* Document-Sign.storyboard in Resources */,
 				FC98AF111E94E16A00718A12 /* file-djvu.icns in Resources */,
 				5ACC12882BC036B20089A585 /* file-ots.icns in Resources */,
 				FC98AF0E1E94E16A00718A12 /* file-csv.icns in Resources */,
 				FC98AF411E94E16A00718A12 /* file-xps.icns in Resources */,
+				5A54B9352D0353A8008FA596 /* file-vsdx.icns in Resources */,
 				BE6251BA22BD089100656116 /* dictionaries in Resources */,
+				5A0229552CCFC01B0011C6EC /* file-dotx.icns in Resources */,
 				FC98AF171E94E16A00718A12 /* file-docx.icns in Resources */,
 				FC3B777B1BB28CE900DB9705 /* login in Resources */,
 				5ACC12862BC033080089A585 /* file-xlsb.icns in Resources */,
 				FC98AF141E94E16A00718A12 /* file-doc.icns in Resources */,
+				5AB89E312CFD1441000972EF /* file-numbers.icns in Resources */,
 				FC98AF291E94E16A00718A12 /* file-pps.icns in Resources */,
+				5A0229592CCFC02B0011C6EC /* file-oxps.icns in Resources */,
+				5A0229662CCFC05C0011C6EC /* file-pptm.icns in Resources */,
 				FC0907411C186A7A00D9E881 /* converter in Resources */,
+				5AB89E2B2CFD1441000972EF /* file-pages.icns in Resources */,
 				FC98AF201E94E16A00718A12 /* file-ods.icns in Resources */,
 				FCBC42761B9D650500405301 /* Images.xcassets in Resources */,
 				FCFC000D1BC54ACC00939341 /* Localizable.strings in Resources */,
 				FCD2B9181BC64F0C00F54560 /* Localizable.stringsdict in Resources */,
 				FC98AF2F1E94E16A00718A12 /* file-ppt.icns in Resources */,
+				5A0229692CCFC05C0011C6EC /* file-potx.icns in Resources */,
 				FC6718461BD91B3A0028600F /* MoveApplication.strings in Resources */,
 				FCA3F30B2570EC9500DCAB12 /* file-ott.icns in Resources */,
 				FC98AF3B1E94E16A00718A12 /* file-xls.icns in Resources */,
@@ -2124,6 +2239,8 @@
 				FC98AF321E94E16A00718A12 /* file-pptx.icns in Resources */,
 				FC98AF381E94E16A00718A12 /* file-txt.icns in Resources */,
 				FCBC42791B9D650500405301 /* Main.storyboard in Resources */,
+				5A0229512CCFBF260011C6EC /* file-fods.icns in Resources */,
+				5A0229632CCFC05C0011C6EC /* file-xltx.icns in Resources */,
 				FCA3F30D2570EC9500DCAB12 /* file-xml.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2162,7 +2279,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\ncode_sign_if_enabled \"${converter_path}/libDjVuFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libdoctrenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libDocxRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libEpubFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libFb2File.dylib\"\ncode_sign_if_enabled \"${converter_path}/libgraphics.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlFile2.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicudata.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicuuc.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel_network.dylib\"\ncode_sign_if_enabled \"${converter_path}/libPdfFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libUnicodeConverter.dylib\"\ncode_sign_if_enabled \"${converter_path}/libXpsFile.dylib\"\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
+			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Sign libs in directory\nsign_libs_in_directory() {\n    for i in $1/*.dylib; do\n        [ -f \"$i\" ] || break\n        code_sign_if_enabled \"$i\"\n    done\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\nsign_libs_in_directory ${converter_path}\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FC0BD6F7258B63F700C47F95 /* Increment Build Number */ = {
@@ -2199,7 +2316,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\ncode_sign_if_enabled \"${converter_path}/libDjVuFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libdoctrenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libDocxRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libEpubFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libFb2File.dylib\"\ncode_sign_if_enabled \"${converter_path}/libgraphics.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlFile2.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicudata.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicuuc.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel_network.dylib\"\ncode_sign_if_enabled \"${converter_path}/libPdfFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libUnicodeConverter.dylib\"\ncode_sign_if_enabled \"${converter_path}/libXpsFile.dylib\"\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
+			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Sign libs in directory\nsign_libs_in_directory() {\n    for i in $1/*.dylib; do\n        [ -f \"$i\" ] || break\n        code_sign_if_enabled \"$i\"\n    done\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\nsign_libs_in_directory \"${converter_path}\"\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FC5A2D271BABF6E1001ACEB1 /* Copy Library */ = {
@@ -2248,7 +2365,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_arm64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\ncode_sign_if_enabled \"${converter_path}/libDjVuFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libdoctrenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libDocxRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libEpubFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libFb2File.dylib\"\ncode_sign_if_enabled \"${converter_path}/libgraphics.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlFile2.dylib\"\ncode_sign_if_enabled \"${converter_path}/libHtmlRenderer.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicudata.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libicuuc.58.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel.dylib\"\ncode_sign_if_enabled \"${converter_path}/libkernel_network.dylib\"\ncode_sign_if_enabled \"${converter_path}/libPdfFile.dylib\"\ncode_sign_if_enabled \"${converter_path}/libUnicodeConverter.dylib\"\ncode_sign_if_enabled \"${converter_path}/libXpsFile.dylib\"\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
+			shellScript = "#!/bin/sh\n\n#exit 0\n\nbase_path=$(pwd)\ncontents_path=${CONFIGURATION_BUILD_DIR}/${CONTENTS_FOLDER_PATH}\nframeworks_path=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nconverter_path=\"${contents_path}/Resources/converter\"\ncore_path=\"${base_path}/../../build_tools/out/mac_arm64/onlyoffice/desktopeditors\"\napp_name=\"ONLYOFFICE\"\n\n# Signs a framework with the provided identity\ncode_sign_if_enabled() {\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" -a \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" -a \"${CODE_SIGNING_ALLOWED}\" != \"NO\" ]; then\n    # Use the current code_sign_identity\n    echo \"Code Signing $1 with Identity ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n    local code_sign_cmd=\"/usr/bin/codesign --force --sign ${EXPANDED_CODE_SIGN_IDENTITY} ${OTHER_CODE_SIGN_FLAGS:-} --preserve-metadata=identifier,entitlements '$1'\"\n\n    echo \"$code_sign_cmd\"\n    eval \"$code_sign_cmd\"\n  fi\n}\n\n# Sign libs in directory\nsign_libs_in_directory() {\n    for i in $1/*.dylib; do\n        [ -f \"$i\" ] || break\n        code_sign_if_enabled \"$i\"\n    done\n}\n\n# Change path of dependency library\nchange_dependency_path() {\n  echo \"Rename path for $1 from $2 to $3\"\n  install_name_tool -change \"$2\" \"$3\" \"$1\"\n}\n\nrm -rf \"${frameworks_path}/Chromium Embedded Framework.framework\"\nrm -rf \"${frameworks_path}/editors_helper.app\"\nrm -rf \"${frameworks_path}/editors_helper (GPU).app\"\nrm -rf \"${frameworks_path}/editors_helper (Renderer).app\"\nrm -rf \"${frameworks_path}/libascdocumentscore.dylib\"\nrm -rf \"${frameworks_path}/libooxmlsignature.dylib\"\nrm -rf \"${frameworks_path}/libhunspell.dylib\"\n\nif [ ! -d \"${frameworks_path}\" ]; then\nmkdir -p \"${frameworks_path}\"\nfi\n\necho \"Copy libraries and frameworks\"\ncp -Rv \"${core_path}/editors_helper.app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (GPU).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/editors_helper (Renderer).app\" \"${frameworks_path}/\"\ncp -Rv \"${core_path}/Chromium Embedded Framework.framework\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libascdocumentscore.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libooxmlsignature.dylib\" \"${frameworks_path}\"\ncp -Rv \"${core_path}/libhunspell.dylib\" \"${frameworks_path}\"\n\n# Fixed paths application\necho \"Fixed dependency paths of application\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" \"@executable_path/../Frameworks/Chromium Embedded Framework.framework/Chromium Embedded Framework\" \"@rpath/Chromium Embedded Framework.framework/Chromium Embedded Framework\"\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libascdocumentscore.dylib @rpath/libascdocumentscore.dylib\nchange_dependency_path \"${contents_path}/MacOS/${app_name}\" libooxmlsignature.dylib @rpath/libooxmlsignature.dylib\n\n# Resign the code if required by the build settings to avoid unstable apps\necho \"Sign libraries and frameworks with ${EXPANDED_CODE_SIGN_IDENTITY_NAME}\"\n\ncode_sign_if_enabled \"${frameworks_path}/libooxmlsignature.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libascdocumentscore.dylib\"\ncode_sign_if_enabled \"${frameworks_path}/libhunspell.dylib\"\n\nsign_libs_in_directory ${converter_path}\n\ncodesign --verbose --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${converter_path}/x2t\"\n\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libEGL.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libswiftshader_libGLESv2.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework/Libraries/libvk_swiftshader.dylib\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Chromium Embedded Framework.framework\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper.app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (GPU).app\"\ncodesign --verbose=4 --force --deep --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --entitlements \"${CODE_SIGN_ENTITLEMENTS}\"  \"${frameworks_path}/editors_helper (Renderer).app\"\n\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Updater.app/Contents/MacOS/Updater\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/Autoupdate\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.Downloader.xpc/Contents/MacOS/org.sparkle-project.Downloader\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/org.sparkle-project.InstallerLauncher\"\ncodesign --verbose --force --options runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${frameworks_path}/Sparkle.framework/Versions/B\"\n\ncodesign --verbose=4 --force --options runtime --entitlements \"${CODE_SIGN_ENTITLEMENTS}\" --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${contents_path}/MacOS/${app_name}\"\n";
 			showEnvVarsInLog = 0;
 		};
 		FCB4C73326DD018B0012C20D /* Increment Build Number */ = {
@@ -2579,6 +2696,9 @@
 				5ABE02562B22699F0031328E /* ar-SA */,
 				5A417F772C05265E00758795 /* sr-Latn-RS */,
 				5A417F802C05267F00758795 /* sr-RS */,
+				5A02293F2C7770E00011C6EC /* en-GB */,
+				5A0229482CAC14940011C6EC /* he */,
+				5AC644242D36901A00145A90 /* sq-AL */,
 			);
 			name = "Presentation-Reporter.storyboard";
 			sourceTree = "<group>";
@@ -2629,6 +2749,9 @@
 				5ABE02552B22699F0031328E /* ar-SA */,
 				5A417F762C05265E00758795 /* sr-Latn-RS */,
 				5A417F7F2C05267F00758795 /* sr-RS */,
+				5A02293E2C7770E00011C6EC /* en-GB */,
+				5A0229472CAC14940011C6EC /* he */,
+				5AC644232D36901A00145A90 /* sq-AL */,
 			);
 			name = MoveApplication.strings;
 			sourceTree = "<group>";
@@ -2719,6 +2842,9 @@
 				5ABE02592B22699F0031328E /* ar-SA */,
 				5A417F7A2C05265E00758795 /* sr-Latn-RS */,
 				5A417F832C05267F00758795 /* sr-RS */,
+				5A0229422C7770E00011C6EC /* en-GB */,
+				5A02294B2CAC14940011C6EC /* he */,
+				5AC644272D36901A00145A90 /* sq-AL */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -2809,6 +2935,9 @@
 				5ABE02582B22699F0031328E /* ar-SA */,
 				5A417F792C05265E00758795 /* sr-Latn-RS */,
 				5A417F822C05267F00758795 /* sr-RS */,
+				5A0229412C7770E00011C6EC /* en-GB */,
+				5A02294A2CAC14940011C6EC /* he */,
+				5AC644262D36901A00145A90 /* sq-AL */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -2900,6 +3029,9 @@
 				5ABE02572B22699F0031328E /* ar-SA */,
 				5A417F782C05265E00758795 /* sr-Latn-RS */,
 				5A417F812C05267F00758795 /* sr-RS */,
+				5A0229402C7770E00011C6EC /* en-GB */,
+				5A0229492CAC14940011C6EC /* he */,
+				5AC644252D36901A00145A90 /* sq-AL */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -2950,6 +3082,9 @@
 				5ABE02542B22699F0031328E /* ar-SA */,
 				5A417F752C05265E00758795 /* sr-Latn-RS */,
 				5A417F7E2C05267F00758795 /* sr-RS */,
+				5A02293D2C7770E00011C6EC /* en-GB */,
+				5A0229462CAC14940011C6EC /* he */,
+				5AC644222D36901A00145A90 /* sq-AL */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -3000,6 +3135,9 @@
 				5ABE02532B22699F0031328E /* ar-SA */,
 				5A417F742C05265E00758795 /* sr-Latn-RS */,
 				5A417F7D2C05267F00758795 /* sr-RS */,
+				5A02293C2C7770E00011C6EC /* en-GB */,
+				5A0229452CAC14940011C6EC /* he */,
+				5AC644212D36901900145A90 /* sq-AL */,
 			);
 			name = Localizable.stringsdict;
 			sourceTree = "<group>";
@@ -3050,6 +3188,9 @@
 				5ABE02512B22699F0031328E /* ar-SA */,
 				5A417F722C05265E00758795 /* sr-Latn-RS */,
 				5A417F7B2C05267F00758795 /* sr-RS */,
+				5A02293A2C7770DF0011C6EC /* en-GB */,
+				5A0229432CAC14940011C6EC /* he */,
+				5AC6441F2D36901900145A90 /* sq-AL */,
 			);
 			name = "Document-Sign.storyboard";
 			sourceTree = "<group>";
@@ -3100,6 +3241,10 @@
 				5ABE02522B22699F0031328E /* ar-SA */,
 				5A417F732C05265E00758795 /* sr-Latn-RS */,
 				5A417F7C2C05267F00758795 /* sr-RS */,
+				5A0229392C4A54600011C6EC /* en */,
+				5A02293B2C7770E00011C6EC /* en-GB */,
+				5A0229442CAC14940011C6EC /* he */,
+				5AC644202D36901900145A90 /* sq-AL */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

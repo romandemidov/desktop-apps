@@ -31,9 +31,11 @@ public:
     bool openLocalFile(const std::wstring& sFilePath, const std::wstring& params);
     void createLocalFile(AscEditorType nFileFormat, const std::wstring& sName = L"");
     void createLocalFile(const std::wstring& templatepath, const std::wstring& name);
+    void createLocalFile(int templateid, const std::wstring& name);
     bool openRecoverFile(int id);
     bool openRecentFile(int id);
     bool isReady();
+    bool hasUncommittedChanges();
     void applyLoader(const QString& cmd, const QString& args = QString());
     void setReady();
     //void resize(int w, int h);

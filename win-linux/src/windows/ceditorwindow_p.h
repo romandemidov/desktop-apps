@@ -39,11 +39,16 @@
 #include "ceditortools.h"
 #include "components/cfullscrwidget.h"
 #include "components/cprintdialog.h"
+#include "components/cmenu.h"
+#include "Network/FileTransporter/include/FileTransporter.h"
+#include <QDir>
+#include <QUuid>
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QGridLayout>
 #include <QPrintEngine>
+#include <QAction>
 
 #ifdef __linux__
 # include "platform_linux/gtkprintdialog.h"
@@ -57,6 +62,7 @@
 #define MARGINS 6
 
 using namespace NSEditorApi;
+using namespace NSNetwork::NSFileTransport;
 
 
 auto prepare_editor_css(AscEditorType type, const CTheme& theme) -> QString {
@@ -67,12 +73,13 @@ auto prepare_editor_css(AscEditorType type, const CTheme& theme) -> QString {
     case AscEditorType::etPresentation: c = theme.value(CTheme::ColorRole::ecrTabSlideActive); break;
     case AscEditorType::etSpreadsheet: c = theme.value(CTheme::ColorRole::ecrTabCellActive); break;
     case AscEditorType::etPdf: c = theme.value(CTheme::ColorRole::ecrTabViewerActive); break;
+    case AscEditorType::etDraw: c = theme.value(CTheme::ColorRole::ecrTabDrawActive); break;
     }
     QString g_css(Utils::readStylesheets(":/styles/editor.qss"));
 #ifdef __linux__
     g_css.append(Utils::readStylesheets(":styles/editor_unix.qss"));
 #endif
-    return g_css.arg(QString::fromStdWString(c));
+    return g_css.arg(QString::fromStdWString(c), GetColorQValueByRole(ecrTextNormal), GetColorQValueByRole(ecrTextPretty));
 }
 
 auto editor_color(AscEditorType type) -> QColor {
@@ -81,8 +88,20 @@ auto editor_color(AscEditorType type) -> QColor {
     case AscEditorType::etPresentation: return GetColorByRole(ecrTabSlideActive);
     case AscEditorType::etSpreadsheet: return GetColorByRole(ecrTabCellActive);
     case AscEditorType::etPdf: return GetColorByRole(ecrTabViewerActive);
+    case AscEditorType::etDraw: return GetColorByRole(ecrTabDrawActive);
     default: return GetColorByRole(ecrTabWordActive);
     }
+}
+
+auto rounded_pixmap(const QPixmap &px, int size) -> QPixmap {
+    int diam = qMin(px.width(), px.height());
+    QPixmap pxm(diam, diam);
+    pxm.fill(Qt::transparent);
+    QPainter p(&pxm);
+    p.setBrush(QBrush(px));
+    p.drawEllipse(0, 0, diam, diam);
+    p.end();
+    return pxm.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 }
 
 class CEditorWindowPrivate : public CCefEventsGate
@@ -90,14 +109,17 @@ class CEditorWindowPrivate : public CCefEventsGate
     CEditorWindow * window = nullptr;
     QLabel * iconuser = nullptr;
     bool isPrinting = false,
+         layoutIsSet = false,
         isFullScreen = false;
     int layoutType = LayoutNone;
     CFullScrWidget * fs_parent = nullptr;
     QLabel * iconcrypted = nullptr;
     QWidget * boxtitlelabel = nullptr,
             * leftboxbuttons = nullptr;
+    QPixmap   avatar;
 
     QMap<QString, CSVGPushButton*> m_mapTitleButtons;
+    CFileDownloader *fdl = nullptr;
     int leftBtnsCount = DEFAULT_BTNS_COUNT;
 
     enum LayoutType {
@@ -107,10 +129,15 @@ class CEditorWindowPrivate : public CCefEventsGate
     };
 
 public:
+    int titleLeftOffset = 0;
+
+public:
     CEditorWindowPrivate(CEditorWindow * w) : window(w) {}
     ~CEditorWindowPrivate() override {
         if ( leftboxbuttons )
             leftboxbuttons->deleteLater();
+        if (fdl)
+            delete fdl, fdl = nullptr;
     }
 
     void createHomeButton() {
@@ -278,6 +305,16 @@ public:
         }
     }
 
+    virtual void onImageLoadFinished(int err) override
+    {
+        if (err == 0) {
+            QString path = QString::fromStdWString(fdl->GetFilePath());
+            if (!(avatar = QPixmap(path)).isNull())
+                iconuser->setPixmap(rounded_pixmap(avatar, iconuser->width()));
+            QFile::remove(path);
+        }
+    }
+
     void onEditorConfig(int, std::wstring cfg) override
     {
 //        if ( id == window->holdView(id) )
@@ -302,11 +339,34 @@ public:
             if ( jerror.error == QJsonParseError::NoError ) {
                 QJsonObject objRoot = jdoc.object();
                 if ( objRoot.contains("user") ) {
-                    QString _user_name = objRoot["user"].toObject().value("name").toString();
+                    QJsonObject objUser = objRoot["user"].toObject();
+                    QString _user_name = objUser.value("name").toString();
                     //iconUser()->setToolTip(_user_name);
                     iconUser()->setProperty("ToolTip", _user_name);
                     adjustIconUser();
                     iconuser->setText(getInitials(_user_name));
+                    if (objUser.contains("image")) {
+                        QString img_url = objUser["image"].toString();
+                        if (QUrl(img_url).scheme() == "data") {
+                            auto list = img_url.split(";base64,");
+                            if (list.size() == 2 && !list[1].isEmpty()) {
+                                if (avatar.loadFromData(QByteArray::fromBase64(list[1].toLocal8Bit())))
+                                    iconuser->setPixmap(rounded_pixmap(avatar, iconuser->width()));
+                            }
+                        } else {
+                            if (!fdl) {
+                                QString tmp_name = QString("/avatar_%1.png").arg(QUuid::createUuid().toString().remove('{').remove('}'));
+                                fdl = new CFileDownloader(img_url.toStdWString(), false);
+                                fdl->SetFilePath((QDir::tempPath() + tmp_name).toStdWString());
+                                fdl->SetEvent_OnComplete([=](int err) {
+                                    QMetaObject::invokeMethod(this, "onImageLoadFinished", Qt::QueuedConnection, Q_ARG(int, err));
+                                });
+                            } else {
+                                fdl->Cancel();
+                            }
+                            fdl->Start(0);
+                        }
+                    }
                     iconuser->setVisible(true);
                 }
 
@@ -447,12 +507,18 @@ public:
             background = GetColorValueByRole(ecrTabViewerActive);
             border = background;
             break;
+        case AscEditorType::etDraw:
+            background = GetColorValueByRole(ecrTabDrawActive);
+            border = background;
+            break;
         default:
             background = GetColorValueByRole(ecrWindowBackground);
             border = GetColorValueByRole(ecrWindowBorder);
         }
+        if (GetCurrentTheme().id() == L"theme-gray")
+            border = GetColorValueByRole(ecrWindowBorder);
 
-        window->setWindowColors(QColor(QString::fromStdWString(background)), QColor(QString::fromStdWString(border)));
+        window->setWindowColors(QColor(QString::fromStdWString(background)), QColor(QString::fromStdWString(border)), window->isActiveWindow());
     }
 
     void changeTheme(const std::wstring& theme)
@@ -503,6 +569,8 @@ public:
                 window->hide();
             }
         } else {
+            if (!cancel)
+                window->menu()->setSectionEnabled(CMenu::ActionShowInFolder, true);
             AscAppManager::cancelClose();
         }
     }
@@ -696,6 +764,9 @@ public:
         if ( window->isCustomWindowStyle() ) {
             if ( iconuser ) {
                 adjustIconUser();
+
+                if (!avatar.isNull())
+                    iconuser->setPixmap(rounded_pixmap(avatar, iconuser->width()));
             }
 
             if ( iconcrypted ) {
@@ -979,6 +1050,7 @@ public:
         if (QLayoutItem *stretch = _layout->takeAt(0))
             delete stretch;
         boxtitlelabel = new QWidget(window->m_boxTitleBtns);
+        boxtitlelabel->setObjectName("boxtitlelabel");
         boxtitlelabel->setLayout(new QHBoxLayout(boxtitlelabel));
         boxtitlelabel->layout()->setSpacing(0);
         boxtitlelabel->layout()->setMargin(0);

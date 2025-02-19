@@ -35,14 +35,18 @@
 
 #include <QApplication>
 #include <QByteArray>
-#include "csocket.h"
+#pragma push_macro("signals")
+#undef signals
+#include <gio/gio.h>
+#pragma pop_macro("signals")
 
 
+class CSocket;
 class SingleApplication : public QApplication
 {
     Q_OBJECT
 public:
-    explicit SingleApplication( int &argc, char *argv[], const QString& servername = QString());
+    explicit SingleApplication( int &argc, char *argv[]);
     ~SingleApplication();
 
     bool isPrimary();
@@ -56,6 +60,9 @@ private slots:
 
 private:
     CSocket *m_socket = nullptr;
+    GDBusConnection *m_conn = nullptr;
+    std::string m_client_id;
+    uint    m_subscrId = 0;
     bool    m_isPrimary = false;
 };
 

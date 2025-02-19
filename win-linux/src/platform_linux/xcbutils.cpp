@@ -41,6 +41,18 @@
 #include <X11/Xlib-xcb.h>
 
 
+void XcbUtils::moveWindow(xcb_window_t window, int x, int y)
+{
+    xcb_connection_t *conn = QX11Info::connection();
+    if (conn && window != XCB_WINDOW_NONE) {
+        uint32_t val[2];
+        val[0] = x;
+        val[1] = y;
+        xcb_configure_window(conn, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, val);
+        xcb_flush(conn);
+    }
+}
+
 bool XcbUtils::isNativeFocus(xcb_window_t window)
 {
     xcb_window_t win = 0;
@@ -94,7 +106,7 @@ static void GetWindowList(Display *disp, Window **list, unsigned long *len) {
     unsigned long remain;
     unsigned char *win_list;
     Atom type;
-    Atom prop = XInternAtom(disp, "_NET_CLIENT_LIST", true);
+    Atom prop = XInternAtom(disp, "_NET_CLIENT_LIST_STACKING", true);
     Window root = XDefaultRootWindow(disp);
     int res = XGetWindowProperty(disp, root, prop, 0, 1024, false, XA_WINDOW,
                                  &type, &form, len, &remain, &win_list);
@@ -120,9 +132,9 @@ static bool IsVisible(Display *disp, Window wnd)
     return false;
 }
 
-void XcbUtils::findWindowAsync(const char *window_name,
+void XcbUtils::findWindowAsync(const char *window_name, void *user_data,
                                uint timeout_ms,
-                               void(*callback)(xcb_window_t))
+                               void(*callback)(xcb_window_t, void*))
 {
     QtConcurrent::run([=]() {
         Display *disp = XOpenDisplay(NULL);
@@ -144,7 +156,7 @@ void XcbUtils::findWindowAsync(const char *window_name,
                         if (IsVisible(disp, win_list[i])) {
                             win_found = win_list[i];
                             SetSkipTaskbar(disp, win_found);
-                            callback((xcb_window_t)win_found);
+                            callback((xcb_window_t)win_found, user_data);
                         }
                         free(name);
                         break;
@@ -157,4 +169,19 @@ void XcbUtils::findWindowAsync(const char *window_name,
         } while (--RETRIES > 0 && win_found == None);
         XCloseDisplay(disp);
     });
+}
+
+void XcbUtils::getWindowStack(std::vector<xcb_window_t> &winStack)
+{
+    Display *disp = XOpenDisplay(NULL);
+    if (!disp)
+        return;
+    Window *win_list = NULL;
+    unsigned long win_list_size = 0;
+    GetWindowList(disp, &win_list, &win_list_size);
+    if (win_list) {
+        for (int i = 0; i < (int)win_list_size; i++)
+            winStack.push_back((xcb_window_t)win_list[i]);
+        XFree(win_list);
+    }
 }
